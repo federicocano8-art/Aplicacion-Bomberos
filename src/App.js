@@ -7532,159 +7532,68 @@ function Vehiculos(props) {
                             })
                           )
                     ),
+tabActual === 'bateria' && React.createElement('div', null,
+  React.createElement('div', { style: Object.assign({}, styles.card, { background: '#fffbeb', border: '2px solid #fde68a' }) },
+    React.createElement('h4', { style: { fontWeight: 'bold', color: '#92400e', marginBottom: '16px' } }, '🔋 Estado de Batería'),
+    React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' } },
+      React.createElement('div', null,
+        React.createElement('label', { style: styles.label }, '🔋 Batería (Marca/Modelo)'),
+        React.createElement('input', { type: 'text', value: bateria.descripcion || '', onChange: function (e) { props.onActualizar(v.id, { bateria: Object.assign({}, bateria, { descripcion: e.target.value }) }); }, style: styles.input, placeholder: 'Ej: Bosch S4 12V 70Ah' })
+      ),
+      React.createElement('div', null,
+        React.createElement('label', { style: styles.label }, '🔢 N° de Lote'),
+        React.createElement('input', { type: 'text', value: bateria.lote || '', onChange: function (e) { props.onActualizar(v.id, { bateria: Object.assign({}, bateria, { lote: e.target.value }) }); }, style: styles.input, placeholder: 'Ej: LOT-2024-001' })
+      ),
+      React.createElement('div', null,
+        React.createElement('label', { style: styles.label }, '📅 Fecha de Compra'),
+        React.createElement('input', { type: 'date', value: bateria.fechaCompra || '', onChange: function (e) { props.onActualizar(v.id, { bateria: Object.assign({}, bateria, { fechaCompra: e.target.value }) }); }, style: styles.input })
+      ),
+      React.createElement('div', null,
+        React.createElement('label', { style: styles.label }, '⚡ Estado'),
+        React.createElement('select', { value: bateria.estado || 'bueno', onChange: function (e) { props.onActualizar(v.id, { bateria: Object.assign({}, bateria, { estado: e.target.value }) }); }, style: Object.assign({}, styles.input, { background: bateria.estado === 'bueno' ? '#ecfdf5' : bateria.estado === 'regular' ? '#fef3c7' : '#fee2e2' }) },
+          React.createElement('option', { value: 'bueno' }, '✅ Bueno'),
+          React.createElement('option', { value: 'regular' }, '⚠️ Regular'),
+          React.createElement('option', { value: 'malo' }, '❌ Malo')
+        )
+      ),
+      React.createElement('div', null,
+        React.createElement('label', { style: styles.label }, '🔌 Voltaje (V)'),
+        React.createElement('input', { type: 'number', value: bateria.voltaje || '', onChange: function (e) { props.onActualizar(v.id, { bateria: Object.assign({}, bateria, { voltaje: e.target.value }) }); }, style: styles.input, placeholder: 'Ej: 12.6', step: '0.1' })
+      ),
+      React.createElement('div', null,
+        React.createElement('label', { style: styles.label }, '🔄 Último Reemplazo'),
+        React.createElement('input', { type: 'date', value: bateria.ultimoReemplazo || '', onChange: function (e) { props.onActualizar(v.id, { bateria: Object.assign({}, bateria, { ultimoReemplazo: e.target.value }) }); }, style: styles.input })
+      ),
+      React.createElement('div', { style: { gridColumn: 'span 3' } },
+        React.createElement('label', { style: styles.label }, '💬 Observaciones'),
+        React.createElement('textarea', { value: bateria.observaciones || '', onChange: function (e) { props.onActualizar(v.id, { bateria: Object.assign({}, bateria, { observaciones: e.target.value }) }); }, style: Object.assign({}, styles.input, { minHeight: '80px', resize: 'vertical' }), placeholder: 'Observaciones sobre el estado de la batería, mantenimiento realizado, próximo service...' })
+      )
+    ),
 
-                  tabActual === 'bateria' &&
-                    React.createElement(
-                      'div',
-                      null,
-                      React.createElement(
-                        'div',
-                        {
-                          style: Object.assign({}, styles.card, {
-                            background: '#fffbeb',
-                            border: '2px solid #fde68a',
-                          }),
-                        },
-                        React.createElement(
-                          'h4',
-                          {
-                            style: {
-                              fontWeight: 'bold',
-                              color: '#92400e',
-                              marginBottom: '16px',
-                            },
-                          },
-                          '🔋 Estado de Batería'
-                        ),
-                        React.createElement(
-                          'div',
-                          {
-                            style: {
-                              display: 'grid',
-                              gridTemplateColumns: 'repeat(3, 1fr)',
-                              gap: '12px',
-                            },
-                          },
-                          React.createElement(
-                            'div',
-                            null,
-                            React.createElement(
-                              'label',
-                              { style: styles.label },
-                              'Estado Batería'
-                            ),
-                            React.createElement(
-                              'select',
-                              {
-                                value: bateria.estado || 'bueno',
-                                onChange: function (e) {
-                                  props.onActualizar(v.id, {
-                                    bateria: Object.assign({}, bateria, {
-                                      estado: e.target.value,
-                                    }),
-                                  });
-                                },
-                                style: {
-                                  width: '100%',
-                                  padding: '10px',
-                                  border: '1px solid #d1d5db',
-                                  borderRadius: '8px',
-                                  fontSize: '14px',
-                                  background:
-                                    bateria.estado === 'bueno'
-                                      ? '#ecfdf5'
-                                      : bateria.estado === 'regular'
-                                      ? '#fef3c7'
-                                      : '#fee2e2',
-                                },
-                              },
-                              React.createElement(
-                                'option',
-                                { value: 'bueno' },
-                                '✅ Bueno'
-                              ),
-                              React.createElement(
-                                'option',
-                                { value: 'regular' },
-                                '⚠️ Regular'
-                              ),
-                              React.createElement(
-                                'option',
-                                { value: 'malo' },
-                                '❌ Malo'
-                              )
-                            )
-                          ),
-                          React.createElement(
-                            'div',
-                            null,
-                            React.createElement(
-                              'label',
-                              { style: styles.label },
-                              'Voltaje (V)'
-                            ),
-                            React.createElement('input', {
-                              type: 'number',
-                              value: bateria.voltaje || '',
-                              onChange: function (e) {
-                                props.onActualizar(v.id, {
-                                  bateria: Object.assign({}, bateria, {
-                                    voltaje: e.target.value,
-                                  }),
-                                });
-                              },
-                              style: styles.input,
-                              placeholder: 'Ej: 12.6',
-                              step: '0.1',
-                            })
-                          ),
-                          React.createElement(
-                            'div',
-                            null,
-                            React.createElement(
-                              'label',
-                              { style: styles.label },
-                              'Último Reemplazo'
-                            ),
-                            React.createElement('input', {
-                              type: 'date',
-                              value: bateria.ultimoReemplazo || '',
-                              onChange: function (e) {
-                                props.onActualizar(v.id, {
-                                  bateria: Object.assign({}, bateria, {
-                                    ultimoReemplazo: e.target.value,
-                                  }),
-                                });
-                              },
-                              style: styles.input,
-                            })
-                          ),
-                          React.createElement(
-                            'div',
-                            { style: { gridColumn: 'span 3' } },
-                            React.createElement(
-                              'label',
-                              { style: styles.label },
-                              'Observaciones'
-                            ),
-                            React.createElement('input', {
-                              type: 'text',
-                              value: bateria.observaciones || '',
-                              onChange: function (e) {
-                                props.onActualizar(v.id, {
-                                  bateria: Object.assign({}, bateria, {
-                                    observaciones: e.target.value,
-                                  }),
-                                });
-                              },
-                              style: styles.input,
-                              placeholder: 'Observaciones de la batería...',
-                            })
-                          )
-                        )
-                      )
-                    ),
-
+    React.createElement('div', { style: { marginTop: '16px', padding: '14px', background: 'white', borderRadius: '10px', border: '1px solid #e5e7eb' } },
+      React.createElement('h5', { style: { fontWeight: 'bold', color: '#374151', marginBottom: '10px' } }, '📊 Resumen'),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' } },
+        React.createElement('div', { style: { textAlign: 'center', padding: '10px', background: '#f9fafb', borderRadius: '8px' } },
+          React.createElement('p', { style: { fontSize: '11px', color: '#6b7280', marginBottom: '4px' } }, 'Estado'),
+          React.createElement('p', { style: { fontWeight: '700', fontSize: '14px', color: bateria.estado === 'bueno' ? '#059669' : bateria.estado === 'regular' ? '#d97706' : bateria.estado === 'malo' ? '#dc2626' : '#6b7280' } }, bateria.estado === 'bueno' ? '✅ Bueno' : bateria.estado === 'regular' ? '⚠️ Regular' : bateria.estado === 'malo' ? '❌ Malo' : 'N/D')
+        ),
+        React.createElement('div', { style: { textAlign: 'center', padding: '10px', background: '#f9fafb', borderRadius: '8px' } },
+          React.createElement('p', { style: { fontSize: '11px', color: '#6b7280', marginBottom: '4px' } }, 'Voltaje'),
+          React.createElement('p', { style: { fontWeight: '700', fontSize: '14px', color: '#374151' } }, bateria.voltaje ? bateria.voltaje + ' V' : 'N/D')
+        ),
+        React.createElement('div', { style: { textAlign: 'center', padding: '10px', background: '#f9fafb', borderRadius: '8px' } },
+          React.createElement('p', { style: { fontSize: '11px', color: '#6b7280', marginBottom: '4px' } }, 'N° Lote'),
+          React.createElement('p', { style: { fontWeight: '700', fontSize: '13px', color: '#374151' } }, bateria.lote || 'N/D')
+        ),
+        React.createElement('div', { style: { textAlign: 'center', padding: '10px', background: '#f9fafb', borderRadius: '8px' } },
+          React.createElement('p', { style: { fontSize: '11px', color: '#6b7280', marginBottom: '4px' } }, 'Fecha Compra'),
+          React.createElement('p', { style: { fontWeight: '700', fontSize: '13px', color: '#374151' } }, bateria.fechaCompra || 'N/D')
+        )
+      )
+    )
+  )
+),
+                
                   tabActual === 'fluidos' &&
                     React.createElement(
                       'div',
