@@ -113,14 +113,7 @@ function useColeccion(nombreColeccion) {
     [nombreColeccion]
   );
 
-  return {
-    data: data,
-    loading: loading,
-    error: error,
-    agregar: agregar,
-    actualizar: actualizar,
-    eliminar: eliminar,
-  };
+  return { data, loading, error, agregar, actualizar, eliminar };
 }
 
 function useInventario() {
@@ -202,9 +195,161 @@ function useInventario() {
   });
 }
 
-// ============================================
-// APP PRINCIPAL
-// ============================================
+var styles = {
+  container: {
+    minHeight: '100vh',
+    background: '#f3f4f6',
+    fontFamily: "'Segoe UI', sans-serif",
+  },
+  header: {
+    background: 'linear-gradient(135deg, #1e3a5f 0%, #dc2626 100%)',
+    color: 'white',
+    padding: '16px 24px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+  },
+  headerContent: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    maxWidth: '1400px',
+    margin: '0 auto',
+  },
+  logo: { fontSize: '40px' },
+  title: { fontSize: '22px', fontWeight: 'bold', margin: 0 },
+  subtitle: { fontSize: '13px', opacity: 0.85, margin: 0 },
+  main: {
+    display: 'flex',
+    maxWidth: '1400px',
+    margin: '0 auto',
+    padding: '24px',
+    gap: '24px',
+  },
+  nav: {
+    width: '200px',
+    flexShrink: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+  },
+  navBtn: {
+    width: '100%',
+    padding: '10px 14px',
+    background: 'white',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    textAlign: 'left',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '500',
+    color: '#374151',
+  },
+  navBtnActive: {
+    width: '100%',
+    padding: '10px 14px',
+    background: '#2563eb',
+    border: 'none',
+    borderRadius: '8px',
+    textAlign: 'left',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '700',
+    color: 'white',
+  },
+  content: { flex: 1, minWidth: 0 },
+  card: {
+    background: 'white',
+    borderRadius: '12px',
+    padding: '20px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    marginBottom: '16px',
+  },
+  cardTitle: {
+    fontSize: '16px',
+    fontWeight: 'bold',
+    marginBottom: '16px',
+    color: '#111827',
+  },
+  pageTitle: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: '0',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+    gap: '16px',
+    marginBottom: '24px',
+  },
+  kpi: {
+    borderRadius: '12px',
+    padding: '20px',
+    color: 'white',
+    textAlign: 'center',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+  },
+  input: {
+    width: '100%',
+    padding: '10px 12px',
+    border: '1px solid #d1d5db',
+    borderRadius: '8px',
+    fontSize: '14px',
+    boxSizing: 'border-box',
+    outline: 'none',
+  },
+  label: {
+    display: 'block',
+    fontSize: '13px',
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: '6px',
+  },
+  btnPrimary: {
+    padding: '10px 20px',
+    background: '#2563eb',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    fontSize: '14px',
+  },
+  btnLogout: {
+    padding: '8px 16px',
+    background: 'rgba(255,255,255,0.2)',
+    color: 'white',
+    border: '1px solid rgba(255,255,255,0.4)',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '600',
+  },
+  badgeOk: {
+    background: '#d1fae5',
+    color: '#065f46',
+    padding: '4px 10px',
+    borderRadius: '8px',
+    fontSize: '12px',
+    fontWeight: '700',
+  },
+  badgeWarn: {
+    background: '#fef3c7',
+    color: '#92400e',
+    padding: '4px 10px',
+    borderRadius: '8px',
+    fontSize: '12px',
+    fontWeight: '700',
+  },
+  badgeErr: {
+    background: '#fee2e2',
+    color: '#991b1b',
+    padding: '4px 10px',
+    borderRadius: '8px',
+    fontSize: '12px',
+    fontWeight: '700',
+  },
+};
+
 function App() {
   var usuarioState = useState(null);
   var usuario = usuarioState[0];
@@ -268,6 +413,36 @@ function App() {
       }),
     });
     await erasCol.actualizar(eraId, { vehiculoAsignado: '' });
+  };
+
+  var asignarEquipoAVehiculo = async function (vehiculoId, equipoId) {
+    var vehiculo = vehiculosCol.data.find(function (v) {
+      return v.id === vehiculoId;
+    });
+    if (!vehiculo) return;
+    var equiposActuales = vehiculo.equiposAsignados || [];
+    if (equiposActuales.includes(equipoId)) {
+      alert('Este equipo ya está asignado');
+      return;
+    }
+    await vehiculosCol.actualizar(vehiculoId, {
+      equiposAsignados: equiposActuales.concat([equipoId]),
+    });
+    await equiposCol.actualizar(equipoId, { vehiculoAsignado: vehiculoId });
+    alert('✅ Equipo asignado correctamente');
+  };
+
+  var desasignarEquipoDeVehiculo = async function (vehiculoId, equipoId) {
+    var vehiculo = vehiculosCol.data.find(function (v) {
+      return v.id === vehiculoId;
+    });
+    if (!vehiculo) return;
+    await vehiculosCol.actualizar(vehiculoId, {
+      equiposAsignados: (vehiculo.equiposAsignados || []).filter(function (id) {
+        return id !== equipoId;
+      }),
+    });
+    await equiposCol.actualizar(equipoId, { vehiculoAsignado: '' });
   };
 
   var asignarItemAVehiculo = async function (vehiculoId, itemId, cantidad) {
@@ -348,7 +523,6 @@ function App() {
     });
   };
 
-  // Gestión de compartimientos
   var agregarCompartimiento = async function (vehiculoId, nombre) {
     var vehiculo = vehiculosCol.data.find(function (v) {
       return v.id === vehiculoId;
@@ -478,6 +652,7 @@ function App() {
     });
     await vehiculosCol.actualizar(vehiculoId, { compartimientos: comps });
   };
+
   var actualizarCantidadItemSubcomp = async function (
     vehiculoId,
     compId,
@@ -633,190 +808,166 @@ function App() {
           );
         })
       ),
-      vista === 'panel' &&
-        React.createElement(Panel, {
-          vehiculos: vehiculosCol.data,
-          eras: erasCol.data,
-          checklists: checklistsCol.data,
-          personal: personalCol.data,
-          bitacora: bitacoraCol.data,
-          inventario: inventarioCol.data,
-          equipos: equiposCol.data,
-          itemsBajoStock: inventarioCol.itemsBajoStock,
-          setVista: setVista,
-        }),
-      vista === 'vehiculos' &&
-        React.createElement(Vehiculos, {
-          vehiculos: vehiculosCol.data,
-          eras: erasCol.data,
-          inventario: inventarioCol.data,
-          onAgregar: async function (datos) {
-            var id = await vehiculosCol.agregar(
-              Object.assign({}, datos, {
-                erasAsignadas: [],
-                itemsAsignados: [],
-                compartimientos: [],
-              })
-            );
-            if (id) alert('✅ Móvil agregado correctamente');
-          },
-          onActualizar: vehiculosCol.actualizar,
-          onEliminar: vehiculosCol.eliminar,
-          onAsignarItem: asignarItemAVehiculo,
-          onDesasignarItem: desasignarItemDeVehiculo,
-          onActualizarCantidadItem: actualizarCantidadItem,
-          onAsignarERA: asignarERAaVehiculo,
-          onDesasignarERA: desasignarERAdeVehiculo,
-          onAgregarCompartimiento: agregarCompartimiento,
-          onEliminarCompartimiento: eliminarCompartimiento,
-          onAgregarSubcompartimiento: agregarSubcompartimiento,
-          onEliminarSubcompartimiento: eliminarSubcompartimiento,
-          onAgregarItemSubcomp: agregarItemASubcompartimiento,
-          onEliminarItemSubcomp: eliminarItemDeSubcompartimiento,
-          onActualizarCantidadItemSubcomp: actualizarCantidadItemSubcomp,
-          usuario: usuario,
-        }),
-      vista === 'inventario' &&
-        React.createElement(Inventario, {
-          inventario: inventarioCol.data,
-          movimientos: movimientosCol.data,
-          onAgregar: inventarioCol.agregar,
-          onActualizar: inventarioCol.actualizar,
-          onEliminar: inventarioCol.eliminar,
-          onDescontar: inventarioCol.descontarStock,
-          onAgregarStock: inventarioCol.agregarStock,
-          itemsBajoStock: inventarioCol.itemsBajoStock,
-          usuario: usuario,
-        }),
-      vista === 'panol' &&
-        React.createElement(Panol, {
-          inventario: inventarioCol.data,
-          movimientos: movimientosCol.data,
-          onDescontar: inventarioCol.descontarStock,
-          onAgregarStock: inventarioCol.agregarStock,
-          usuario: usuario,
-        }),
-      vista === 'equipos' &&
-        React.createElement(Equipos, {
-          equipos: equiposCol.data,
-          vehiculos: vehiculosCol.data,
-          inventario: inventarioCol.data,
-          onAgregar: equiposCol.agregar,
-          onActualizar: equiposCol.actualizar,
-          onEliminar: equiposCol.eliminar,
-          usuario: usuario,
-        }),
-      vista === 'eras' &&
-        React.createElement(ERAs, {
-          eras: erasCol.data,
-          vehiculos: vehiculosCol.data,
-          onAgregar: erasCol.agregar,
-          onActualizar: erasCol.actualizar,
-          onEliminar: erasCol.eliminar,
-          onAsignarERA: asignarERAaVehiculo,
-          onDesasignarERA: desasignarERAdeVehiculo,
-        }),
-      vista === 'checklists' &&
-        React.createElement(Checklists, {
-          vehiculos: vehiculosCol.data,
-          eras: erasCol.data,
-          usuario: usuario,
-          checklists: checklistsCol.data,
-          inventario: inventarioCol.data,
-          onGuardar: checklistsCol.agregar,
-          onEliminar: checklistsCol.eliminar,
-          onDescontarStock: inventarioCol.descontarStock,
-        }),
-      vista === 'personal' &&
-        React.createElement(Personal, {
-          personal: personalCol.data,
-          onAgregar: personalCol.agregar,
-          onActualizar: personalCol.actualizar,
-          onEliminar: personalCol.eliminar,
-        }),
-      vista === 'bitacora' &&
-        React.createElement(Bitacora, {
-          bitacora: bitacoraCol.data,
-          vehiculos: vehiculosCol.data,
-          eras: erasCol.data,
-          personal: personalCol.data,
-          onAgregar: bitacoraCol.agregar,
-          onEliminar: bitacoraCol.eliminar,
-        })
+      React.createElement(
+        'div',
+        { style: styles.content },
+        vista === 'panel' &&
+          React.createElement(Panel, {
+            vehiculos: vehiculosCol.data,
+            eras: erasCol.data,
+            checklists: checklistsCol.data,
+            personal: personalCol.data,
+            inventario: inventarioCol.data,
+            equipos: equiposCol.data,
+            itemsBajoStock: inventarioCol.itemsBajoStock,
+            setVista: setVista,
+          }),
+        vista === 'vehiculos' &&
+          React.createElement(Vehiculos, {
+            vehiculos: vehiculosCol.data,
+            eras: erasCol.data,
+            inventario: inventarioCol.data,
+            equipos: equiposCol.data,
+            onAgregar: async function (datos) {
+              var id = await vehiculosCol.agregar(
+                Object.assign({}, datos, {
+                  erasAsignadas: [],
+                  equiposAsignados: [],
+                  itemsAsignados: [],
+                  compartimientos: [],
+                })
+              );
+              if (id) alert('✅ Móvil agregado correctamente');
+            },
+            onActualizar: vehiculosCol.actualizar,
+            onEliminar: vehiculosCol.eliminar,
+            onAsignarItem: asignarItemAVehiculo,
+            onDesasignarItem: desasignarItemDeVehiculo,
+            onActualizarCantidadItem: actualizarCantidadItem,
+            onAsignarERA: asignarERAaVehiculo,
+            onDesasignarERA: desasignarERAdeVehiculo,
+            onAsignarEquipo: asignarEquipoAVehiculo,
+            onDesasignarEquipo: desasignarEquipoDeVehiculo,
+            onAgregarCompartimiento: agregarCompartimiento,
+            onEliminarCompartimiento: eliminarCompartimiento,
+            onAgregarSubcompartimiento: agregarSubcompartimiento,
+            onEliminarSubcompartimiento: eliminarSubcompartimiento,
+            onAgregarItemSubcomp: agregarItemASubcompartimiento,
+            onEliminarItemSubcomp: eliminarItemDeSubcompartimiento,
+            onActualizarCantidadItemSubcomp: actualizarCantidadItemSubcomp,
+            usuario: usuario,
+          }),
+        vista === 'inventario' &&
+          React.createElement(Inventario, {
+            inventario: inventarioCol.data,
+            movimientos: movimientosCol.data,
+            onAgregar: inventarioCol.agregar,
+            onActualizar: inventarioCol.actualizar,
+            onEliminar: inventarioCol.eliminar,
+            onDescontar: inventarioCol.descontarStock,
+            onAgregarStock: inventarioCol.agregarStock,
+            itemsBajoStock: inventarioCol.itemsBajoStock,
+            usuario: usuario,
+          }),
+        vista === 'panol' &&
+          React.createElement(Panol, {
+            inventario: inventarioCol.data,
+            movimientos: movimientosCol.data,
+            onDescontar: inventarioCol.descontarStock,
+            onAgregarStock: inventarioCol.agregarStock,
+            usuario: usuario,
+          }),
+        vista === 'equipos' &&
+          React.createElement(Equipos, {
+            equipos: equiposCol.data,
+            vehiculos: vehiculosCol.data,
+            inventario: inventarioCol.data,
+            onAgregar: equiposCol.agregar,
+            onActualizar: equiposCol.actualizar,
+            onEliminar: equiposCol.eliminar,
+            onAsignarEquipo: asignarEquipoAVehiculo,
+            onDesasignarEquipo: desasignarEquipoDeVehiculo,
+            usuario: usuario,
+          }),
+        vista === 'eras' &&
+          React.createElement(ERAs, {
+            eras: erasCol.data,
+            vehiculos: vehiculosCol.data,
+            onAgregar: erasCol.agregar,
+            onActualizar: erasCol.actualizar,
+            onEliminar: erasCol.eliminar,
+            onAsignarERA: asignarERAaVehiculo,
+            onDesasignarERA: desasignarERAdeVehiculo,
+          }),
+        vista === 'checklists' &&
+          React.createElement(Checklists, {
+            vehiculos: vehiculosCol.data,
+            eras: erasCol.data,
+            usuario: usuario,
+            checklists: checklistsCol.data,
+            inventario: inventarioCol.data,
+            onGuardar: checklistsCol.agregar,
+            onActualizar: checklistsCol.actualizar,
+            onEliminar: checklistsCol.eliminar,
+            onDescontarStock: inventarioCol.descontarStock,
+          }),
+        vista === 'personal' &&
+          React.createElement(Personal, {
+            personal: personalCol.data,
+            onAgregar: personalCol.agregar,
+            onActualizar: personalCol.actualizar,
+            onEliminar: personalCol.eliminar,
+          }),
+        vista === 'bitacora' &&
+          React.createElement(Bitacora, {
+            bitacora: bitacoraCol.data,
+            vehiculos: vehiculosCol.data,
+            eras: erasCol.data,
+            equipos: equiposCol.data,
+            inventario: inventarioCol.data,
+            personal: personalCol.data,
+            onAgregar: bitacoraCol.agregar,
+            onActualizar: bitacoraCol.actualizar,
+            onEliminar: bitacoraCol.eliminar,
+          })
+      )
     )
   );
 }
 
 // ============================================
-// VEHICULOS CON COMPARTIMIENTOS
+// EQUIPOS - CON PROVEEDOR, CÓDIGO INTERNO Y ASIGNACIÓN A MÓVIL
 // ============================================
-function Vehiculos(props) {
-  var estadoInicial = {
+function Equipos(props) {
+  var formInicial = {
     nombre: '',
-    tipo: 'Camion Bomba',
+    tipo: '',
+    codigoInterno: '',
+    serial: '',
     estado: 'operativo',
-    chasis: '',
-    motor: '',
-    patente: '',
-    año: '',
-    pruebaHidraulica: '',
     vencimiento: '',
-    vtv: { apta: true, vencimiento: '', observaciones: '' },
-    fluidos: {
-      aceite: { ok: true, cantidad: '', observaciones: '' },
-      refrigerante: { ok: true, cantidad: '', observaciones: '' },
-      combustible: { ok: true, cantidad: '', observaciones: '' },
-      liquidoFrenos: { ok: true, cantidad: '', observaciones: '' },
-    },
-    controles: {
-      luces: { ok: true, observaciones: '' },
-      lucesEmergencia: { ok: true, observaciones: '' },
-      sirena: { ok: true, observaciones: '' },
-      bocina: { ok: true, observaciones: '' },
-    },
+    ubicacion: '',
+    observaciones: '',
+    proveedor: { nombre: '', contacto: '', telefono: '', email: '', web: '' },
   };
-
-  var formState = useState(estadoInicial);
+  var formState = useState(formInicial);
   var form = formState[0];
   var setForm = formState[1];
   var mostrarFormState = useState(false);
   var mostrarForm = mostrarFormState[0];
   var setMostrarForm = mostrarFormState[1];
+  var editandoState = useState(null);
+  var editando = editandoState[0];
+  var setEditando = editandoState[1];
+  var formEditState = useState({});
+  var formEdit = formEditState[0];
+  var setFormEdit = formEditState[1];
   var expandidoState = useState(null);
   var expandido = expandidoState[0];
   var setExpandido = expandidoState[1];
-  var tabsState = useState({});
-  var tabs = tabsState[0];
-  var setTabs = tabsState[1];
-  var guardandoState = useState(false);
-  var guardando = guardandoState[0];
-  var setGuardando = guardandoState[1];
-
-  // Estados para compartimientos
-  var nuevoCompNombreState = useState('');
-  var nuevoCompNombre = nuevoCompNombreState[0];
-  var setNuevoCompNombre = nuevoCompNombreState[1];
-  var nuevoSubNombresState = useState({});
-  var nuevoSubNombres = nuevoSubNombresState[0];
-  var setNuevoSubNombres = nuevoSubNombresState[1];
-  var itemSelSubcompState = useState({});
-  var itemSelSubcomp = itemSelSubcompState[0];
-  var setItemSelSubcomp = itemSelSubcompState[1];
-  var cantSelSubcompState = useState({});
-  var cantSelSubcomp = cantSelSubcompState[0];
-  var setCantSelSubcomp = cantSelSubcompState[1];
-  var expandCompState = useState({});
-  var expandComp = expandCompState[0];
-  var setExpandComp = expandCompState[1];
-  var itemAsignarState = useState('');
-  var itemAsignar = itemAsignarState[0];
-  var setItemAsignar = itemAsignarState[1];
-  var cantAsignarState = useState(1);
-  var cantAsignar = cantAsignarState[0];
-  var setCantAsignar = cantAsignarState[1];
-  var eraAsignarState = useState('');
-  var eraAsignar = eraAsignarState[0];
-  var setEraAsignar = eraAsignarState[1];
+  var asignarVehState = useState('');
+  var asignarVeh = asignarVehState[0];
+  var setAsignarVeh = asignarVehState[1];
 
   var verificarVencimiento = function (fecha) {
     if (!fecha) return '';
@@ -828,37 +979,32 @@ function Vehiculos(props) {
     return 'ok';
   };
 
-  var getBorderColor = function (est) {
-    return est === 'vencido'
-      ? '#ef4444'
-      : est === 'proximo'
-      ? '#f59e0b'
-      : '#d1d5db';
-  };
-  var getBgColor = function (est) {
-    return est === 'vencido'
-      ? '#fef2f2'
-      : est === 'proximo'
-      ? '#fffbeb'
-      : 'white';
-  };
-  var getTab = function (vehiculoId) {
-    return tabs[vehiculoId] || 'info';
-  };
-  var setTab = function (vehiculoId, tab) {
-    var t = Object.assign({}, tabs);
-    t[vehiculoId] = tab;
-    setTabs(t);
+  var iniciarEdicion = function (eq) {
+    setEditando(eq.id);
+    setFormEdit({
+      nombre: eq.nombre || '',
+      tipo: eq.tipo || '',
+      codigoInterno: eq.codigoInterno || '',
+      serial: eq.serial || '',
+      estado: eq.estado || 'operativo',
+      vencimiento: eq.vencimiento || '',
+      ubicacion: eq.ubicacion || '',
+      observaciones: eq.observaciones || '',
+      proveedor: eq.proveedor || {
+        nombre: '',
+        contacto: '',
+        telefono: '',
+        email: '',
+        web: '',
+      },
+    });
   };
 
-  var tabsConfig = [
-    { key: 'info', label: '📋 Info' },
-    { key: 'fluidos', label: '🛢️ Fluidos' },
-    { key: 'compartimientos', label: '🗄️ Compartimientos' },
-    { key: 'items', label: '📦 Items' },
-    { key: 'eras', label: '🎽 ERAs' },
-    { key: 'vtv', label: '🚗 VTV' },
-  ];
+  var guardarEdicion = async function (eqId) {
+    await props.onActualizar(eqId, formEdit);
+    setEditando(null);
+    alert('✅ Equipo actualizado correctamente');
+  };
 
   var handleSubmit = async function (e) {
     e.preventDefault();
@@ -866,17 +1012,5269 @@ function Vehiculos(props) {
       alert('El nombre es obligatorio');
       return;
     }
-    setGuardando(true);
-    try {
-      await props.onAgregar(form);
-      setForm(estadoInicial);
+    var id = await props.onAgregar(form);
+    if (id) {
+      setForm(formInicial);
       setMostrarForm(false);
-    } catch (err) {
-      alert('❌ Error: ' + err.message);
-    } finally {
-      setGuardando(false);
+      alert('✅ Equipo agregado');
     }
   };
+
+  return React.createElement(
+    'div',
+    null,
+    React.createElement(
+      'div',
+      {
+        style: {
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '24px',
+        },
+      },
+      React.createElement('h2', { style: styles.pageTitle }, '🧯 Equipos'),
+      React.createElement(
+        'button',
+        {
+          style: styles.btnPrimary,
+          onClick: function () {
+            setMostrarForm(!mostrarForm);
+          },
+        },
+        mostrarForm ? '✖ Cancelar' : '➕ Nuevo Equipo'
+      )
+    ),
+
+    mostrarForm &&
+      React.createElement(
+        'div',
+        {
+          style: Object.assign({}, styles.card, {
+            background: '#fff7ed',
+            border: '2px solid #fed7aa',
+            marginBottom: '24px',
+          }),
+        },
+        React.createElement(
+          'h3',
+          { style: Object.assign({}, styles.cardTitle, { color: '#c2410c' }) },
+          '➕ Nuevo Equipo'
+        ),
+        React.createElement(
+          'form',
+          { onSubmit: handleSubmit },
+          React.createElement(
+            'div',
+            {
+              style: {
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '16px',
+                marginBottom: '16px',
+              },
+            },
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Nombre *'),
+              React.createElement('input', {
+                type: 'text',
+                value: form.nombre,
+                onChange: function (e) {
+                  setForm(Object.assign({}, form, { nombre: e.target.value }));
+                },
+                style: styles.input,
+                required: true,
+                placeholder: 'Ej: Extintor CO2',
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Tipo'),
+              React.createElement('input', {
+                type: 'text',
+                value: form.tipo,
+                onChange: function (e) {
+                  setForm(Object.assign({}, form, { tipo: e.target.value }));
+                },
+                style: styles.input,
+                placeholder: 'Ej: Extintor, Manguera...',
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement(
+                'label',
+                { style: styles.label },
+                '🏷️ Código Interno'
+              ),
+              React.createElement('input', {
+                type: 'text',
+                value: form.codigoInterno,
+                onChange: function (e) {
+                  setForm(
+                    Object.assign({}, form, { codigoInterno: e.target.value })
+                  );
+                },
+                style: styles.input,
+                placeholder: 'Ej: EQ-001',
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement(
+                'label',
+                { style: styles.label },
+                'Serial/N° Serie'
+              ),
+              React.createElement('input', {
+                type: 'text',
+                value: form.serial,
+                onChange: function (e) {
+                  setForm(Object.assign({}, form, { serial: e.target.value }));
+                },
+                style: styles.input,
+                placeholder: 'Número de serie',
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Estado'),
+              React.createElement(
+                'select',
+                {
+                  value: form.estado,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, { estado: e.target.value })
+                    );
+                  },
+                  style: styles.input,
+                },
+                React.createElement(
+                  'option',
+                  { value: 'operativo' },
+                  'Operativo'
+                ),
+                React.createElement(
+                  'option',
+                  { value: 'mantenimiento' },
+                  'En Mantenimiento'
+                ),
+                React.createElement('option', { value: 'baja' }, 'Baja')
+              )
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement(
+                'label',
+                { style: styles.label },
+                'Vencimiento'
+              ),
+              React.createElement('input', {
+                type: 'date',
+                value: form.vencimiento,
+                onChange: function (e) {
+                  setForm(
+                    Object.assign({}, form, { vencimiento: e.target.value })
+                  );
+                },
+                style: styles.input,
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement(
+                'label',
+                { style: styles.label },
+                'Ubicación'
+              ),
+              React.createElement('input', {
+                type: 'text',
+                value: form.ubicacion,
+                onChange: function (e) {
+                  setForm(
+                    Object.assign({}, form, { ubicacion: e.target.value })
+                  );
+                },
+                style: styles.input,
+                placeholder: 'Ej: Depósito A',
+              })
+            ),
+            React.createElement(
+              'div',
+              { style: { gridColumn: 'span 2' } },
+              React.createElement(
+                'label',
+                { style: styles.label },
+                'Observaciones'
+              ),
+              React.createElement('input', {
+                type: 'text',
+                value: form.observaciones,
+                onChange: function (e) {
+                  setForm(
+                    Object.assign({}, form, { observaciones: e.target.value })
+                  );
+                },
+                style: styles.input,
+                placeholder: 'Observaciones...',
+              })
+            )
+          ),
+          React.createElement(
+            'div',
+            {
+              style: {
+                background: '#fef3c7',
+                border: '1px solid #fde68a',
+                borderRadius: '10px',
+                padding: '16px',
+                marginBottom: '16px',
+              },
+            },
+            React.createElement(
+              'h4',
+              {
+                style: {
+                  fontWeight: 'bold',
+                  color: '#92400e',
+                  marginBottom: '12px',
+                },
+              },
+              '🏢 Datos del Proveedor'
+            ),
+            React.createElement(
+              'div',
+              {
+                style: {
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '12px',
+                },
+              },
+              React.createElement(
+                'div',
+                null,
+                React.createElement(
+                  'label',
+                  { style: styles.label },
+                  'Nombre Proveedor'
+                ),
+                React.createElement('input', {
+                  type: 'text',
+                  value: form.proveedor.nombre,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, {
+                        proveedor: Object.assign({}, form.proveedor, {
+                          nombre: e.target.value,
+                        }),
+                      })
+                    );
+                  },
+                  style: styles.input,
+                  placeholder: 'Empresa proveedora',
+                })
+              ),
+              React.createElement(
+                'div',
+                null,
+                React.createElement(
+                  'label',
+                  { style: styles.label },
+                  'Contacto'
+                ),
+                React.createElement('input', {
+                  type: 'text',
+                  value: form.proveedor.contacto,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, {
+                        proveedor: Object.assign({}, form.proveedor, {
+                          contacto: e.target.value,
+                        }),
+                      })
+                    );
+                  },
+                  style: styles.input,
+                  placeholder: 'Nombre del contacto',
+                })
+              ),
+              React.createElement(
+                'div',
+                null,
+                React.createElement(
+                  'label',
+                  { style: styles.label },
+                  'Teléfono'
+                ),
+                React.createElement('input', {
+                  type: 'text',
+                  value: form.proveedor.telefono,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, {
+                        proveedor: Object.assign({}, form.proveedor, {
+                          telefono: e.target.value,
+                        }),
+                      })
+                    );
+                  },
+                  style: styles.input,
+                  placeholder: 'Tel. proveedor',
+                })
+              ),
+              React.createElement(
+                'div',
+                null,
+                React.createElement('label', { style: styles.label }, 'Email'),
+                React.createElement('input', {
+                  type: 'email',
+                  value: form.proveedor.email,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, {
+                        proveedor: Object.assign({}, form.proveedor, {
+                          email: e.target.value,
+                        }),
+                      })
+                    );
+                  },
+                  style: styles.input,
+                  placeholder: 'email@proveedor.com',
+                })
+              ),
+              React.createElement(
+                'div',
+                { style: { gridColumn: 'span 2' } },
+                React.createElement('label', { style: styles.label }, 'Web'),
+                React.createElement('input', {
+                  type: 'text',
+                  value: form.proveedor.web,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, {
+                        proveedor: Object.assign({}, form.proveedor, {
+                          web: e.target.value,
+                        }),
+                      })
+                    );
+                  },
+                  style: styles.input,
+                  placeholder: 'www.proveedor.com',
+                })
+              )
+            )
+          ),
+          React.createElement(
+            'button',
+            {
+              type: 'submit',
+              style: {
+                width: '100%',
+                padding: '12px',
+                background: '#f97316',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '700',
+                cursor: 'pointer',
+              },
+            },
+            '💾 Agregar Equipo'
+          )
+        )
+      ),
+
+    props.equipos.length === 0
+      ? React.createElement(
+          'div',
+          {
+            style: Object.assign({}, styles.card, {
+              textAlign: 'center',
+              padding: '60px',
+            }),
+          },
+          React.createElement(
+            'div',
+            { style: { fontSize: '64px', marginBottom: '16px' } },
+            '🧯'
+          ),
+          React.createElement(
+            'h3',
+            { style: { color: '#6b7280' } },
+            'No hay equipos registrados'
+          )
+        )
+      : React.createElement(
+          'div',
+          { style: { display: 'flex', flexDirection: 'column', gap: '12px' } },
+          props.equipos.map(function (eq) {
+            var venc = verificarVencimiento(eq.vencimiento);
+            var tieneAlerta = venc === 'vencido';
+            var isEditando = editando === eq.id;
+            var isExpandido = expandido === eq.id;
+            var vehiculoAsig = eq.vehiculoAsignado
+              ? props.vehiculos.find(function (v) {
+                  return v.id === eq.vehiculoAsignado;
+                })
+              : null;
+            var prov = eq.proveedor || {};
+
+            return React.createElement(
+              'div',
+              {
+                key: eq.id,
+                style: Object.assign({}, styles.card, {
+                  border: '2px solid ' + (tieneAlerta ? '#ef4444' : '#e5e7eb'),
+                  background: tieneAlerta ? '#fef2f2' : 'white',
+                  marginBottom: '0',
+                }),
+              },
+              React.createElement(
+                'div',
+                {
+                  style: {
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                  },
+                  onClick: function () {
+                    setExpandido(isExpandido ? null : eq.id);
+                  },
+                },
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '14px',
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    {
+                      style: {
+                        width: '48px',
+                        height: '48px',
+                        background: 'linear-gradient(135deg, #f97316, #ea580c)',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '24px',
+                      },
+                    },
+                    '🧯'
+                  ),
+                  React.createElement(
+                    'div',
+                    null,
+                    React.createElement(
+                      'h3',
+                      {
+                        style: {
+                          fontWeight: 'bold',
+                          fontSize: '16px',
+                          marginBottom: '2px',
+                        },
+                      },
+                      eq.nombre
+                    ),
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          display: 'flex',
+                          gap: '8px',
+                          flexWrap: 'wrap',
+                        },
+                      },
+                      eq.codigoInterno &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '11px',
+                              background: '#fef3c7',
+                              color: '#92400e',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontWeight: '600',
+                            },
+                          },
+                          '🏷️ ' + eq.codigoInterno
+                        ),
+                      eq.tipo &&
+                        React.createElement(
+                          'span',
+                          { style: { fontSize: '11px', color: '#6b7280' } },
+                          eq.tipo
+                        ),
+                      eq.serial &&
+                        React.createElement(
+                          'span',
+                          { style: { fontSize: '11px', color: '#6b7280' } },
+                          'S/N: ' + eq.serial
+                        ),
+                      vehiculoAsig &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '11px',
+                              background: '#dbeafe',
+                              color: '#1e40af',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontWeight: '600',
+                            },
+                          },
+                          '🚛 ' + vehiculoAsig.nombre
+                        ),
+                      prov.nombre &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '11px',
+                              background: '#f0fdf4',
+                              color: '#15803d',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                            },
+                          },
+                          '🏢 ' + prov.nombre
+                        )
+                    )
+                  )
+                ),
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      display: 'flex',
+                      gap: '8px',
+                      alignItems: 'center',
+                    },
+                  },
+                  React.createElement(
+                    'span',
+                    {
+                      style:
+                        eq.estado === 'operativo'
+                          ? styles.badgeOk
+                          : styles.badgeWarn,
+                    },
+                    eq.estado === 'operativo'
+                      ? '✓ OPERATIVO'
+                      : eq.estado === 'mantenimiento'
+                      ? '🔧 MANT.'
+                      : '⛔ BAJA'
+                  ),
+                  React.createElement(
+                    'span',
+                    { style: { fontSize: '18px', color: '#6b7280' } },
+                    isExpandido ? '▲' : '▼'
+                  )
+                )
+              ),
+
+              isExpandido &&
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      marginTop: '20px',
+                      borderTop: '1px solid #e5e7eb',
+                      paddingTop: '20px',
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    {
+                      style: {
+                        display: 'flex',
+                        gap: '8px',
+                        marginBottom: '16px',
+                        flexWrap: 'wrap',
+                      },
+                    },
+                    React.createElement(
+                      'button',
+                      {
+                        style: {
+                          padding: '8px 14px',
+                          background: '#3b82f6',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                        },
+                        onClick: function (e) {
+                          e.stopPropagation();
+                          iniciarEdicion(eq);
+                        },
+                      },
+                      '                  ✏️ Editar'
+                    ),
+                    React.createElement(
+                      'button',
+                      {
+                        style: {
+                          padding: '8px 14px',
+                          background: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                        },
+                        onClick: function (e) {
+                          e.stopPropagation();
+                          if (window.confirm('¿Eliminar ' + eq.nombre + '?')) {
+                            props.onEliminar(eq.id);
+                          }
+                        },
+                      },
+                      '🗑️ Eliminar'
+                    )
+                  ),
+
+                  isEditando &&
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          background: '#f0f9ff',
+                          padding: '20px',
+                          borderRadius: '12px',
+                          border: '2px solid #0ea5e9',
+                          marginBottom: '16px',
+                        },
+                      },
+                      React.createElement(
+                        'h4',
+                        {
+                          style: {
+                            fontWeight: 'bold',
+                            color: '#0369a1',
+                            marginBottom: '16px',
+                          },
+                        },
+                        '✏️ Editando: ' + eq.nombre
+                      ),
+                      React.createElement(
+                        'div',
+                        {
+                          style: {
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gap: '12px',
+                            marginBottom: '12px',
+                          },
+                        },
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Nombre'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.nombre || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  nombre: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Tipo'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.tipo || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  tipo: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            '🏷️ Código Interno'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.codigoInterno || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  codigoInterno: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Serial'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.serial || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  serial: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Estado'
+                          ),
+                          React.createElement(
+                            'select',
+                            {
+                              value: formEdit.estado || 'operativo',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    estado: e.target.value,
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            },
+                            React.createElement(
+                              'option',
+                              { value: 'operativo' },
+                              'Operativo'
+                            ),
+                            React.createElement(
+                              'option',
+                              { value: 'mantenimiento' },
+                              'En Mantenimiento'
+                            ),
+                            React.createElement(
+                              'option',
+                              { value: 'baja' },
+                              'Baja'
+                            )
+                          )
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Vencimiento'
+                          ),
+                          React.createElement('input', {
+                            type: 'date',
+                            value: formEdit.vencimiento || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  vencimiento: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Ubicación'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.ubicacion || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  ubicacion: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          { style: { gridColumn: 'span 2' } },
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Observaciones'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.observaciones || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  observaciones: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        )
+                      ),
+                      React.createElement(
+                        'div',
+                        {
+                          style: {
+                            background: '#fef3c7',
+                            border: '1px solid #fde68a',
+                            borderRadius: '10px',
+                            padding: '14px',
+                            marginBottom: '12px',
+                          },
+                        },
+                        React.createElement(
+                          'h5',
+                          {
+                            style: {
+                              fontWeight: 'bold',
+                              color: '#92400e',
+                              marginBottom: '10px',
+                            },
+                          },
+                          '🏢 Datos del Proveedor'
+                        ),
+                        React.createElement(
+                          'div',
+                          {
+                            style: {
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(3, 1fr)',
+                              gap: '10px',
+                            },
+                          },
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Nombre'
+                            ),
+                            React.createElement('input', {
+                              type: 'text',
+                              value: (formEdit.proveedor || {}).nombre || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    proveedor: Object.assign(
+                                      {},
+                                      formEdit.proveedor || {},
+                                      { nombre: e.target.value }
+                                    ),
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Contacto'
+                            ),
+                            React.createElement('input', {
+                              type: 'text',
+                              value: (formEdit.proveedor || {}).contacto || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    proveedor: Object.assign(
+                                      {},
+                                      formEdit.proveedor || {},
+                                      { contacto: e.target.value }
+                                    ),
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Teléfono'
+                            ),
+                            React.createElement('input', {
+                              type: 'text',
+                              value: (formEdit.proveedor || {}).telefono || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    proveedor: Object.assign(
+                                      {},
+                                      formEdit.proveedor || {},
+                                      { telefono: e.target.value }
+                                    ),
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Email'
+                            ),
+                            React.createElement('input', {
+                              type: 'email',
+                              value: (formEdit.proveedor || {}).email || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    proveedor: Object.assign(
+                                      {},
+                                      formEdit.proveedor || {},
+                                      { email: e.target.value }
+                                    ),
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            { style: { gridColumn: 'span 2' } },
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Web'
+                            ),
+                            React.createElement('input', {
+                              type: 'text',
+                              value: (formEdit.proveedor || {}).web || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    proveedor: Object.assign(
+                                      {},
+                                      formEdit.proveedor || {},
+                                      { web: e.target.value }
+                                    ),
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          )
+                        )
+                      ),
+                      React.createElement(
+                        'div',
+                        { style: { display: 'flex', gap: '10px' } },
+                        React.createElement(
+                          'button',
+                          {
+                            style: {
+                              flex: 1,
+                              padding: '10px',
+                              background: '#10b981',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                            },
+                            onClick: function () {
+                              guardarEdicion(eq.id);
+                            },
+                          },
+                          '💾 Guardar'
+                        ),
+                        React.createElement(
+                          'button',
+                          {
+                            style: {
+                              flex: 1,
+                              padding: '10px',
+                              background: '#6b7280',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                            },
+                            onClick: function () {
+                              setEditando(null);
+                            },
+                          },
+                          '✖ Cancelar'
+                        )
+                      )
+                    ),
+
+                  React.createElement(
+                    'div',
+                    {
+                      style: {
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '16px',
+                        marginBottom: '16px',
+                      },
+                    },
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          background: '#f9fafb',
+                          padding: '16px',
+                          borderRadius: '10px',
+                          border: '1px solid #e5e7eb',
+                        },
+                      },
+                      React.createElement(
+                        'h5',
+                        {
+                          style: {
+                            fontWeight: 'bold',
+                            color: '#374151',
+                            marginBottom: '10px',
+                          },
+                        },
+                        '📋 Información General'
+                      ),
+                      React.createElement(
+                        'div',
+                        {
+                          style: {
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '6px',
+                          },
+                        },
+                        React.createElement(
+                          'p',
+                          { style: { fontSize: '13px' } },
+                          '🏷️ Código: ' + (eq.codigoInterno || 'N/D')
+                        ),
+                        React.createElement(
+                          'p',
+                          { style: { fontSize: '13px' } },
+                          '🔖 Serial: ' + (eq.serial || 'N/D')
+                        ),
+                        React.createElement(
+                          'p',
+                          { style: { fontSize: '13px' } },
+                          '📍 Ubicación: ' + (eq.ubicacion || 'N/D')
+                        ),
+                        eq.vencimiento &&
+                          React.createElement(
+                            'p',
+                            {
+                              style: {
+                                fontSize: '13px',
+                                color:
+                                  venc === 'vencido'
+                                    ? '#dc2626'
+                                    : venc === 'proximo'
+                                    ? '#d97706'
+                                    : '#374151',
+                                fontWeight: venc !== 'ok' ? '600' : '400',
+                              },
+                            },
+                            '📅 Vence: ' +
+                              eq.vencimiento +
+                              (venc === 'vencido'
+                                ? ' ⚠️ VENCIDO'
+                                : venc === 'proximo'
+                                ? ' ⚠️ PRÓXIMO'
+                                : ' ✓')
+                          ),
+                        eq.observaciones &&
+                          React.createElement(
+                            'p',
+                            {
+                              style: {
+                                fontSize: '13px',
+                                color: '#6b7280',
+                                fontStyle: 'italic',
+                              },
+                            },
+                            '💬 ' + eq.observaciones
+                          )
+                      )
+                    ),
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          background: '#fefce8',
+                          padding: '16px',
+                          borderRadius: '10px',
+                          border: '1px solid #fde68a',
+                        },
+                      },
+                      React.createElement(
+                        'h5',
+                        {
+                          style: {
+                            fontWeight: 'bold',
+                            color: '#92400e',
+                            marginBottom: '10px',
+                          },
+                        },
+                        '🏢 Proveedor'
+                      ),
+                      prov.nombre
+                        ? React.createElement(
+                            'div',
+                            {
+                              style: {
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '6px',
+                              },
+                            },
+                            React.createElement(
+                              'p',
+                              {
+                                style: { fontSize: '13px', fontWeight: '600' },
+                              },
+                              '🏢 ' + prov.nombre
+                            ),
+                            prov.contacto &&
+                              React.createElement(
+                                'p',
+                                { style: { fontSize: '13px' } },
+                                '👤 ' + prov.contacto
+                              ),
+                            prov.telefono &&
+                              React.createElement(
+                                'p',
+                                { style: { fontSize: '13px' } },
+                                '📞 ' + prov.telefono
+                              ),
+                            prov.email &&
+                              React.createElement(
+                                'p',
+                                { style: { fontSize: '13px' } },
+                                '✉️ ' + prov.email
+                              ),
+                            prov.web &&
+                              React.createElement(
+                                'p',
+                                { style: { fontSize: '13px' } },
+                                '🌐 ' + prov.web
+                              )
+                          )
+                        : React.createElement(
+                            'p',
+                            { style: { fontSize: '13px', color: '#9ca3af' } },
+                            'Sin datos de proveedor'
+                          )
+                    )
+                  ),
+
+                  React.createElement(
+                    'div',
+                    {
+                      style: {
+                        background: '#f0fdf4',
+                        padding: '16px',
+                        borderRadius: '10px',
+                        border: '1px solid #bbf7d0',
+                      },
+                    },
+                    React.createElement(
+                      'h5',
+                      {
+                        style: {
+                          fontWeight: 'bold',
+                          color: '#15803d',
+                          marginBottom: '12px',
+                        },
+                      },
+                      '🚛 Asignación a Móvil'
+                    ),
+                    vehiculoAsig
+                      ? React.createElement(
+                          'div',
+                          {
+                            style: {
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            },
+                          },
+                          React.createElement(
+                            'p',
+                            {
+                              style: {
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: '#15803d',
+                              },
+                            },
+                            '✅ Asignado a: ' + vehiculoAsig.nombre
+                          ),
+                          React.createElement(
+                            'button',
+                            {
+                              style: {
+                                padding: '8px 14px',
+                                background: '#ef4444',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                              },
+                              onClick: function () {
+                                if (
+                                  window.confirm(
+                                    '¿Desasignar equipo del móvil?'
+                                  )
+                                ) {
+                                  props.onDesasignarEquipo(
+                                    vehiculoAsig.id,
+                                    eq.id
+                                  );
+                                }
+                              },
+                            },
+                            '↩️ Desasignar'
+                          )
+                        )
+                      : React.createElement(
+                          'div',
+                          {
+                            style: {
+                              display: 'flex',
+                              gap: '10px',
+                              alignItems: 'center',
+                            },
+                          },
+                          React.createElement(
+                            'select',
+                            {
+                              value: asignarVeh,
+                              onChange: function (e) {
+                                setAsignarVeh(e.target.value);
+                              },
+                              style: Object.assign({}, styles.input, {
+                                flex: 1,
+                              }),
+                            },
+                            React.createElement(
+                              'option',
+                              { value: '' },
+                              'Seleccionar móvil...'
+                            ),
+                            props.vehiculos.map(function (v) {
+                              return React.createElement(
+                                'option',
+                                { key: v.id, value: v.id },
+                                v.nombre
+                              );
+                            })
+                          ),
+                          React.createElement(
+                            'button',
+                            {
+                              style: {
+                                padding: '10px 16px',
+                                background: '#15803d',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                              },
+                              onClick: function () {
+                                if (!asignarVeh) {
+                                  alert('Seleccioná un móvil');
+                                  return;
+                                }
+                                props.onAsignarEquipo(asignarVeh, eq.id);
+                                setAsignarVeh('');
+                              },
+                            },
+                            '➕ Asignar'
+                          )
+                        )
+                  )
+                )
+            );
+          })
+        )
+  );
+}
+
+// ============================================
+// ERAs - CON PROVEEDOR, CÓDIGO INTERNO Y ASIGNACIÓN A MÓVIL
+// ============================================
+function ERAs(props) {
+  var formInicial = {
+    marca: '',
+    modelo: '',
+    codigoInterno: '',
+    serial: '',
+    presion: 300,
+    estado: 'activo',
+    pruebaHidraulica: '',
+    vencimientoTubo: '',
+    observaciones: '',
+    proveedor: { nombre: '', contacto: '', telefono: '', email: '', web: '' },
+  };
+  var formState = useState(formInicial);
+  var form = formState[0];
+  var setForm = formState[1];
+  var mostrarFormState = useState(false);
+  var mostrarForm = mostrarFormState[0];
+  var setMostrarForm = mostrarFormState[1];
+  var editandoState = useState(null);
+  var editando = editandoState[0];
+  var setEditando = editandoState[1];
+  var formEditState = useState({});
+  var formEdit = formEditState[0];
+  var setFormEdit = formEditState[1];
+  var expandidoState = useState(null);
+  var expandido = expandidoState[0];
+  var setExpandido = expandidoState[1];
+  var asignarVehState = useState('');
+  var asignarVeh = asignarVehState[0];
+  var setAsignarVeh = asignarVehState[1];
+
+  var verificarVencimiento = function (fecha) {
+    if (!fecha) return '';
+    var dias = Math.ceil(
+      (new Date(fecha) - new Date()) / (1000 * 60 * 60 * 24)
+    );
+    if (dias < 0) return 'vencido';
+    if (dias <= 30) return 'proximo';
+    return 'ok';
+  };
+
+  var iniciarEdicion = function (era) {
+    setEditando(era.id);
+    setFormEdit({
+      marca: era.marca || '',
+      modelo: era.modelo || '',
+      codigoInterno: era.codigoInterno || '',
+      serial: era.serial || '',
+      presion: era.presion || 300,
+      estado: era.estado || 'activo',
+      pruebaHidraulica: era.pruebaHidraulica || '',
+      vencimientoTubo: era.vencimientoTubo || '',
+      observaciones: era.observaciones || '',
+      proveedor: era.proveedor || {
+        nombre: '',
+        contacto: '',
+        telefono: '',
+        email: '',
+        web: '',
+      },
+    });
+  };
+
+  var guardarEdicion = async function (eraId) {
+    await props.onActualizar(eraId, formEdit);
+    setEditando(null);
+    alert('✅ ERA actualizada correctamente');
+  };
+
+  var handleSubmit = async function (e) {
+    e.preventDefault();
+    if (!form.marca.trim() || !form.serial.trim()) {
+      alert('Marca y serial son obligatorios');
+      return;
+    }
+    var id = await props.onAgregar(form);
+    if (id) {
+      setForm(formInicial);
+      setMostrarForm(false);
+      alert('✅ ERA agregada');
+    }
+  };
+
+  return React.createElement(
+    'div',
+    null,
+    React.createElement(
+      'div',
+      {
+        style: {
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '24px',
+        },
+      },
+      React.createElement('h2', { style: styles.pageTitle }, '🎽 ERAs'),
+      React.createElement(
+        'button',
+        {
+          style: styles.btnPrimary,
+          onClick: function () {
+            setMostrarForm(!mostrarForm);
+          },
+        },
+        mostrarForm ? '✖ Cancelar' : '➕ Nueva ERA'
+      )
+    ),
+
+    mostrarForm &&
+      React.createElement(
+        'div',
+        {
+          style: Object.assign({}, styles.card, {
+            background: '#f5f3ff',
+            border: '2px solid #ddd6fe',
+            marginBottom: '24px',
+          }),
+        },
+        React.createElement(
+          'h3',
+          { style: Object.assign({}, styles.cardTitle, { color: '#7c3aed' }) },
+          '➕ Nueva ERA'
+        ),
+        React.createElement(
+          'form',
+          { onSubmit: handleSubmit },
+          React.createElement(
+            'div',
+            {
+              style: {
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '16px',
+                marginBottom: '16px',
+              },
+            },
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Marca *'),
+              React.createElement('input', {
+                type: 'text',
+                value: form.marca,
+                onChange: function (e) {
+                  setForm(Object.assign({}, form, { marca: e.target.value }));
+                },
+                style: styles.input,
+                required: true,
+                placeholder: 'Ej: MSA',
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Modelo'),
+              React.createElement('input', {
+                type: 'text',
+                value: form.modelo,
+                onChange: function (e) {
+                  setForm(Object.assign({}, form, { modelo: e.target.value }));
+                },
+                style: styles.input,
+                placeholder: 'Ej: AirMaXX',
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement(
+                'label',
+                { style: styles.label },
+                '🏷️ Código Interno'
+              ),
+              React.createElement('input', {
+                type: 'text',
+                value: form.codigoInterno,
+                onChange: function (e) {
+                  setForm(
+                    Object.assign({}, form, { codigoInterno: e.target.value })
+                  );
+                },
+                style: styles.input,
+                placeholder: 'Ej: ERA-001',
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Serial *'),
+              React.createElement('input', {
+                type: 'text',
+                value: form.serial,
+                onChange: function (e) {
+                  setForm(Object.assign({}, form, { serial: e.target.value }));
+                },
+                style: styles.input,
+                required: true,
+                placeholder: 'Número de serie',
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement(
+                'label',
+                { style: styles.label },
+                'Presión (bar)'
+              ),
+              React.createElement('input', {
+                type: 'number',
+                value: form.presion,
+                onChange: function (e) {
+                  setForm(
+                    Object.assign({}, form, {
+                      presion: parseInt(e.target.value) || 0,
+                    })
+                  );
+                },
+                style: styles.input,
+                min: '0',
+                max: '300',
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Estado'),
+              React.createElement(
+                'select',
+                {
+                  value: form.estado,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, { estado: e.target.value })
+                    );
+                  },
+                  style: styles.input,
+                },
+                React.createElement('option', { value: 'activo' }, 'Activo'),
+                React.createElement(
+                  'option',
+                  { value: 'mantenimiento' },
+                  'En Mantenimiento'
+                ),
+                React.createElement('option', { value: 'baja' }, 'Baja')
+              )
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement(
+                'label',
+                { style: styles.label },
+                'Prueba Hidráulica'
+              ),
+              React.createElement('input', {
+                type: 'date',
+                value: form.pruebaHidraulica,
+                onChange: function (e) {
+                  setForm(
+                    Object.assign({}, form, {
+                      pruebaHidraulica: e.target.value,
+                    })
+                  );
+                },
+                style: styles.input,
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement(
+                'label',
+                { style: styles.label },
+                'Venc. Tubo'
+              ),
+              React.createElement('input', {
+                type: 'date',
+                value: form.vencimientoTubo,
+                onChange: function (e) {
+                  setForm(
+                    Object.assign({}, form, { vencimientoTubo: e.target.value })
+                  );
+                },
+                style: styles.input,
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement(
+                'label',
+                { style: styles.label },
+                'Observaciones'
+              ),
+              React.createElement('input', {
+                type: 'text',
+                value: form.observaciones,
+                onChange: function (e) {
+                  setForm(
+                    Object.assign({}, form, { observaciones: e.target.value })
+                  );
+                },
+                style: styles.input,
+                placeholder: 'Observaciones...',
+              })
+            )
+          ),
+          React.createElement(
+            'div',
+            {
+              style: {
+                background: '#ede9fe',
+                border: '1px solid #ddd6fe',
+                borderRadius: '10px',
+                padding: '16px',
+                marginBottom: '16px',
+              },
+            },
+            React.createElement(
+              'h4',
+              {
+                style: {
+                  fontWeight: 'bold',
+                  color: '#7c3aed',
+                  marginBottom: '12px',
+                },
+              },
+              '🏢 Datos del Proveedor'
+            ),
+            React.createElement(
+              'div',
+              {
+                style: {
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '12px',
+                },
+              },
+              React.createElement(
+                'div',
+                null,
+                React.createElement(
+                  'label',
+                  { style: styles.label },
+                  'Nombre Proveedor'
+                ),
+                React.createElement('input', {
+                  type: 'text',
+                  value: form.proveedor.nombre,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, {
+                        proveedor: Object.assign({}, form.proveedor, {
+                          nombre: e.target.value,
+                        }),
+                      })
+                    );
+                  },
+                  style: styles.input,
+                  placeholder: 'Empresa proveedora',
+                })
+              ),
+              React.createElement(
+                'div',
+                null,
+                React.createElement(
+                  'label',
+                  { style: styles.label },
+                  'Contacto'
+                ),
+                React.createElement('input', {
+                  type: 'text',
+                  value: form.proveedor.contacto,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, {
+                        proveedor: Object.assign({}, form.proveedor, {
+                          contacto: e.target.value,
+                        }),
+                      })
+                    );
+                  },
+                  style: styles.input,
+                  placeholder: 'Nombre del contacto',
+                })
+              ),
+              React.createElement(
+                'div',
+                null,
+                React.createElement(
+                  'label',
+                  { style: styles.label },
+                  'Teléfono'
+                ),
+                React.createElement('input', {
+                  type: 'text',
+                  value: form.proveedor.telefono,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, {
+                        proveedor: Object.assign({}, form.proveedor, {
+                          telefono: e.target.value,
+                        }),
+                      })
+                    );
+                  },
+                  style: styles.input,
+                  placeholder: 'Tel. proveedor',
+                })
+              ),
+              React.createElement(
+                'div',
+                null,
+                React.createElement('label', { style: styles.label }, 'Email'),
+                React.createElement('input', {
+                  type: 'email',
+                  value: form.proveedor.email,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, {
+                        proveedor: Object.assign({}, form.proveedor, {
+                          email: e.target.value,
+                        }),
+                      })
+                    );
+                  },
+                  style: styles.input,
+                  placeholder: 'email@proveedor.com',
+                })
+              ),
+              React.createElement(
+                'div',
+                { style: { gridColumn: 'span 2' } },
+                React.createElement('label', { style: styles.label }, 'Web'),
+                React.createElement('input', {
+                  type: 'text',
+                  value: form.proveedor.web,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, {
+                        proveedor: Object.assign({}, form.proveedor, {
+                          web: e.target.value,
+                        }),
+                      })
+                    );
+                  },
+                  style: styles.input,
+                  placeholder: 'www.proveedor.com',
+                })
+              )
+            )
+          ),
+          React.createElement(
+            'button',
+            {
+              type: 'submit',
+              style: {
+                width: '100%',
+                padding: '12px',
+                background: '#7c3aed',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '700',
+                cursor: 'pointer',
+              },
+            },
+            '💾 Agregar ERA'
+          )
+        )
+      ),
+
+    props.eras.length === 0
+      ? React.createElement(
+          'div',
+          {
+            style: Object.assign({}, styles.card, {
+              textAlign: 'center',
+              padding: '60px',
+            }),
+          },
+          React.createElement(
+            'div',
+            { style: { fontSize: '64px', marginBottom: '16px' } },
+            '🎽'
+          ),
+          React.createElement(
+            'h3',
+            { style: { color: '#6b7280' } },
+            'No hay ERAs registradas'
+          )
+        )
+      : React.createElement(
+          'div',
+          { style: { display: 'flex', flexDirection: 'column', gap: '12px' } },
+          props.eras.map(function (era) {
+            var vencTubo = verificarVencimiento(era.vencimientoTubo);
+            var vencPH = verificarVencimiento(era.pruebaHidraulica);
+            var tieneAlerta = vencTubo === 'vencido' || vencPH === 'vencido';
+            var vehiculoAsig = era.vehiculoAsignado
+              ? props.vehiculos.find(function (v) {
+                  return v.id === era.vehiculoAsignado;
+                })
+              : null;
+            var isEditando = editando === era.id;
+            var isExpandido = expandido === era.id;
+            var prov = era.proveedor || {};
+
+            return React.createElement(
+              'div',
+              {
+                key: era.id,
+                style: Object.assign({}, styles.card, {
+                  border: '2px solid ' + (tieneAlerta ? '#ef4444' : '#ddd6fe'),
+                  background: tieneAlerta ? '#fef2f2' : 'white',
+                  marginBottom: '0',
+                }),
+              },
+              React.createElement(
+                'div',
+                {
+                  style: {
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                  },
+                  onClick: function () {
+                    setExpandido(isExpandido ? null : era.id);
+                  },
+                },
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '14px',
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    {
+                      style: {
+                        width: '50px',
+                        height: '50px',
+                        background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '24px',
+                      },
+                    },
+                    '🎽'
+                  ),
+                  React.createElement(
+                    'div',
+                    null,
+                    React.createElement(
+                      'h3',
+                      {
+                        style: {
+                          fontWeight: 'bold',
+                          fontSize: '16px',
+                          marginBottom: '2px',
+                        },
+                      },
+                      era.marca + ' ' + era.modelo
+                    ),
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          display: 'flex',
+                          gap: '8px',
+                          flexWrap: 'wrap',
+                        },
+                      },
+                      era.codigoInterno &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '11px',
+                              background: '#ede9fe',
+                              color: '#7c3aed',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontWeight: '600',
+                            },
+                          },
+                          '🏷️ ' + era.codigoInterno
+                        ),
+                      React.createElement(
+                        'span',
+                        { style: { fontSize: '11px', color: '#6b7280' } },
+                        '🔖 ' + era.serial
+                      ),
+                      vehiculoAsig &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '11px',
+                              background: '#dbeafe',
+                              color: '#1e40af',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontWeight: '600',
+                            },
+                          },
+                          '🚛 ' + vehiculoAsig.nombre
+                        ),
+                      prov.nombre &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '11px',
+                              background: '#f0fdf4',
+                              color: '#15803d',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                            },
+                          },
+                          '🏢 ' + prov.nombre
+                        )
+                    )
+                  )
+                ),
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      display: 'flex',
+                      gap: '8px',
+                      alignItems: 'center',
+                    },
+                  },
+                  React.createElement(
+                    'span',
+                    {
+                      style: {
+                        background:
+                          (era.presion || 0) >= 280 ? '#d1fae5' : '#fee2e2',
+                        color:
+                          (era.presion || 0) >= 280 ? '#065f46' : '#dc2626',
+                        padding: '4px 12px',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        fontWeight: '700',
+                      },
+                    },
+                    (era.presion || 0) + ' bar'
+                  ),
+                  React.createElement(
+                    'span',
+                    {
+                      style:
+                        era.estado === 'activo'
+                          ? styles.badgeOk
+                          : styles.badgeWarn,
+                    },
+                    era.estado === 'activo'
+                      ? '✓ ACTIVA'
+                      : era.estado === 'mantenimiento'
+                      ? '🔧 MANT.'
+                      : '⛔ BAJA'
+                  ),
+                  React.createElement(
+                    'span',
+                    { style: { fontSize: '18px', color: '#6b7280' } },
+                    isExpandido ? '▲' : '▼'
+                  )
+                )
+              ),
+
+              isExpandido &&
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      marginTop: '20px',
+                      borderTop: '1px solid #e5e7eb',
+                      paddingTop: '20px',
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    {
+                      style: {
+                        display: 'flex',
+                        gap: '8px',
+                        marginBottom: '16px',
+                        flexWrap: 'wrap',
+                      },
+                    },
+                    React.createElement(
+                      'button',
+                      {
+                        style: {
+                          padding: '8px 14px',
+                          background: '#3b82f6',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                        },
+                        onClick: function (e) {
+                          e.stopPropagation();
+                          iniciarEdicion(era);
+                        },
+                      },
+                      '✏️ Editar'
+                    ),
+                    React.createElement(
+                      'button',
+                      {
+                        style: {
+                          padding: '8px 14px',
+                          background: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                        },
+                        onClick: function (e) {
+                          e.stopPropagation();
+                          if (
+                            window.confirm('¿Eliminar ERA ' + era.serial + '?')
+                          ) {
+                            props.onEliminar(era.id);
+                          }
+                        },
+                      },
+                      '🗑️ Eliminar'
+                    )
+                  ),
+
+                  isEditando &&
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          background: '#f0f9ff',
+                          padding: '20px',
+                          borderRadius: '12px',
+                          border: '2px solid #0ea5e9',
+                          marginBottom: '16px',
+                        },
+                      },
+                      React.createElement(
+                        'h4',
+                        {
+                          style: {
+                            fontWeight: 'bold',
+                            color: '#0369a1',
+                            marginBottom: '16px',
+                          },
+                        },
+                        '✏️ Editando ERA: ' + era.marca + ' ' + era.modelo
+                      ),
+                      React.createElement(
+                        'div',
+                        {
+                          style: {
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gap: '12px',
+                            marginBottom: '12px',
+                          },
+                        },
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Marca'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.marca || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  marca: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Modelo'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.modelo || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  modelo: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            '🏷️ Código Interno'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.codigoInterno || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  codigoInterno: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Serial'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.serial || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  serial: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Presión (bar)'
+                          ),
+                          React.createElement('input', {
+                            type: 'number',
+                            value: formEdit.presion || 0,
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  presion: parseInt(e.target.value) || 0,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                            min: '0',
+                            max: '300',
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Estado'
+                          ),
+                          React.createElement(
+                            'select',
+                            {
+                              value: formEdit.estado || 'activo',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    estado: e.target.value,
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            },
+                            React.createElement(
+                              'option',
+                              { value: 'activo' },
+                              'Activo'
+                            ),
+                            React.createElement(
+                              'option',
+                              { value: 'mantenimiento' },
+                              'En Mantenimiento'
+                            ),
+                            React.createElement(
+                              'option',
+                              { value: 'baja' },
+                              'Baja'
+                            )
+                          )
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Prueba Hidráulica'
+                          ),
+                          React.createElement('input', {
+                            type: 'date',
+                            value: formEdit.pruebaHidraulica || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  pruebaHidraulica: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Venc. Tubo'
+                          ),
+                          React.createElement('input', {
+                            type: 'date',
+                            value: formEdit.vencimientoTubo || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  vencimientoTubo: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Observaciones'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.observaciones || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  observaciones: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        )
+                      ),
+                      React.createElement(
+                        'div',
+                        {
+                          style: {
+                            background: '#ede9fe',
+                            border: '1px solid #ddd6fe',
+                            borderRadius: '10px',
+                            padding: '14px',
+                            marginBottom: '12px',
+                          },
+                        },
+                        React.createElement(
+                          'h5',
+                          {
+                            style: {
+                              fontWeight: 'bold',
+                              color: '#7c3aed',
+                              marginBottom: '10px',
+                            },
+                          },
+                          '🏢 Datos del Proveedor'
+                        ),
+                        React.createElement(
+                          'div',
+                          {
+                            style: {
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(3, 1fr)',
+                              gap: '10px',
+                            },
+                          },
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Nombre'
+                            ),
+                            React.createElement('input', {
+                              type: 'text',
+                              value: (formEdit.proveedor || {}).nombre || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    proveedor: Object.assign(
+                                      {},
+                                      formEdit.proveedor || {},
+                                      { nombre: e.target.value }
+                                    ),
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Contacto'
+                            ),
+                            React.createElement('input', {
+                              type: 'text',
+                              value: (formEdit.proveedor || {}).contacto || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    proveedor: Object.assign(
+                                      {},
+                                      formEdit.proveedor || {},
+                                      { contacto: e.target.value }
+                                    ),
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Teléfono'
+                            ),
+                            React.createElement('input', {
+                              type: 'text',
+                              value: (formEdit.proveedor || {}).telefono || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    proveedor: Object.assign(
+                                      {},
+                                      formEdit.proveedor || {},
+                                      { telefono: e.target.value }
+                                    ),
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Email'
+                            ),
+                            React.createElement('input', {
+                              type: 'email',
+                              value: (formEdit.proveedor || {}).email || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    proveedor: Object.assign(
+                                      {},
+                                      formEdit.proveedor || {},
+                                      { email: e.target.value }
+                                    ),
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            { style: { gridColumn: 'span 2' } },
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Web'
+                            ),
+                            React.createElement('input', {
+                              type: 'text',
+                              value: (formEdit.proveedor || {}).web || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    proveedor: Object.assign(
+                                      {},
+                                      formEdit.proveedor || {},
+                                      { web: e.target.value }
+                                    ),
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          )
+                        )
+                      ),
+                      React.createElement(
+                        'div',
+                        { style: { display: 'flex', gap: '10px' } },
+                        React.createElement(
+                          'button',
+                          {
+                            style: {
+                              flex: 1,
+                              padding: '10px',
+                              background: '#10b981',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                            },
+                            onClick: function () {
+                              guardarEdicion(era.id);
+                            },
+                          },
+                          '💾 Guardar'
+                        ),
+                        React.createElement(
+                          'button',
+                          {
+                            style: {
+                              flex: 1,
+                              padding: '10px',
+                              background: '#6b7280',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                            },
+                            onClick: function () {
+                              setEditando(null);
+                            },
+                          },
+                          '✖ Cancelar'
+                        )
+                      )
+                    ),
+
+                  React.createElement(
+                    'div',
+                    {
+                      style: {
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '16px',
+                        marginBottom: '16px',
+                      },
+                    },
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          background: '#f5f3ff',
+                          padding: '16px',
+                          borderRadius: '10px',
+                          border: '1px solid #ddd6fe',
+                        },
+                      },
+                      React.createElement(
+                        'h5',
+                        {
+                          style: {
+                            fontWeight: 'bold',
+                            color: '#7c3aed',
+                            marginBottom: '10px',
+                          },
+                        },
+                        '📋 Información General'
+                      ),
+                      React.createElement(
+                        'div',
+                        {
+                          style: {
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '6px',
+                          },
+                        },
+                        React.createElement(
+                          'p',
+                          { style: { fontSize: '13px' } },
+                          '🏷️ Código: ' + (era.codigoInterno || 'N/D')
+                        ),
+                        React.createElement(
+                          'p',
+                          { style: { fontSize: '13px' } },
+                          '🔖 Serial: ' + (era.serial || 'N/D')
+                        ),
+                        React.createElement(
+                          'p',
+                          {
+                            style: {
+                              fontSize: '13px',
+                              fontWeight: '600',
+                              color:
+                                (era.presion || 0) >= 280
+                                  ? '#059669'
+                                  : '#dc2626',
+                            },
+                          },
+                          '💨 Presión: ' + (era.presion || 0) + ' bar'
+                        ),
+                        era.pruebaHidraulica &&
+                          React.createElement(
+                            'p',
+                            {
+                              style: {
+                                fontSize: '13px',
+                                color:
+                                  vencPH === 'vencido'
+                                    ? '#dc2626'
+                                    : vencPH === 'proximo'
+                                    ? '#d97706'
+                                    : '#374151',
+                                fontWeight: vencPH !== 'ok' ? '600' : '400',
+                              },
+                            },
+                            '🔧 PH: ' +
+                              era.pruebaHidraulica +
+                              (vencPH === 'vencido'
+                                ? ' ⚠️ VENCIDA'
+                                : vencPH === 'proximo'
+                                ? ' ⚠️ PRÓXIMA'
+                                : ' ✓')
+                          ),
+                        era.vencimientoTubo &&
+                          React.createElement(
+                            'p',
+                            {
+                              style: {
+                                fontSize: '13px',
+                                color:
+                                  vencTubo === 'vencido'
+                                    ? '#dc2626'
+                                    : vencTubo === 'proximo'
+                                    ? '#d97706'
+                                    : '#374151',
+                                fontWeight: vencTubo !== 'ok' ? '600' : '400',
+                              },
+                            },
+                            '🧪 Tubo: ' +
+                              era.vencimientoTubo +
+                              (vencTubo === 'vencido'
+                                ? ' ⚠️ VENCIDO'
+                                : vencTubo === 'proximo'
+                                ? ' ⚠️ PRÓXIMO'
+                                : ' ✓')
+                          ),
+                        era.observaciones &&
+                          React.createElement(
+                            'p',
+                            {
+                              style: {
+                                fontSize: '13px',
+                                color: '#6b7280',
+                                fontStyle: 'italic',
+                              },
+                            },
+                            '💬 ' + era.observaciones
+                          )
+                      )
+                    ),
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          background: '#fefce8',
+                          padding: '16px',
+                          borderRadius: '10px',
+                          border: '1px solid #fde68a',
+                        },
+                      },
+                      React.createElement(
+                        'h5',
+                        {
+                          style: {
+                            fontWeight: 'bold',
+                            color: '#92400e',
+                            marginBottom: '10px',
+                          },
+                        },
+                        '🏢 Proveedor'
+                      ),
+                      prov.nombre
+                        ? React.createElement(
+                            'div',
+                            {
+                              style: {
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '6px',
+                              },
+                            },
+                            React.createElement(
+                              'p',
+                              {
+                                style: { fontSize: '13px', fontWeight: '600' },
+                              },
+                              '🏢 ' + prov.nombre
+                            ),
+                            prov.contacto &&
+                              React.createElement(
+                                'p',
+                                { style: { fontSize: '13px' } },
+                                '👤 ' + prov.contacto
+                              ),
+                            prov.telefono &&
+                              React.createElement(
+                                'p',
+                                { style: { fontSize: '13px' } },
+                                '📞 ' + prov.telefono
+                              ),
+                            prov.email &&
+                              React.createElement(
+                                'p',
+                                { style: { fontSize: '13px' } },
+                                '✉️ ' + prov.email
+                              ),
+                            prov.web &&
+                              React.createElement(
+                                'p',
+                                { style: { fontSize: '13px' } },
+                                '🌐 ' + prov.web
+                              )
+                          )
+                        : React.createElement(
+                            'p',
+                            { style: { fontSize: '13px', color: '#9ca3af' } },
+                            'Sin datos de proveedor'
+                          )
+                    )
+                  ),
+
+                  React.createElement(
+                    'div',
+                    {
+                      style: {
+                        background: '#f0fdf4',
+                        padding: '16px',
+                        borderRadius: '10px',
+                        border: '1px solid #bbf7d0',
+                      },
+                    },
+                    React.createElement(
+                      'h5',
+                      {
+                        style: {
+                          fontWeight: 'bold',
+                          color: '#15803d',
+                          marginBottom: '12px',
+                        },
+                      },
+                      '🚛 Asignación a Móvil'
+                    ),
+                    vehiculoAsig
+                      ? React.createElement(
+                          'div',
+                          {
+                            style: {
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            },
+                          },
+                          React.createElement(
+                            'p',
+                            {
+                              style: {
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: '#15803d',
+                              },
+                            },
+                            '✅ Asignada a: ' + vehiculoAsig.nombre
+                          ),
+                          React.createElement(
+                            'button',
+                            {
+                              style: {
+                                padding: '8px 14px',
+                                background: '#ef4444',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                              },
+                              onClick: function () {
+                                if (
+                                  window.confirm('¿Desasignar ERA del móvil?')
+                                ) {
+                                  props.onDesasignarERA(
+                                    vehiculoAsig.id,
+                                    era.id
+                                  );
+                                }
+                              },
+                            },
+                            '↩️ Desasignar'
+                          )
+                        )
+                      : React.createElement(
+                          'div',
+                          {
+                            style: {
+                              display: 'flex',
+                              gap: '10px',
+                              alignItems: 'center',
+                            },
+                          },
+                          React.createElement(
+                            'select',
+                            {
+                              value: asignarVeh,
+                              onChange: function (e) {
+                                setAsignarVeh(e.target.value);
+                              },
+                              style: Object.assign({}, styles.input, {
+                                flex: 1,
+                              }),
+                            },
+                            React.createElement(
+                              'option',
+                              { value: '' },
+                              'Seleccionar móvil...'
+                            ),
+                            props.vehiculos.map(function (v) {
+                              return React.createElement(
+                                'option',
+                                { key: v.id, value: v.id },
+                                v.nombre
+                              );
+                            })
+                          ),
+                          React.createElement(
+                            'button',
+                            {
+                              style: {
+                                padding: '10px 16px',
+                                background: '#7c3aed',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                              },
+                              onClick: function () {
+                                if (!asignarVeh) {
+                                  alert('Seleccioná un móvil');
+                                  return;
+                                }
+                                props.onAsignarERA(asignarVeh, era.id);
+                                setAsignarVeh('');
+                              },
+                            },
+                            '➕ Asignar'
+                          )
+                        )
+                  )
+                )
+            );
+          })
+        )
+  );
+}
+
+// ============================================
+// PERSONAL - CON LICENCIAS DE CONDUCIR
+// ============================================
+function Personal(props) {
+  var formInicial = {
+    nombre: '',
+    apellido: '',
+    legajo: '',
+    rol: 'bombero',
+    telefono: '',
+    email: '',
+    fechaIngreso: '',
+    estado: 'activo',
+    licencia: {
+      numero: '',
+      categoria: '',
+      vencimiento: '',
+      observaciones: '',
+    },
+  };
+  var formState = useState(formInicial);
+  var form = formState[0];
+  var setForm = formState[1];
+  var mostrarFormState = useState(false);
+  var mostrarForm = mostrarFormState[0];
+  var setMostrarForm = mostrarFormState[1];
+  var editandoState = useState(null);
+  var editando = editandoState[0];
+  var setEditando = editandoState[1];
+  var formEditState = useState({});
+  var formEdit = formEditState[0];
+  var setFormEdit = formEditState[1];
+  var busquedaState = useState('');
+  var busqueda = busquedaState[0];
+  var setBusqueda = busquedaState[1];
+  var expandidoState = useState(null);
+  var expandido = expandidoState[0];
+  var setExpandido = expandidoState[1];
+
+  var roles = [
+    'bombero',
+    'cabo',
+    'sargento',
+    'teniente',
+    'capitan',
+    'administrativo',
+    'voluntario',
+  ];
+  var categoriasLicencia = [
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'A1',
+    'B1',
+    'C1',
+    'D1',
+    'E1',
+  ];
+
+  var verificarVencimiento = function (fecha) {
+    if (!fecha) return '';
+    var dias = Math.ceil(
+      (new Date(fecha) - new Date()) / (1000 * 60 * 60 * 24)
+    );
+    if (dias < 0) return 'vencido';
+    if (dias <= 60) return 'proximo';
+    return 'ok';
+  };
+
+  var personalFiltrado = props.personal.filter(function (p) {
+    return (
+      !busqueda ||
+      (p.nombre + ' ' + p.apellido + ' ' + p.legajo)
+        .toLowerCase()
+        .includes(busqueda.toLowerCase())
+    );
+  });
+
+  var iniciarEdicion = function (p) {
+    setEditando(p.id);
+    setFormEdit({
+      nombre: p.nombre || '',
+      apellido: p.apellido || '',
+      legajo: p.legajo || '',
+      rol: p.rol || 'bombero',
+      telefono: p.telefono || '',
+      email: p.email || '',
+      fechaIngreso: p.fechaIngreso || '',
+      estado: p.estado || 'activo',
+      licencia: p.licencia || {
+        numero: '',
+        categoria: '',
+        vencimiento: '',
+        observaciones: '',
+      },
+    });
+  };
+
+  var guardarEdicion = async function (pId) {
+    await props.onActualizar(pId, formEdit);
+    setEditando(null);
+    alert('✅ Personal actualizado correctamente');
+  };
+
+  var handleSubmit = async function (e) {
+    e.preventDefault();
+    if (!form.nombre.trim()) {
+      alert('El nombre es obligatorio');
+      return;
+    }
+    var id = await props.onAgregar(form);
+    if (id) {
+      setForm(formInicial);
+      setMostrarForm(false);
+      alert('✅ Personal agregado');
+    }
+  };
+
+  return React.createElement(
+    'div',
+    null,
+    React.createElement(
+      'div',
+      {
+        style: {
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '24px',
+        },
+      },
+      React.createElement('h2', { style: styles.pageTitle }, '👥 Personal'),
+      React.createElement(
+        'button',
+        {
+          style: styles.btnPrimary,
+          onClick: function () {
+            setMostrarForm(!mostrarForm);
+          },
+        },
+        mostrarForm ? '✖ Cancelar' : '➕ Nuevo Personal'
+      )
+    ),
+
+    mostrarForm &&
+      React.createElement(
+        'div',
+        {
+          style: Object.assign({}, styles.card, {
+            background: '#f0fdf4',
+            border: '2px solid #bbf7d0',
+            marginBottom: '24px',
+          }),
+        },
+        React.createElement(
+          'h3',
+          { style: Object.assign({}, styles.cardTitle, { color: '#15803d' }) },
+          '➕ Nuevo Personal'
+        ),
+        React.createElement(
+          'form',
+          { onSubmit: handleSubmit },
+          React.createElement(
+            'div',
+            {
+              style: {
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '16px',
+                marginBottom: '16px',
+              },
+            },
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Nombre *'),
+              React.createElement('input', {
+                type: 'text',
+                value: form.nombre,
+                onChange: function (e) {
+                  setForm(Object.assign({}, form, { nombre: e.target.value }));
+                },
+                style: styles.input,
+                required: true,
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Apellido'),
+              React.createElement('input', {
+                type: 'text',
+                value: form.apellido,
+                onChange: function (e) {
+                  setForm(
+                    Object.assign({}, form, { apellido: e.target.value })
+                  );
+                },
+                style: styles.input,
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Legajo'),
+              React.createElement('input', {
+                type: 'text',
+                value: form.legajo,
+                onChange: function (e) {
+                  setForm(Object.assign({}, form, { legajo: e.target.value }));
+                },
+                style: styles.input,
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Rol'),
+              React.createElement(
+                'select',
+                {
+                  value: form.rol,
+                  onChange: function (e) {
+                    setForm(Object.assign({}, form, { rol: e.target.value }));
+                  },
+                  style: styles.input,
+                },
+                roles.map(function (r) {
+                  return React.createElement('option', { key: r, value: r }, r);
+                })
+              )
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Teléfono'),
+              React.createElement('input', {
+                type: 'text',
+                value: form.telefono,
+                onChange: function (e) {
+                  setForm(
+                    Object.assign({}, form, { telefono: e.target.value })
+                  );
+                },
+                style: styles.input,
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Email'),
+              React.createElement('input', {
+                type: 'email',
+                value: form.email,
+                onChange: function (e) {
+                  setForm(Object.assign({}, form, { email: e.target.value }));
+                },
+                style: styles.input,
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement(
+                'label',
+                { style: styles.label },
+                'Fecha Ingreso'
+              ),
+              React.createElement('input', {
+                type: 'date',
+                value: form.fechaIngreso,
+                onChange: function (e) {
+                  setForm(
+                    Object.assign({}, form, { fechaIngreso: e.target.value })
+                  );
+                },
+                style: styles.input,
+              })
+            )
+          ),
+          React.createElement(
+            'div',
+            {
+              style: {
+                background: '#dbeafe',
+                border: '1px solid #93c5fd',
+                borderRadius: '10px',
+                padding: '16px',
+                marginBottom: '16px',
+              },
+            },
+            React.createElement(
+              'h4',
+              {
+                style: {
+                  fontWeight: 'bold',
+                  color: '#1e40af',
+                  marginBottom: '12px',
+                },
+              },
+              '🪪 Licencia de Conducir'
+            ),
+            React.createElement(
+              'div',
+              {
+                style: {
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '12px',
+                },
+              },
+              React.createElement(
+                'div',
+                null,
+                React.createElement(
+                  'label',
+                  { style: styles.label },
+                  'N° Licencia'
+                ),
+                React.createElement('input', {
+                  type: 'text',
+                  value: form.licencia.numero,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, {
+                        licencia: Object.assign({}, form.licencia, {
+                          numero: e.target.value,
+                        }),
+                      })
+                    );
+                  },
+                  style: styles.input,
+                  placeholder: 'Número de licencia',
+                })
+              ),
+              React.createElement(
+                'div',
+                null,
+                React.createElement(
+                  'label',
+                  { style: styles.label },
+                  'Categoría'
+                ),
+                React.createElement(
+                  'select',
+                  {
+                    value: form.licencia.categoria,
+                    onChange: function (e) {
+                      setForm(
+                        Object.assign({}, form, {
+                          licencia: Object.assign({}, form.licencia, {
+                            categoria: e.target.value,
+                          }),
+                        })
+                      );
+                    },
+                    style: styles.input,
+                  },
+                  React.createElement('option', { value: '' }, 'Sin licencia'),
+                  categoriasLicencia.map(function (c) {
+                    return React.createElement(
+                      'option',
+                      { key: c, value: c },
+                      'Categoría ' + c
+                    );
+                  })
+                )
+              ),
+              React.createElement(
+                'div',
+                null,
+                React.createElement(
+                  'label',
+                  { style: styles.label },
+                  'Vencimiento'
+                ),
+                React.createElement('input', {
+                  type: 'date',
+                  value: form.licencia.vencimiento,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, {
+                        licencia: Object.assign({}, form.licencia, {
+                          vencimiento: e.target.value,
+                        }),
+                      })
+                    );
+                  },
+                  style: styles.input,
+                })
+              ),
+              React.createElement(
+                'div',
+                { style: { gridColumn: 'span 3' } },
+                React.createElement(
+                  'label',
+                  { style: styles.label },
+                  'Observaciones'
+                ),
+                React.createElement('input', {
+                  type: 'text',
+                  value: form.licencia.observaciones,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, {
+                        licencia: Object.assign({}, form.licencia, {
+                          observaciones: e.target.value,
+                        }),
+                      })
+                    );
+                  },
+                  style: styles.input,
+                  placeholder: 'Restricciones, observaciones...',
+                })
+              )
+            )
+          ),
+          React.createElement(
+            'button',
+            {
+              type: 'submit',
+              style: {
+                width: '100%',
+                padding: '12px',
+                background: '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '700',
+                cursor: 'pointer',
+              },
+            },
+            '💾 Agregar Personal'
+          )
+        )
+      ),
+
+    React.createElement('input', {
+      type: 'text',
+      placeholder: '🔍 Buscar personal...',
+      value: busqueda,
+      onChange: function (e) {
+        setBusqueda(e.target.value);
+      },
+      style: Object.assign({}, styles.input, { marginBottom: '20px' }),
+    }),
+
+    personalFiltrado.length === 0
+      ? React.createElement(
+          'div',
+          {
+            style: Object.assign({}, styles.card, {
+              textAlign: 'center',
+              padding: '60px',
+            }),
+          },
+          React.createElement(
+            'div',
+            { style: { fontSize: '64px', marginBottom: '16px' } },
+            '👥'
+          ),
+          React.createElement(
+            'h3',
+            { style: { color: '#6b7280' } },
+            'No hay personal registrado'
+          )
+        )
+      : React.createElement(
+          'div',
+          { style: { display: 'flex', flexDirection: 'column', gap: '12px' } },
+          personalFiltrado.map(function (p) {
+            var isEditando = editando === p.id;
+            var isExpandido = expandido === p.id;
+            var rolColores = {
+              bombero: '#3b82f6',
+              cabo: '#8b5cf6',
+              sargento: '#f59e0b',
+              teniente: '#ef4444',
+              capitan: '#dc2626',
+              administrativo: '#10b981',
+              voluntario: '#6b7280',
+            };
+            var licencia = p.licencia || {};
+            var vencLic = verificarVencimiento(licencia.vencimiento);
+            var licAlerta = vencLic === 'vencido' || vencLic === 'proximo';
+
+            return React.createElement(
+              'div',
+              {
+                key: p.id,
+                style: Object.assign({}, styles.card, {
+                  marginBottom: '0',
+                  border:
+                    '2px solid ' +
+                    (licAlerta
+                      ? vencLic === 'vencido'
+                        ? '#ef4444'
+                        : '#f59e0b'
+                      : p.estado === 'activo'
+                      ? '#bbf7d0'
+                      : '#fecaca'),
+                }),
+              },
+              React.createElement(
+                'div',
+                {
+                  style: {
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                  },
+                  onClick: function () {
+                    setExpandido(isExpandido ? null : p.id);
+                  },
+                },
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    {
+                      style: {
+                        width: '48px',
+                        height: '48px',
+                        background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '22px',
+                        color: 'white',
+                        fontWeight: 'bold',
+                      },
+                    },
+                    (p.nombre || '?')[0].toUpperCase()
+                  ),
+                  React.createElement(
+                    'div',
+                    null,
+                    React.createElement(
+                      'h3',
+                      {
+                        style: {
+                          fontWeight: 'bold',
+                          fontSize: '16px',
+                          marginBottom: '2px',
+                        },
+                      },
+                      p.nombre + ' ' + (p.apellido || '')
+                    ),
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          display: 'flex',
+                          gap: '8px',
+                          flexWrap: 'wrap',
+                        },
+                      },
+                      p.legajo &&
+                        React.createElement(
+                          'span',
+                          { style: { fontSize: '12px', color: '#6b7280' } },
+                          'Leg: ' + p.legajo
+                        ),
+                      licencia.categoria &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '11px',
+                              background:
+                                vencLic === 'vencido'
+                                  ? '#fee2e2'
+                                  : vencLic === 'proximo'
+                                  ? '#fef3c7'
+                                  : '#dbeafe',
+                              color:
+                                vencLic === 'vencido'
+                                  ? '#dc2626'
+                                  : vencLic === 'proximo'
+                                  ? '#92400e'
+                                  : '#1e40af',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontWeight: '600',
+                            },
+                          },
+                          '🪪 Cat. ' +
+                            licencia.categoria +
+                            (vencLic === 'vencido'
+                              ? ' ⚠️ VENCIDA'
+                              : vencLic === 'proximo'
+                              ? ' ⚠️ PRÓXIMA'
+                              : ' ✓')
+                        )
+                    )
+                  )
+                ),
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      display: 'flex',
+                      gap: '8px',
+                      alignItems: 'center',
+                    },
+                  },
+                  React.createElement(
+                    'span',
+                    {
+                      style: {
+                        background: rolColores[p.rol] || '#6b7280',
+                        color: 'white',
+                        padding: '3px 10px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        textTransform: 'uppercase',
+                      },
+                    },
+                    p.rol || 'bombero'
+                  ),
+                  React.createElement(
+                    'span',
+                    {
+                      style:
+                        p.estado === 'activo'
+                          ? styles.badgeOk
+                          : styles.badgeWarn,
+                    },
+                    p.estado === 'activo' ? '✓ ACTIVO' : '⏸️ INACTIVO'
+                  ),
+                  React.createElement(
+                    'span',
+                    { style: { fontSize: '18px', color: '#6b7280' } },
+                    isExpandido ? '▲' : '▼'
+                  )
+                )
+              ),
+
+              isExpandido &&
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      marginTop: '20px',
+                      borderTop: '1px solid #e5e7eb',
+                      paddingTop: '20px',
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    {
+                      style: {
+                        display: 'flex',
+                        gap: '8px',
+                        marginBottom: '16px',
+                        flexWrap: 'wrap',
+                      },
+                    },
+                    React.createElement(
+                      'button',
+                      {
+                        style: {
+                          padding: '8px 14px',
+                          background: '#3b82f6',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                        },
+                        onClick: function (e) {
+                          e.stopPropagation();
+                          iniciarEdicion(p);
+                        },
+                      },
+                      '✏️ Editar'
+                    ),
+                    React.createElement(
+                      'button',
+                      {
+                        style: {
+                          padding: '8px 14px',
+                          background:
+                            p.estado === 'activo' ? '#f59e0b' : '#10b981',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                        },
+                        onClick: function (e) {
+                          e.stopPropagation();
+                          props.onActualizar(p.id, {
+                            estado:
+                              p.estado === 'activo' ? 'inactivo' : 'activo',
+                          });
+                        },
+                      },
+                      p.estado === 'activo' ? '⏸️ Desactivar' : '▶️ Activar'
+                    ),
+                    React.createElement(
+                      'button',
+                      {
+                        style: {
+                          padding: '8px 14px',
+                          background: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                        },
+                        onClick: function (e) {
+                          e.stopPropagation();
+                          if (window.confirm('¿Eliminar a ' + p.nombre + '?')) {
+                            props.onEliminar(p.id);
+                          }
+                        },
+                      },
+                      '🗑️ Eliminar'
+                    )
+                  ),
+
+                  isEditando &&
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          background: '#f0f9ff',
+                          padding: '20px',
+                          borderRadius: '12px',
+                          border: '2px solid #0ea5e9',
+                          marginBottom: '16px',
+                        },
+                      },
+                      React.createElement(
+                        'h4',
+                        {
+                          style: {
+                            fontWeight: 'bold',
+                            color: '#0369a1',
+                            marginBottom: '16px',
+                          },
+                        },
+                        '✏️ Editando: ' + p.nombre + ' ' + (p.apellido || '')
+                      ),
+                      React.createElement(
+                        'div',
+                        {
+                          style: {
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gap: '12px',
+                            marginBottom: '12px',
+                          },
+                        },
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Nombre'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.nombre || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  nombre: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Apellido'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.apellido || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  apellido: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Legajo'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.legajo || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  legajo: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Rol'
+                          ),
+                          React.createElement(
+                            'select',
+                            {
+                              value: formEdit.rol || 'bombero',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    rol: e.target.value,
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            },
+                            roles.map(function (r) {
+                              return React.createElement(
+                                'option',
+                                { key: r, value: r },
+                                r
+                              );
+                            })
+                          )
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Teléfono'
+                          ),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: formEdit.telefono || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  telefono: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Email'
+                          ),
+                          React.createElement('input', {
+                            type: 'email',
+                            value: formEdit.email || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  email: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Fecha Ingreso'
+                          ),
+                          React.createElement('input', {
+                            type: 'date',
+                            value: formEdit.fechaIngreso || '',
+                            onChange: function (e) {
+                              setFormEdit(
+                                Object.assign({}, formEdit, {
+                                  fechaIngreso: e.target.value,
+                                })
+                              );
+                            },
+                            style: styles.input,
+                          })
+                        ),
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'label',
+                            { style: styles.label },
+                            'Estado'
+                          ),
+                          React.createElement(
+                            'select',
+                            {
+                              value: formEdit.estado || 'activo',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    estado: e.target.value,
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            },
+                            React.createElement(
+                              'option',
+                              { value: 'activo' },
+                              'Activo'
+                            ),
+                            React.createElement(
+                              'option',
+                              { value: 'inactivo' },
+                              'Inactivo'
+                            ),
+                            React.createElement(
+                              'option',
+                              { value: 'licencia' },
+                              'De Licencia'
+                            )
+                          )
+                        )
+                      ),
+                      React.createElement(
+                        'div',
+                        {
+                          style: {
+                            background: '#dbeafe',
+                            border: '1px solid #93c5fd',
+                            borderRadius: '10px',
+                            padding: '14px',
+                            marginBottom: '12px',
+                          },
+                        },
+                        React.createElement(
+                          'h5',
+                          {
+                            style: {
+                              fontWeight: 'bold',
+                              color: '#1e40af',
+                              marginBottom: '10px',
+                            },
+                          },
+                          '🪪 Licencia de Conducir'
+                        ),
+                        React.createElement(
+                          'div',
+                          {
+                            style: {
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(3, 1fr)',
+                              gap: '10px',
+                            },
+                          },
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'N° Licencia'
+                            ),
+                            React.createElement('input', {
+                              type: 'text',
+                              value: (formEdit.licencia || {}).numero || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    licencia: Object.assign(
+                                      {},
+                                      formEdit.licencia || {},
+                                      { numero: e.target.value }
+                                    ),
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Categoría'
+                            ),
+                            React.createElement(
+                              'select',
+                              {
+                                value:
+                                  (formEdit.licencia || {}).categoria || '',
+                                onChange: function (e) {
+                                  setFormEdit(
+                                    Object.assign({}, formEdit, {
+                                      licencia: Object.assign(
+                                        {},
+                                        formEdit.licencia || {},
+                                        { categoria: e.target.value }
+                                      ),
+                                    })
+                                  );
+                                },
+                                style: styles.input,
+                              },
+                              React.createElement(
+                                'option',
+                                { value: '' },
+                                'Sin licencia'
+                              ),
+                              categoriasLicencia.map(function (c) {
+                                return React.createElement(
+                                  'option',
+                                  { key: c, value: c },
+                                  'Categoría ' + c
+                                );
+                              })
+                            )
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Vencimiento'
+                            ),
+                            React.createElement('input', {
+                              type: 'date',
+                              value:
+                                (formEdit.licencia || {}).vencimiento || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    licencia: Object.assign(
+                                      {},
+                                      formEdit.licencia || {},
+                                      { vencimiento: e.target.value }
+                                    ),
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            { style: { gridColumn: 'span 3' } },
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Observaciones'
+                            ),
+                            React.createElement('input', {
+                              type: 'text',
+                              value:
+                                (formEdit.licencia || {}).observaciones || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    licencia: Object.assign(
+                                      {},
+                                      formEdit.licencia || {},
+                                      { observaciones: e.target.value }
+                                    ),
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          )
+                        )
+                      ),
+                      React.createElement(
+                        'div',
+                        { style: { display: 'flex', gap: '10px' } },
+                        React.createElement(
+                          'button',
+                          {
+                            style: {
+                              flex: 1,
+                              padding: '10px',
+                              background: '#10b981',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                            },
+                            onClick: function () {
+                              guardarEdicion(p.id);
+                            },
+                          },
+                          '💾 Guardar'
+                        ),
+                        React.createElement(
+                          'button',
+                          {
+                            style: {
+                              flex: 1,
+                              padding: '10px',
+                              background: '#6b7280',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                            },
+                            onClick: function () {
+                              setEditando(null);
+                            },
+                          },
+                          '✖ Cancelar'
+                        )
+                      )
+                    ),
+
+                  React.createElement(
+                    'div',
+                    {
+                      style: {
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '16px',
+                      },
+                    },
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          background: '#f9fafb',
+                          padding: '16px',
+                          borderRadius: '10px',
+                          border: '1px solid #e5e7eb',
+                        },
+                      },
+                      React.createElement(
+                        'h5',
+                        {
+                          style: {
+                            fontWeight: 'bold',
+                            color: '#374151',
+                            marginBottom: '10px',
+                          },
+                        },
+                        '👤 Datos Personales'
+                      ),
+                      React.createElement(
+                        'div',
+                        {
+                          style: {
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '6px',
+                          },
+                        },
+                        p.telefono &&
+                          React.createElement(
+                            'p',
+                            { style: { fontSize: '13px' } },
+                            '📞 ' + p.telefono
+                          ),
+                        p.email &&
+                          React.createElement(
+                            'p',
+                            { style: { fontSize: '13px' } },
+                            '✉️ ' + p.email
+                          ),
+                        p.fechaIngreso &&
+                          React.createElement(
+                            'p',
+                            { style: { fontSize: '13px' } },
+                            '📅 Ingreso: ' + p.fechaIngreso
+                          )
+                      )
+                    ),
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          background:
+                            vencLic === 'vencido'
+                              ? '#fee2e2'
+                              : vencLic === 'proximo'
+                              ? '#fef3c7'
+                              : '#dbeafe',
+                          padding: '16px',
+                          borderRadius: '10px',
+                          border:
+                            '1px solid ' +
+                            (vencLic === 'vencido'
+                              ? '#fecaca'
+                              : vencLic === 'proximo'
+                              ? '#fde68a'
+                              : '#93c5fd'),
+                        },
+                      },
+                      React.createElement(
+                        'h5',
+                        {
+                          style: {
+                            fontWeight: 'bold',
+                            color:
+                              vencLic === 'vencido'
+                                ? '#dc2626'
+                                : vencLic === 'proximo'
+                                ? '#92400e'
+                                : '#1e40af',
+                            marginBottom: '10px',
+                          },
+                        },
+                        '🪪 Licencia de Conducir'
+                      ),
+                      licencia.categoria
+                        ? React.createElement(
+                            'div',
+                            {
+                              style: {
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '6px',
+                              },
+                            },
+                            React.createElement(
+                              'p',
+                              {
+                                style: { fontSize: '14px', fontWeight: '700' },
+                              },
+                              'Categoría ' + licencia.categoria
+                            ),
+                            licencia.numero &&
+                              React.createElement(
+                                'p',
+                                { style: { fontSize: '13px' } },
+                                '🔢 N°: ' + licencia.numero
+                              ),
+                            licencia.vencimiento &&
+                              React.createElement(
+                                'p',
+                                {
+                                  style: {
+                                    fontSize: '13px',
+                                    fontWeight: '600',
+                                    color:
+                                      vencLic === 'vencido'
+                                        ? '#dc2626'
+                                        : vencLic === 'proximo'
+                                        ? '#92400e'
+                                        : '#15803d',
+                                  },
+                                },
+                                '📅 Vence: ' +
+                                  licencia.vencimiento +
+                                  (vencLic === 'vencido'
+                                    ? ' ⚠️ VENCIDA'
+                                    : vencLic === 'proximo'
+                                    ? ' ⚠️ PRÓXIMA'
+                                    : ' ✓')
+                              ),
+                            licencia.observaciones &&
+                              React.createElement(
+                                'p',
+                                {
+                                  style: {
+                                    fontSize: '12px',
+                                    color: '#6b7280',
+                                    fontStyle: 'italic',
+                                  },
+                                },
+                                '💬 ' + licencia.observaciones
+                              )
+                          )
+                        : React.createElement(
+                            'p',
+                            { style: { fontSize: '13px', color: '#9ca3af' } },
+                            'Sin licencia registrada'
+                          )
+                    )
+                  )
+                )
+            );
+          })
+        )
+  );
+}
+
+// ============================================
+// BITÁCORA - POR ERA, HERRAMIENTA Y MÓVIL
+// ============================================
+function Bitacora(props) {
+  var formInicial = {
+    titulo: '',
+    descripcion: '',
+    tipo: 'incidente',
+    entidadTipo: 'vehiculo',
+    entidadId: '',
+    fecha: new Date().toISOString().split('T')[0],
+  };
+  var formState = useState(formInicial);
+  var form = formState[0];
+  var setForm = formState[1];
+  var mostrarFormState = useState(false);
+  var mostrarForm = mostrarFormState[0];
+  var setMostrarForm = mostrarFormState[1];
+  var editandoState = useState(null);
+  var editando = editandoState[0];
+  var setEditando = editandoState[1];
+  var formEditState = useState({});
+  var formEdit = formEditState[0];
+  var setFormEdit = formEditState[1];
+  var expandidoState = useState(null);
+  var expandido = expandidoState[0];
+  var setExpandido = expandidoState[1];
+  var filtroEntidadState = useState('');
+  var filtroEntidad = filtroEntidadState[0];
+  var setFiltroEntidad = filtroEntidadState[1];
+  var filtroTipoEntState = useState('');
+  var filtroTipoEnt = filtroTipoEntState[0];
+  var setFiltroTipoEnt = filtroTipoEntState[1];
+
+  var tipos = [
+    'incidente',
+    'mantenimiento',
+    'capacitacion',
+    'inspeccion',
+    'reparacion',
+    'otro',
+  ];
+  var tipoColores = {
+    incidente: '#ef4444',
+    mantenimiento: '#f59e0b',
+    capacitacion: '#3b82f6',
+    inspeccion: '#8b5cf6',
+    reparacion: '#10b981',
+    otro: '#6b7280',
+  };
+  var tipoIconos = {
+    incidente: '🚨',
+    mantenimiento: '🔧',
+    capacitacion: '📚',
+    inspeccion: '🔍',
+    reparacion: '🛠️',
+    otro: '📝',
+  };
+
+  var getEntidadesDisponibles = function (tipoEnt) {
+    if (tipoEnt === 'vehiculo')
+      return props.vehiculos.map(function (v) {
+        return { id: v.id, nombre: v.nombre };
+      });
+    if (tipoEnt === 'era')
+      return props.eras.map(function (e) {
+        return {
+          id: e.id,
+          nombre: e.marca + ' ' + e.modelo + ' [' + e.serial + ']',
+        };
+      });
+    if (tipoEnt === 'equipo')
+      return props.equipos.map(function (e) {
+        return {
+          id: e.id,
+          nombre:
+            e.nombre + (e.codigoInterno ? ' [' + e.codigoInterno + ']' : ''),
+        };
+      });
+    if (tipoEnt === 'herramienta')
+      return props.inventario.map(function (i) {
+        return { id: i.id, nombre: i.nombre + ' [' + i.categoria + ']' };
+      });
+    return [];
+  };
+
+  var getNombreEntidad = function (tipoEnt, entidadId) {
+    var lista = getEntidadesDisponibles(tipoEnt);
+    var found = lista.find(function (e) {
+      return e.id === entidadId;
+    });
+    return found ? found.nombre : 'N/D';
+  };
+
+  var bitacoraFiltrada = props.bitacora.filter(function (b) {
+    var matchTipo = !filtroTipoEnt || b.entidadTipo === filtroTipoEnt;
+    var matchEntidad = !filtroEntidad || b.entidadId === filtroEntidad;
+    return matchTipo && matchEntidad;
+  });
+
+  var iniciarEdicion = function (b) {
+    setEditando(b.id);
+    setFormEdit({
+      titulo: b.titulo || '',
+      descripcion: b.descripcion || '',
+      tipo: b.tipo || 'incidente',
+      entidadTipo: b.entidadTipo || 'vehiculo',
+      entidadId: b.entidadId || '',
+      fecha: b.fecha || '',
+    });
+  };
+
+  var guardarEdicion = async function (bId) {
+    await props.onActualizar(bId, formEdit);
+    setEditando(null);
+    alert('✅ Registro actualizado correctamente');
+  };
+
+  var handleSubmit = async function (e) {
+    e.preventDefault();
+    if (!form.titulo.trim()) {
+      alert('El título es obligatorio');
+      return;
+    }
+    if (!form.entidadId) {
+      alert('Seleccioná una entidad');
+      return;
+    }
+    var nombreEntidad = getNombreEntidad(form.entidadTipo, form.entidadId);
+    var id = await props.onAgregar(
+      Object.assign({}, form, { entidadNombre: nombreEntidad })
+    );
+    if (id) {
+      setForm(formInicial);
+      setMostrarForm(false);
+      alert('✅ Registro agregado');
+    }
+  };
+
+  var entidadIconos = {
+    vehiculo: '🚛',
+    era: '🎽',
+    equipo: '🧯',
+    herramienta: '🔧',
+  };
+  var entidadLabels = {
+    vehiculo: 'Móvil',
+    era: 'ERA',
+    equipo: 'Equipo',
+    herramienta: 'Herramienta/Item',
+  };
+
+  return React.createElement(
+    'div',
+    null,
+    React.createElement(
+      'div',
+      {
+        style: {
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '24px',
+        },
+      },
+      React.createElement('h2', { style: styles.pageTitle }, '📝 Bitácora'),
+      React.createElement(
+        'button',
+        {
+          style: styles.btnPrimary,
+          onClick: function () {
+            setMostrarForm(!mostrarForm);
+          },
+        },
+        mostrarForm ? '✖ Cancelar' : '➕ Nuevo Registro'
+      )
+    ),
+
+    mostrarForm &&
+      React.createElement(
+        'div',
+        {
+          style: Object.assign({}, styles.card, {
+            background: '#fafafa',
+            border: '2px solid #e5e7eb',
+            marginBottom: '24px',
+          }),
+        },
+        React.createElement(
+          'h3',
+          { style: styles.cardTitle },
+          '➕ Nuevo Registro de Bitácora'
+        ),
+        React.createElement(
+          'form',
+          { onSubmit: handleSubmit },
+          React.createElement(
+            'div',
+            {
+              style: {
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '16px',
+                marginBottom: '16px',
+              },
+            },
+            React.createElement(
+              'div',
+              { style: { gridColumn: 'span 2' } },
+              React.createElement('label', { style: styles.label }, 'Título *'),
+              React.createElement('input', {
+                type: 'text',
+                value: form.titulo,
+                onChange: function (e) {
+                  setForm(Object.assign({}, form, { titulo: e.target.value }));
+                },
+                style: styles.input,
+                required: true,
+                placeholder: 'Título del registro',
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Fecha'),
+              React.createElement('input', {
+                type: 'date',
+                value: form.fecha,
+                onChange: function (e) {
+                  setForm(Object.assign({}, form, { fecha: e.target.value }));
+                },
+                style: styles.input,
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement(
+                'label',
+                { style: styles.label },
+                'Tipo de Registro'
+              ),
+              React.createElement(
+                'select',
+                {
+                  value: form.tipo,
+                  onChange: function (e) {
+                    setForm(Object.assign({}, form, { tipo: e.target.value }));
+                  },
+                  style: styles.input,
+                },
+                tipos.map(function (t) {
+                  return React.createElement(
+                    'option',
+                    { key: t, value: t },
+                    tipoIconos[t] + ' ' + t.charAt(0).toUpperCase() + t.slice(1)
+                  );
+                })
+              )
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement(
+                'label',
+                { style: styles.label },
+                'Tipo de Entidad'
+              ),
+              React.createElement(
+                'select',
+                {
+                  value: form.entidadTipo,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, {
+                        entidadTipo: e.target.value,
+                        entidadId: '',
+                      })
+                    );
+                  },
+                  style: styles.input,
+                },
+                React.createElement(
+                  'option',
+                  { value: 'vehiculo' },
+                  '🚛 Móvil'
+                ),
+                React.createElement('option', { value: 'era' }, '🎽 ERA'),
+                React.createElement('option', { value: 'equipo' }, '🧯 Equipo'),
+                React.createElement(
+                  'option',
+                  { value: 'herramienta' },
+                  '🔧 Herramienta/Item'
+                )
+              )
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement(
+                'label',
+                { style: styles.label },
+                entidadLabels[form.entidadTipo] + ' *'
+              ),
+              React.createElement(
+                'select',
+                {
+                  value: form.entidadId,
+                  onChange: function (e) {
+                    setForm(
+                      Object.assign({}, form, { entidadId: e.target.value })
+                    );
+                  },
+                  style: styles.input,
+                },
+                React.createElement('option', { value: '' }, 'Seleccionar...'),
+                getEntidadesDisponibles(form.entidadTipo).map(function (ent) {
+                  return React.createElement(
+                    'option',
+                    { key: ent.id, value: ent.id },
+                    ent.nombre
+                  );
+                })
+              )
+            ),
+            React.createElement(
+              'div',
+              { style: { gridColumn: 'span 3' } },
+              React.createElement(
+                'label',
+                { style: styles.label },
+                'Descripción'
+              ),
+              React.createElement('textarea', {
+                value: form.descripcion,
+                onChange: function (e) {
+                  setForm(
+                    Object.assign({}, form, { descripcion: e.target.value })
+                  );
+                },
+                style: Object.assign({}, styles.input, {
+                  minHeight: '100px',
+                  resize: 'vertical',
+                }),
+                placeholder: 'Descripción detallada del registro...',
+              })
+            )
+          ),
+          React.createElement(
+            'button',
+            {
+              type: 'submit',
+              style: {
+                width: '100%',
+                padding: '12px',
+                background: '#374151',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '700',
+                cursor: 'pointer',
+              },
+            },
+            '💾 Guardar Registro'
+          )
+        )
+      ),
+
+    React.createElement(
+      'div',
+      {
+        style: {
+          display: 'flex',
+          gap: '12px',
+          marginBottom: '20px',
+          flexWrap: 'wrap',
+        },
+      },
+      React.createElement(
+        'select',
+        {
+          value: filtroTipoEnt,
+          onChange: function (e) {
+            setFiltroTipoEnt(e.target.value);
+            setFiltroEntidad('');
+          },
+          style: Object.assign({}, styles.input, { width: '180px' }),
+        },
+        React.createElement('option', { value: '' }, 'Todas las entidades'),
+        React.createElement('option', { value: 'vehiculo' }, '🚛 Móviles'),
+        React.createElement('option', { value: 'era' }, '🎽 ERAs'),
+        React.createElement('option', { value: 'equipo' }, '🧯 Equipos'),
+        React.createElement(
+          'option',
+          { value: 'herramienta' },
+          '🔧 Herramientas'
+        )
+      ),
+      filtroTipoEnt &&
+        React.createElement(
+          'select',
+          {
+            value: filtroEntidad,
+            onChange: function (e) {
+              setFiltroEntidad(e.target.value);
+            },
+            style: Object.assign({}, styles.input, {
+              flex: 1,
+              minWidth: '200px',
+            }),
+          },
+          React.createElement(
+            'option',
+            { value: '' },
+            'Todos los ' + (entidadLabels[filtroTipoEnt] || '') + 's'
+          ),
+          getEntidadesDisponibles(filtroTipoEnt).map(function (ent) {
+            return React.createElement(
+              'option',
+              { key: ent.id, value: ent.id },
+              ent.nombre
+            );
+          })
+        )
+    ),
+
+    bitacoraFiltrada.length === 0
+      ? React.createElement(
+          'div',
+          {
+            style: Object.assign({}, styles.card, {
+              textAlign: 'center',
+              padding: '60px',
+            }),
+          },
+          React.createElement(
+            'div',
+            { style: { fontSize: '64px', marginBottom: '16px' } },
+            '📝'
+          ),
+          React.createElement(
+            'h3',
+            { style: { color: '#6b7280' } },
+            'No hay registros en la bitácora'
+          )
+        )
+      : React.createElement(
+          'div',
+          { style: { display: 'flex', flexDirection: 'column', gap: '12px' } },
+          bitacoraFiltrada.map(function (b) {
+            var isEditando = editando === b.id;
+            var isExpandido = expandido === b.id;
+            var nombreEntidad =
+              b.entidadNombre || getNombreEntidad(b.entidadTipo, b.entidadId);
+
+            return React.createElement(
+              'div',
+              {
+                key: b.id,
+                style: Object.assign({}, styles.card, {
+                  borderLeft: '5px solid ' + (tipoColores[b.tipo] || '#e5e7eb'),
+                  marginBottom: '0',
+                }),
+              },
+              React.createElement(
+                'div',
+                {
+                  style: {
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    flexWrap: 'wrap',
+                    gap: '10px',
+                  },
+                },
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '14px',
+                      flex: 1,
+                      cursor: 'pointer',
+                    },
+                    onClick: function () {
+                      setExpandido(isExpandido ? null : b.id);
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    {
+                      style: {
+                        width: '44px',
+                        height: '44px',
+                        background: tipoColores[b.tipo] || '#6b7280',
+                        borderRadius: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '22px',
+                        flexShrink: 0,
+                      },
+                    },
+                    tipoIconos[b.tipo] || '📝'
+                  ),
+                  React.createElement(
+                    'div',
+                    null,
+                    React.createElement(
+                      'h3',
+                      {
+                        style: {
+                          fontWeight: 'bold',
+                          fontSize: '16px',
+                          marginBottom: '4px',
+                        },
+                      },
+                      b.titulo
+                    ),
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          display: 'flex',
+                          gap: '8px',
+                          flexWrap: 'wrap',
+                        },
+                      },
+                      React.createElement(
+                        'span',
+                        {
+                          style: {
+                            background:
+                              (tipoColores[b.tipo] || '#6b7280') + '20',
+                            color: tipoColores[b.tipo] || '#374151',
+                            padding: '2px 8px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                          },
+                        },
+                        tipoIconos[b.tipo] +
+                          ' ' +
+                          (b.tipo || '').charAt(0).toUpperCase() +
+                          (b.tipo || '').slice(1)
+                      ),
+                      b.entidadTipo &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              background: '#f3f4f6',
+                              color: '#374151',
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                            },
+                          },
+                          entidadIconos[b.entidadTipo] + ' ' + nombreEntidad
+                        ),
+                      b.fecha &&
+                        React.createElement(
+                          'span',
+                          { style: { fontSize: '12px', color: '#6b7280' } },
+                          '📅 ' + b.fecha
+                        )
+                    )
+                  )
+                ),
+                React.createElement(
+                  'div',
+                  { style: { display: 'flex', gap: '8px' } },
+                  React.createElement(
+                    'button',
+                    {
+                      style: {
+                        padding: '7px 12px',
+                        background: '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                      },
+                      onClick: function () {
+                        iniciarEdicion(b);
+                      },
+                    },
+                    '✏️ Editar'
+                  ),
+                  React.createElement(
+                    'button',
+                    {
+                      style: {
+                        padding: '7px 12px',
+                        background: '#ef4444',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                      },
+                      onClick: function () {
+                        if (window.confirm('¿Eliminar este registro?')) {
+                          props.onEliminar(b.id);
+                        }
+                      },
+                    },
+                    '🗑️'
+                  )
+                )
+              ),
+
+              isExpandido &&
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      marginTop: '16px',
+                      borderTop: '1px solid #e5e7eb',
+                      paddingTop: '16px',
+                    },
+                  },
+                  isEditando
+                    ? React.createElement(
+                        'div',
+                        {
+                          style: {
+                            background: '#f9fafb',
+                            padding: '16px',
+                            borderRadius: '10px',
+                          },
+                        },
+                        React.createElement(
+                          'div',
+                          {
+                            style: {
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(3, 1fr)',
+                              gap: '12px',
+                              marginBottom: '12px',
+                            },
+                          },
+                          React.createElement(
+                            'div',
+                            { style: { gridColumn: 'span 2' } },
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Título'
+                            ),
+                            React.createElement('input', {
+                              type: 'text',
+                              value: formEdit.titulo || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    titulo: e.target.value,
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Fecha'
+                            ),
+                            React.createElement('input', {
+                              type: 'date',
+                              value: formEdit.fecha || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    fecha: e.target.value,
+                                  })
+                                );
+                              },
+                              style: styles.input,
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Tipo'
+                            ),
+                            React.createElement(
+                              'select',
+                              {
+                                value: formEdit.tipo || 'incidente',
+                                onChange: function (e) {
+                                  setFormEdit(
+                                    Object.assign({}, formEdit, {
+                                      tipo: e.target.value,
+                                    })
+                                  );
+                                },
+                                style: styles.input,
+                              },
+                              tipos.map(function (t) {
+                                return React.createElement(
+                                  'option',
+                                  { key: t, value: t },
+                                  tipoIconos[t] +
+                                    ' ' +
+                                    t.charAt(0).toUpperCase() +
+                                    t.slice(1)
+                                );
+                              })
+                            )
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Tipo Entidad'
+                            ),
+                            React.createElement(
+                              'select',
+                              {
+                                value: formEdit.entidadTipo || 'vehiculo',
+                                onChange: function (e) {
+                                  setFormEdit(
+                                    Object.assign({}, formEdit, {
+                                      entidadTipo: e.target.value,
+                                      entidadId: '',
+                                    })
+                                  );
+                                },
+                                style: styles.input,
+                              },
+                              React.createElement(
+                                'option',
+                                { value: 'vehiculo' },
+                                '🚛 Móvil'
+                              ),
+                              React.createElement(
+                                'option',
+                                { value: 'era' },
+                                '🎽 ERA'
+                              ),
+                              React.createElement(
+                                'option',
+                                { value: 'equipo' },
+                                '🧯 Equipo'
+                              ),
+                              React.createElement(
+                                'option',
+                                { value: 'herramienta' },
+                                '🔧 Herramienta'
+                              )
+                            )
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              entidadLabels[formEdit.entidadTipo || 'vehiculo']
+                            ),
+                            React.createElement(
+                              'select',
+                              {
+                                value: formEdit.entidadId || '',
+                                onChange: function (e) {
+                                  setFormEdit(
+                                    Object.assign({}, formEdit, {
+                                      entidadId: e.target.value,
+                                    })
+                                  );
+                                },
+                                style: styles.input,
+                              },
+                              React.createElement(
+                                'option',
+                                { value: '' },
+                                'Seleccionar...'
+                              ),
+                              getEntidadesDisponibles(
+                                formEdit.entidadTipo || 'vehiculo'
+                              ).map(function (ent) {
+                                return React.createElement(
+                                  'option',
+                                  { key: ent.id, value: ent.id },
+                                  ent.nombre
+                                );
+                              })
+                            )
+                          ),
+                          React.createElement(
+                            'div',
+                            { style: { gridColumn: 'span 3' } },
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Descripción'
+                            ),
+                            React.createElement('textarea', {
+                              value: formEdit.descripcion || '',
+                              onChange: function (e) {
+                                setFormEdit(
+                                  Object.assign({}, formEdit, {
+                                    descripcion: e.target.value,
+                                  })
+                                );
+                              },
+                              style: Object.assign({}, styles.input, {
+                                minHeight: '80px',
+                                resize: 'vertical',
+                              }),
+                            })
+                          )
+                        ),
+                        React.createElement(
+                          'div',
+                          { style: { display: 'flex', gap: '10px' } },
+                          React.createElement(
+                            'button',
+                            {
+                              style: {
+                                flex: 1,
+                                padding: '10px',
+                                background: '#10b981',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                              },
+                              onClick: function () {
+                                guardarEdicion(b.id);
+                              },
+                            },
+                            '💾 Guardar'
+                          ),
+                          React.createElement(
+                            'button',
+                            {
+                              style: {
+                                flex: 1,
+                                padding: '10px',
+                                background: '#6b7280',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                              },
+                              onClick: function () {
+                                setEditando(null);
+                              },
+                            },
+                            '✖ Cancelar'
+                          )
+                        )
+                      )
+                    : b.descripcion &&
+                        React.createElement(
+                          'div',
+                          {
+                            style: {
+                              padding: '14px',
+                              background: '#f9fafb',
+                              borderRadius: '8px',
+                              borderLeft:
+                                '3px solid ' +
+                                (tipoColores[b.tipo] || '#e5e7eb'),
+                            },
+                          },
+                          React.createElement(
+                            'p',
+                            {
+                              style: {
+                                fontSize: '14px',
+                                color: '#374151',
+                                lineHeight: '1.6',
+                                whiteSpace: 'pre-wrap',
+                              },
+                            },
+                            b.descripcion
+                          )
+                        )
+                )
+            );
+          })
+        )
+  );
+}
+
+// ============================================
+// RESTO DE FUNCIONES SIN CAMBIOS
+// ============================================
+function Vehiculos(props) {
+  var expandedState = useState({});
+  var expanded = expandedState[0];
+  var setExpanded = expandedState[1];
+  var tabsState = useState({});
+  var tabs = tabsState[0];
+  var setTabs = tabsState[1];
+  var editandoState = useState(null);
+  var editando = editandoState[0];
+  var setEditando = editandoState[1];
+  var formEditState = useState({});
+  var formEdit = formEditState[0];
+  var setFormEdit = formEditState[1];
+  var mostrarFormState = useState(false);
+  var mostrarForm = mostrarFormState[0];
+  var setMostrarForm = mostrarFormState[1];
+  var formState = useState({
+    nombre: '',
+    tipo: 'Camion Bomba',
+    patente: '',
+    año: '',
+    estado: 'operativo',
+    chasis: '',
+    motor: '',
+    pruebaHidraulica: '',
+    vencimiento: '',
+  });
+  var form = formState[0];
+  var setForm = formState[1];
+  var nuevoCompNombreState = useState('');
+  var nuevoCompNombre = nuevoCompNombreState[0];
+  var setNuevoCompNombre = nuevoCompNombreState[1];
+  var nuevoSubNombresState = useState({});
+  var nuevoSubNombres = nuevoSubNombresState[0];
+  var setNuevoSubNombres = nuevoSubNombresState[1];
+  var expandCompState = useState({});
+  var expandComp = expandCompState[0];
+  var setExpandComp = expandCompState[1];
+  var itemSelSubcompState = useState({});
+  var itemSelSubcomp = itemSelSubcompState[0];
+  var setItemSelSubcomp = itemSelSubcompState[1];
+  var cantSelSubcompState = useState({});
+  var cantSelSubcomp = cantSelSubcompState[0];
+  var setCantSelSubcomp = cantSelSubcompState[1];
+  var itemAsignarState = useState('');
+  var itemAsignar = itemAsignarState[0];
+  var setItemAsignar = itemAsignarState[1];
+  var cantAsignarState = useState(1);
+  var cantAsignar = cantAsignarState[0];
+  var setCantAsignar = cantAsignarState[1];
+  var eraAsignarState = useState('');
+  var eraAsignar = eraAsignarState[0];
+  var setEraAsignar = eraAsignarState[1];
+  var equipoAsignarState = useState('');
+  var equipoAsignar = equipoAsignarState[0];
+  var setEquipoAsignar = equipoAsignarState[1];
+
+  var setTab = function (vId, tabKey) {
+    var t = Object.assign({}, tabs);
+    t[vId] = tabKey;
+    setTabs(t);
+  };
+
+  var verificarVencimiento = function (fecha) {
+    if (!fecha) return '';
+    var dias = Math.ceil(
+      (new Date(fecha) - new Date()) / (1000 * 60 * 60 * 24)
+    );
+    if (dias < 0) return 'vencido';
+    if (dias <= 30) return 'proximo';
+    return 'ok';
+  };
+
+  var getBgColor = function (est) {
+    return est === 'vencido'
+      ? '#fee2e2'
+      : est === 'proximo'
+      ? '#fef3c7'
+      : '#f9fafb';
+  };
+  var getBorderColor = function (est) {
+    return est === 'vencido'
+      ? '#fecaca'
+      : est === 'proximo'
+      ? '#fde68a'
+      : '#e5e7eb';
+  };
+
+  var iniciarEdicion = function (v) {
+    setEditando(v.id);
+    setFormEdit({
+      nombre: v.nombre || '',
+      tipo: v.tipo || '',
+      patente: v.patente || '',
+      año: v.año || '',
+      chasis: v.chasis || '',
+      motor: v.motor || '',
+      pruebaHidraulica: v.pruebaHidraulica || '',
+      vencimiento: v.vencimiento || '',
+    });
+  };
+
+  var guardarEdicion = async function (vId) {
+    await props.onActualizar(vId, formEdit);
+    setEditando(null);
+    alert('✅ Móvil actualizado correctamente');
+  };
+
+  var handleSubmit = async function (e) {
+    e.preventDefault();
+    if (!form.nombre.trim()) {
+      alert('El nombre es obligatorio');
+      return;
+    }
+    await props.onAgregar(form);
+    setForm({
+      nombre: '',
+      tipo: 'Camion Bomba',
+      patente: '',
+      año: '',
+      estado: 'operativo',
+      chasis: '',
+      motor: '',
+      pruebaHidraulica: '',
+      vencimiento: '',
+    });
+    setMostrarForm(false);
+  };
+
+  var tabsConfig = [
+    { key: 'info', label: '📋 Info' },
+    { key: 'bateria', label: '🔋 Batería' },
+    { key: 'fluidos', label: '🛢️ Fluidos' },
+    { key: 'compartimientos', label: '🗄️ Compartimientos' },
+    { key: 'items', label: '📦 Items' },
+    { key: 'eras', label: '🎽 ERAs' },
+    { key: 'equipos', label: '🧯 Equipos' },
+    { key: 'vtv', label: '🚗 VTV' },
+  ];
 
   return React.createElement(
     'div',
@@ -944,7 +6342,7 @@ function Vehiculos(props) {
                 },
                 style: styles.input,
                 required: true,
-                placeholder: 'Ej: TB-01',
+                placeholder: 'Ej: Autobomba 1',
               })
             ),
             React.createElement(
@@ -983,7 +6381,6 @@ function Vehiculos(props) {
                   setForm(Object.assign({}, form, { patente: e.target.value }));
                 },
                 style: styles.input,
-                placeholder: 'ABC-123',
               })
             ),
             React.createElement(
@@ -997,19 +6394,12 @@ function Vehiculos(props) {
                   setForm(Object.assign({}, form, { año: e.target.value }));
                 },
                 style: styles.input,
-                placeholder: '2020',
               })
             ),
             React.createElement(
               'div',
               null,
-              React.createElement(
-                'label',
-                {
-                  style: Object.assign({}, styles.label, { color: '#dc2626' }),
-                },
-                '🔩 Chasis *'
-              ),
+              React.createElement('label', { style: styles.label }, 'Chasis'),
               React.createElement('input', {
                 type: 'text',
                 value: form.chasis,
@@ -1017,65 +6407,17 @@ function Vehiculos(props) {
                   setForm(Object.assign({}, form, { chasis: e.target.value }));
                 },
                 style: styles.input,
-                placeholder: 'Número de chasis',
               })
             ),
             React.createElement(
               'div',
               null,
-              React.createElement(
-                'label',
-                {
-                  style: Object.assign({}, styles.label, { color: '#dc2626' }),
-                },
-                '⚙️ Motor *'
-              ),
+              React.createElement('label', { style: styles.label }, 'Motor'),
               React.createElement('input', {
                 type: 'text',
                 value: form.motor,
                 onChange: function (e) {
                   setForm(Object.assign({}, form, { motor: e.target.value }));
-                },
-                style: styles.input,
-                placeholder: 'Número de motor',
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Prueba Hidráulica'
-              ),
-              React.createElement('input', {
-                type: 'date',
-                value: form.pruebaHidraulica,
-                onChange: function (e) {
-                  setForm(
-                    Object.assign({}, form, {
-                      pruebaHidraulica: e.target.value,
-                    })
-                  );
-                },
-                style: styles.input,
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Vencimiento General'
-              ),
-              React.createElement('input', {
-                type: 'date',
-                value: form.vencimiento,
-                onChange: function (e) {
-                  setForm(
-                    Object.assign({}, form, { vencimiento: e.target.value })
-                  );
                 },
                 style: styles.input,
               })
@@ -1085,19 +6427,18 @@ function Vehiculos(props) {
             'button',
             {
               type: 'submit',
-              disabled: guardando,
               style: {
                 width: '100%',
-                padding: '14px',
-                background: guardando ? '#9ca3af' : '#10b981',
+                padding: '12px',
+                background: '#2563eb',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: '700',
-                cursor: guardando ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
               },
             },
-            guardando ? '⏳ Guardando...' : '💾 Agregar Móvil'
+            '💾 Agregar Móvil'
           )
         )
       ),
@@ -1126,19 +6467,58 @@ function Vehiculos(props) {
           'div',
           { style: { display: 'flex', flexDirection: 'column', gap: '16px' } },
           props.vehiculos.map(function (v) {
-            var exp = expandido === v.id;
-            var tabActual = getTab(v.id);
-            var diasVtv = null;
-            var vtvEstado = 'sin-datos';
-            if (v.vtv && v.vtv.vencimiento) {
-              diasVtv = Math.ceil(
-                (new Date(v.vtv.vencimiento) - new Date()) /
-                  (1000 * 60 * 60 * 24)
+            var exp = expanded[v.id];
+            var tabActual = tabs[v.id] || 'info';
+            var bateria = v.bateria || {};
+            var compartimientos = v.compartimientos || [];
+            var totalItemsComps = compartimientos.reduce(function (acc, c) {
+              return (
+                acc +
+                (c.subcompartimientos || []).reduce(function (a, s) {
+                  return a + (s.items || []).length;
+                }, 0)
               );
-              if (!v.vtv.apta || diasVtv < 0) vtvEstado = 'vencida';
-              else if (diasVtv <= 30) vtvEstado = 'proxima';
-              else vtvEstado = 'apta';
-            }
+            }, 0);
+            var erasAsignadas = (v.erasAsignadas || [])
+              .map(function (eId) {
+                return props.eras.find(function (e) {
+                  return e.id === eId;
+                });
+              })
+              .filter(Boolean);
+            var equiposAsignados = (v.equiposAsignados || [])
+              .map(function (eId) {
+                return props.equipos.find(function (e) {
+                  return e.id === eId;
+                });
+              })
+              .filter(Boolean);
+            var itemsAsignados = v.itemsAsignados || [];
+            var erasDisponibles = props.eras.filter(function (e) {
+              return !e.vehiculoAsignado && e.estado === 'activo';
+            });
+            var equiposDisponibles = props.equipos.filter(function (e) {
+              return !e.vehiculoAsignado && e.estado === 'operativo';
+            });
+            var vtvVenc =
+              v.vtv && v.vtv.vencimiento
+                ? verificarVencimiento(v.vtv.vencimiento)
+                : '';
+            var diasVtv =
+              v.vtv && v.vtv.vencimiento
+                ? Math.ceil(
+                    (new Date(v.vtv.vencimiento) - new Date()) /
+                      (1000 * 60 * 60 * 24)
+                  )
+                : null;
+            var vtvEstado =
+              !v.vtv || !v.vtv.vencimiento
+                ? 'sin_datos'
+                : vtvVenc === 'vencido'
+                ? 'vencida'
+                : vtvVenc === 'proximo'
+                ? 'proxima'
+                : 'apta';
             var vtvColor =
               vtvEstado === 'apta'
                 ? '#059669'
@@ -1155,34 +6535,17 @@ function Vehiculos(props) {
                 : vtvEstado === 'vencida'
                 ? '#fee2e2'
                 : '#f3f4f6';
-            var erasAsignadas = (v.erasAsignadas || [])
-              .map(function (eraId) {
-                return props.eras.find(function (e) {
-                  return e.id === eraId;
-                });
-              })
-              .filter(Boolean);
-            var itemsAsignados = v.itemsAsignados || [];
-            var compartimientos = v.compartimientos || [];
-            var erasDisponibles = props.eras.filter(function (era) {
-              return (
-                era.estado === 'activo' &&
-                !(v.erasAsignadas || []).includes(era.id)
-              );
-            });
-            var totalItemsComps = compartimientos.reduce(function (acc, c) {
-              return (
-                acc +
-                (c.subcompartimientos || []).reduce(function (acc2, s) {
-                  return acc2 + (s.items || []).length;
-                }, 0)
-              );
-            }, 0);
 
             return React.createElement(
               'div',
-              { key: v.id, style: styles.card },
-              // HEADER DEL VEHICULO
+              {
+                key: v.id,
+                style: Object.assign({}, styles.card, {
+                  border:
+                    '2px solid ' +
+                    (v.estado === 'operativo' ? '#bbf7d0' : '#fde68a'),
+                }),
+              },
               React.createElement(
                 'div',
                 {
@@ -1193,7 +6556,9 @@ function Vehiculos(props) {
                     cursor: 'pointer',
                   },
                   onClick: function () {
-                    setExpandido(exp ? null : v.id);
+                    var e = Object.assign({}, expanded);
+                    e[v.id] = !e[v.id];
+                    setExpanded(e);
                   },
                 },
                 React.createElement(
@@ -1209,18 +6574,17 @@ function Vehiculos(props) {
                     'div',
                     {
                       style: {
-                        width: '56px',
+                        width: '56                  px',
                         height: '56px',
                         background:
                           v.estado === 'operativo'
                             ? 'linear-gradient(135deg, #10b981, #059669)'
                             : 'linear-gradient(135deg, #f59e0b, #d97706)',
-                        borderRadius: '12px',
+                        borderRadius: '14px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: '28px',
-                        flexShrink: 0,
                       },
                     },
                     '🚛'
@@ -1234,73 +6598,101 @@ function Vehiculos(props) {
                         style: {
                           fontSize: '18px',
                           fontWeight: 'bold',
-                          marginBottom: '2px',
+                          marginBottom: '4px',
                         },
                       },
                       v.nombre
-                    ),
-                    React.createElement(
-                      'p',
-                      { style: { color: '#6b7280', fontSize: '13px' } },
-                      v.tipo +
-                        (v.patente ? ' · ' + v.patente : '') +
-                        (v.año ? ' · ' + v.año : '')
                     ),
                     React.createElement(
                       'div',
                       {
                         style: {
                           display: 'flex',
-                          gap: '6px',
-                          marginTop: '4px',
+                          gap: '10px',
                           flexWrap: 'wrap',
                         },
                       },
-                      compartimientos.length > 0 &&
+                      React.createElement(
+                        'span',
+                        { style: { fontSize: '13px', color: '#6b7280' } },
+                        v.tipo
+                      ),
+                      v.patente &&
                         React.createElement(
                           'span',
-                          {
-                            style: {
-                              fontSize: '11px',
-                              background: '#fef3c7',
-                              color: '#92400e',
-                              padding: '2px 6px',
-                              borderRadius: '4px',
-                            },
-                          },
-                          '🗄️ ' +
-                            compartimientos.length +
-                            ' comp. / ' +
-                            totalItemsComps +
-                            ' items'
+                          { style: { fontSize: '13px', color: '#6b7280' } },
+                          '🪪 ' + v.patente
+                        ),
+                      v.año &&
+                        React.createElement(
+                          'span',
+                          { style: { fontSize: '13px', color: '#6b7280' } },
+                          '📅 ' + v.año
                         ),
                       erasAsignadas.length > 0 &&
                         React.createElement(
                           'span',
                           {
                             style: {
-                              fontSize: '11px',
+                              fontSize: '12px',
                               background: '#ede9fe',
                               color: '#7c3aed',
                               padding: '2px 6px',
                               borderRadius: '4px',
+                              fontWeight: '600',
                             },
                           },
-                          '🎽 ' + erasAsignadas.length + ' ERA(s)'
+                          '🎽 ' + erasAsignadas.length + ' ERAs'
+                        ),
+                      equiposAsignados.length > 0 &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '12px',
+                              background: '#fff7ed',
+                              color: '#c2410c',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontWeight: '600',
+                            },
+                          },
+                          '🧯 ' + equiposAsignados.length + ' Equipos'
                         ),
                       itemsAsignados.length > 0 &&
                         React.createElement(
                           'span',
                           {
                             style: {
-                              fontSize: '11px',
-                              background: '#dbeafe',
-                              color: '#1e40af',
+                              fontSize: '12px',
+                              background: '#f0fdf4',
+                              color: '#15803d',
                               padding: '2px 6px',
                               borderRadius: '4px',
+                              fontWeight: '600',
                             },
                           },
-                          '📦 ' + itemsAsignados.length + ' item(s)'
+                          '📦 ' + itemsAsignados.length + ' Items'
+                        ),
+                      vtvEstado !== 'sin_datos' &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '12px',
+                              background: vtvBg,
+                              color: vtvColor,
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontWeight: '600',
+                            },
+                          },
+                          '🚗 VTV: ' +
+                            (vtvEstado === 'apta'
+                              ? '✓'
+                              : vtvEstado === 'proxima'
+                              ? '⚠️'
+                              : '❌')
                         )
                     )
                   )
@@ -1310,31 +6702,10 @@ function Vehiculos(props) {
                   {
                     style: {
                       display: 'flex',
+                      gap: '10px',
                       alignItems: 'center',
-                      gap: '8px',
-                      flexWrap: 'wrap',
                     },
                   },
-                  React.createElement(
-                    'span',
-                    {
-                      style: {
-                        background: vtvBg,
-                        color: vtvColor,
-                        padding: '4px 10px',
-                        borderRadius: '8px',
-                        fontSize: '11px',
-                        fontWeight: '700',
-                      },
-                    },
-                    vtvEstado === 'apta'
-                      ? '🚗 VTV OK'
-                      : vtvEstado === 'proxima'
-                      ? '🚗 VTV PRÓXIMA'
-                      : vtvEstado === 'vencida'
-                      ? '🚗 VTV VENCIDA'
-                      : '🚗 VTV S/D'
-                  ),
                   React.createElement(
                     'span',
                     {
@@ -1349,7 +6720,7 @@ function Vehiculos(props) {
                   ),
                   React.createElement(
                     'span',
-                    { style: { fontSize: '18px', color: '#6b7280' } },
+                    { style: { fontSize: '20px', color: '#6b7280' } },
                     exp ? '▲' : '▼'
                   )
                 )
@@ -1358,92 +6729,21 @@ function Vehiculos(props) {
               exp &&
                 React.createElement(
                   'div',
-                  { style: { marginTop: '20px' } },
-                  // BOTONES ESTADO
-                  React.createElement(
-                    'div',
-                    {
-                      style: {
-                        display: 'flex',
-                        gap: '8px',
-                        marginBottom: '16px',
-                        flexWrap: 'wrap',
-                      },
+                  {
+                    style: {
+                      marginTop: '20px',
+                      borderTop: '1px solid #e5e7eb',
+                      paddingTop: '20px',
                     },
-                    React.createElement(
-                      'button',
-                      {
-                        style: {
-                          flex: 1,
-                          padding: '10px',
-                          background: '#10b981',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '8px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                        },
-                        onClick: function (e) {
-                          e.stopPropagation();
-                          props.onActualizar(v.id, { estado: 'operativo' });
-                        },
-                      },
-                      '✅ Operativo'
-                    ),
-                    React.createElement(
-                      'button',
-                      {
-                        style: {
-                          flex: 1,
-                          padding: '10px',
-                          background: '#f59e0b',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '8px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                        },
-                        onClick: function (e) {
-                          e.stopPropagation();
-                          props.onActualizar(v.id, { estado: 'mantenimiento' });
-                        },
-                      },
-                      '🔧 Mantenimiento'
-                    ),
-                    React.createElement(
-                      'button',
-                      {
-                        style: {
-                          flex: 1,
-                          padding: '10px',
-                          background: '#ef4444',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '8px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                        },
-                        onClick: function (e) {
-                          e.stopPropagation();
-                          if (window.confirm('¿Eliminar ' + v.nombre + '?')) {
-                            props.onEliminar(v.id);
-                          }
-                        },
-                      },
-                      '🗑️ Eliminar'
-                    )
-                  ),
-
-                  // TABS
+                  },
                   React.createElement(
                     'div',
                     {
                       style: {
                         display: 'flex',
-                        gap: '0',
-                        marginBottom: '16px',
-                        borderBottom: '2px solid #e5e7eb',
-                        overflowX: 'auto',
+                        gap: '6px',
+                        marginBottom: '20px',
+                        flexWrap: 'wrap',
                       },
                     },
                     tabsConfig.map(function (tab) {
@@ -1452,20 +6752,15 @@ function Vehiculos(props) {
                         {
                           key: tab.key,
                           style: {
-                            padding: '10px 14px',
+                            padding: '8px 14px',
+                            background:
+                              tabActual === tab.key ? '#2563eb' : '#f3f4f6',
+                            color: tabActual === tab.key ? 'white' : '#374151',
                             border: 'none',
-                            borderBottom:
-                              tabActual === tab.key
-                                ? '3px solid #2563eb'
-                                : '3px solid transparent',
-                            background: 'transparent',
-                            fontWeight: tabActual === tab.key ? '700' : '500',
-                            color:
-                              tabActual === tab.key ? '#2563eb' : '#6b7280',
+                            borderRadius: '8px',
                             cursor: 'pointer',
                             fontSize: '13px',
-                            marginBottom: '-2px',
-                            whiteSpace: 'nowrap',
+                            fontWeight: tabActual === tab.key ? '700' : '500',
                           },
                           onClick: function (e) {
                             e.stopPropagation();
@@ -1477,571 +6772,516 @@ function Vehiculos(props) {
                     })
                   ),
 
-                  // TAB INFO
                   tabActual === 'info' &&
                     React.createElement(
                       'div',
                       null,
-                      React.createElement(
-                        'div',
-                        {
-                          style: {
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
-                            gap: '12px',
-                          },
-                        },
-                        React.createElement(
-                          'div',
-                          {
-                            style: {
-                              background: '#f9fafb',
-                              padding: '14px',
-                              borderRadius: '10px',
-                            },
-                          },
-                          React.createElement(
-                            'p',
-                            {
-                              style: {
-                                fontSize: '12px',
-                                color: '#6b7280',
-                                marginBottom: '6px',
-                                fontWeight: '600',
-                              },
-                            },
-                            '🔩 Chasis'
-                          ),
-                          React.createElement('input', {
-                            type: 'text',
-                            value: v.chasis || '',
-                            onChange: function (e) {
-                              props.onActualizar(v.id, {
-                                chasis: e.target.value,
-                              });
-                            },
-                            style: {
-                              width: '100%',
-                              padding: '8px',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '6px',
-                              fontSize: '13px',
-                              boxSizing: 'border-box',
-                            },
-                          })
-                        ),
-                        React.createElement(
-                          'div',
-                          {
-                            style: {
-                              background: '#f9fafb',
-                              padding: '14px',
-                              borderRadius: '10px',
-                            },
-                          },
-                          React.createElement(
-                            'p',
-                            {
-                              style: {
-                                fontSize: '12px',
-                                color: '#6b7280',
-                                marginBottom: '6px',
-                                fontWeight: '600',
-                              },
-                            },
-                            '⚙️ Motor'
-                          ),
-                          React.createElement('input', {
-                            type: 'text',
-                            value: v.motor || '',
-                            onChange: function (e) {
-                              props.onActualizar(v.id, {
-                                motor: e.target.value,
-                              });
-                            },
-                            style: {
-                              width: '100%',
-                              padding: '8px',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '6px',
-                              fontSize: '13px',
-                              boxSizing: 'border-box',
-                            },
-                          })
-                        ),
-                        React.createElement(
-                          'div',
-                          {
-                            style: {
-                              background: '#f9fafb',
-                              padding: '14px',
-                              borderRadius: '10px',
-                            },
-                          },
-                          React.createElement(
-                            'p',
-                            {
-                              style: {
-                                fontSize: '12px',
-                                color: '#6b7280',
-                                marginBottom: '6px',
-                                fontWeight: '600',
-                              },
-                            },
-                            '📅 Prueba Hidráulica'
-                          ),
-                          React.createElement('input', {
-                            type: 'date',
-                            value: v.pruebaHidraulica || '',
-                            onChange: function (e) {
-                              props.onActualizar(v.id, {
-                                pruebaHidraulica: e.target.value,
-                              });
-                            },
-                            style: {
-                              width: '100%',
-                              padding: '8px',
-                              border:
-                                '1px solid ' +
-                                getBorderColor(
-                                  verificarVencimiento(v.pruebaHidraulica)
-                                ),
-                              borderRadius: '6px',
-                              fontSize: '13px',
-                              background: getBgColor(
-                                verificarVencimiento(v.pruebaHidraulica)
-                              ),
-                              boxSizing: 'border-box',
-                            },
-                          }),
-                          verificarVencimiento(v.pruebaHidraulica) ===
-                            'vencido' &&
-                            React.createElement(
-                              'p',
-                              {
-                                style: {
-                                  fontSize: '11px',
-                                  color: '#dc2626',
-                                  marginTop: '4px',
-                                  fontWeight: '600',
-                                },
-                              },
-                              '⚠️ VENCIDA'
-                            )
-                        ),
-                        React.createElement(
-                          'div',
-                          {
-                            style: {
-                              background: '#f9fafb',
-                              padding: '14px',
-                              borderRadius: '10px',
-                            },
-                          },
-                          React.createElement(
-                            'p',
-                            {
-                              style: {
-                                fontSize: '12px',
-                                color: '#6b7280',
-                                marginBottom: '6px',
-                                fontWeight: '600',
-                              },
-                            },
-                            '📅 Vencimiento General'
-                          ),
-                          React.createElement('input', {
-                            type: 'date',
-                            value: v.vencimiento || '',
-                            onChange: function (e) {
-                              props.onActualizar(v.id, {
-                                vencimiento: e.target.value,
-                              });
-                            },
-                            style: {
-                              width: '100%',
-                              padding: '8px',
-                              border:
-                                '1px solid ' +
-                                getBorderColor(
-                                  verificarVencimiento(v.vencimiento)
-                                ),
-                              borderRadius: '6px',
-                              fontSize: '13px',
-                              background: getBgColor(
-                                verificarVencimiento(v.vencimiento)
-                              ),
-                              boxSizing: 'border-box',
-                            },
-                          }),
-                          verificarVencimiento(v.vencimiento) === 'vencido' &&
-                            React.createElement(
-                              'p',
-                              {
-                                style: {
-                                  fontSize: '11px',
-                                  color: '#dc2626',
-                                  marginTop: '4px',
-                                  fontWeight: '600',
-                                },
-                              },
-                              '⚠️ VENCIDO'
-                            )
-                        )
-                      )
-                    ),
-
-                  // TAB FLUIDOS
-                  tabActual === 'fluidos' &&
-                    React.createElement(
-                      'div',
-                      null,
-                      React.createElement(
-                        'h4',
-                        {
-                          style: {
-                            fontWeight: 'bold',
-                            color: '#92400e',
-                            marginBottom: '12px',
-                          },
-                        },
-                        '🛢️ Fluidos'
-                      ),
-                      React.createElement(
-                        'div',
-                        {
-                          style: {
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
-                            gap: '12px',
-                            marginBottom: '16px',
-                          },
-                        },
-                        Object.entries(v.fluidos || {}).map(function (entry) {
-                          var nombre = entry[0];
-                          var fluido = entry[1];
-                          var etiquetas = {
-                            aceite: '🛢️ Aceite',
-                            refrigerante: '🌡️ Refrigerante',
-                            combustible: '⛽ Combustible',
-                            liquidoFrenos: '🔴 Liq. Frenos',
-                          };
-                          return React.createElement(
+                      editando === v.id
+                        ? React.createElement(
                             'div',
                             {
-                              key: nombre,
                               style: {
-                                background: fluido.ok ? '#ecfdf5' : '#fee2e2',
-                                padding: '12px',
-                                borderRadius: '8px',
-                                border:
-                                  '2px solid ' +
-                                  (fluido.ok ? '#a7f3d0' : '#fecaca'),
+                                background: '#f0f9ff',
+                                padding: '20px',
+                                borderRadius: '12px',
+                                border: '2px solid #0ea5e9',
+                                marginBottom: '16px',
                               },
                             },
+                            React.createElement(
+                              'h4',
+                              {
+                                style: {
+                                  fontWeight: 'bold',
+                                  color: '#0369a1',
+                                  marginBottom: '16px',
+                                },
+                              },
+                              '✏️ Editando: ' + v.nombre
+                            ),
+                            React.createElement(
+                              'div',
+                              {
+                                style: {
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(3, 1fr)',
+                                  gap: '12px',
+                                  marginBottom: '12px',
+                                },
+                              },
+                              React.createElement(
+                                'div',
+                                null,
+                                React.createElement(
+                                  'label',
+                                  { style: styles.label },
+                                  'Nombre'
+                                ),
+                                React.createElement('input', {
+                                  type: 'text',
+                                  value: formEdit.nombre || '',
+                                  onChange: function (e) {
+                                    setFormEdit(
+                                      Object.assign({}, formEdit, {
+                                        nombre: e.target.value,
+                                      })
+                                    );
+                                  },
+                                  style: styles.input,
+                                })
+                              ),
+                              React.createElement(
+                                'div',
+                                null,
+                                React.createElement(
+                                  'label',
+                                  { style: styles.label },
+                                  'Tipo'
+                                ),
+                                React.createElement(
+                                  'select',
+                                  {
+                                    value: formEdit.tipo || '',
+                                    onChange: function (e) {
+                                      setFormEdit(
+                                        Object.assign({}, formEdit, {
+                                          tipo: e.target.value,
+                                        })
+                                      );
+                                    },
+                                    style: styles.input,
+                                  },
+                                  [
+                                    'Camion Bomba',
+                                    'Camion Tanque',
+                                    'Unidad de Rescate',
+                                    'Ambulancia',
+                                    'Vehiculo de Comando',
+                                    'Otro',
+                                  ].map(function (t) {
+                                    return React.createElement(
+                                      'option',
+                                      { key: t, value: t },
+                                      t
+                                    );
+                                  })
+                                )
+                              ),
+                              React.createElement(
+                                'div',
+                                null,
+                                React.createElement(
+                                  'label',
+                                  { style: styles.label },
+                                  'Patente'
+                                ),
+                                React.createElement('input', {
+                                  type: 'text',
+                                  value: formEdit.patente || '',
+                                  onChange: function (e) {
+                                    setFormEdit(
+                                      Object.assign({}, formEdit, {
+                                        patente: e.target.value,
+                                      })
+                                    );
+                                  },
+                                  style: styles.input,
+                                })
+                              ),
+                              React.createElement(
+                                'div',
+                                null,
+                                React.createElement(
+                                  'label',
+                                  { style: styles.label },
+                                  'Año'
+                                ),
+                                React.createElement('input', {
+                                  type: 'number',
+                                  value: formEdit.año || '',
+                                  onChange: function (e) {
+                                    setFormEdit(
+                                      Object.assign({}, formEdit, {
+                                        año: e.target.value,
+                                      })
+                                    );
+                                  },
+                                  style: styles.input,
+                                })
+                              ),
+                              React.createElement(
+                                'div',
+                                null,
+                                React.createElement(
+                                  'label',
+                                  { style: styles.label },
+                                  'Chasis'
+                                ),
+                                React.createElement('input', {
+                                  type: 'text',
+                                  value: formEdit.chasis || '',
+                                  onChange: function (e) {
+                                    setFormEdit(
+                                      Object.assign({}, formEdit, {
+                                        chasis: e.target.value,
+                                      })
+                                    );
+                                  },
+                                  style: styles.input,
+                                })
+                              ),
+                              React.createElement(
+                                'div',
+                                null,
+                                React.createElement(
+                                  'label',
+                                  { style: styles.label },
+                                  'Motor'
+                                ),
+                                React.createElement('input', {
+                                  type: 'text',
+                                  value: formEdit.motor || '',
+                                  onChange: function (e) {
+                                    setFormEdit(
+                                      Object.assign({}, formEdit, {
+                                        motor: e.target.value,
+                                      })
+                                    );
+                                  },
+                                  style: styles.input,
+                                })
+                              )
+                            ),
+                            React.createElement(
+                              'div',
+                              { style: { display: 'flex', gap: '10px' } },
+                              React.createElement(
+                                'button',
+                                {
+                                  style: {
+                                    flex: 1,
+                                    padding: '10px',
+                                    background: '#10b981',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                  },
+                                  onClick: function (e) {
+                                    e.stopPropagation();
+                                    guardarEdicion(v.id);
+                                  },
+                                },
+                                '💾 Guardar'
+                              ),
+                              React.createElement(
+                                'button',
+                                {
+                                  style: {
+                                    flex: 1,
+                                    padding: '10px',
+                                    background: '#6b7280',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                  },
+                                  onClick: function (e) {
+                                    e.stopPropagation();
+                                    setEditando(null);
+                                  },
+                                },
+                                '✖ Cancelar'
+                              )
+                            )
+                          )
+                        : React.createElement(
+                            'div',
+                            null,
                             React.createElement(
                               'div',
                               {
                                 style: {
                                   display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  marginBottom: '8px',
+                                  gap: '10px',
+                                  marginBottom: '16px',
+                                  flexWrap: 'wrap',
                                 },
                               },
                               React.createElement(
-                                'span',
+                                'button',
                                 {
                                   style: {
-                                    fontWeight: 'bold',
+                                    padding: '8px 14px',
+                                    background: '#3b82f6',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
                                     fontSize: '13px',
+                                    fontWeight: '600',
+                                  },
+                                  onClick: function (e) {
+                                    e.stopPropagation();
+                                    iniciarEdicion(v);
                                   },
                                 },
-                                etiquetas[nombre] || nombre
+                                '✏️ Editar'
                               ),
                               React.createElement(
-                                'div',
-                                { style: { display: 'flex', gap: '4px' } },
-                                React.createElement(
-                                  'button',
-                                  {
-                                    style: {
-                                      padding: '4px 8px',
-                                      background: fluido.ok
-                                        ? '#059669'
+                                'button',
+                                {
+                                  style: {
+                                    padding: '8px 14px',
+                                    background:
+                                      v.estado === 'operativo'
+                                        ? '#f59e0b'
                                         : '#10b981',
-                                      color: 'white',
-                                      border: fluido.ok
-                                        ? '2px solid #065f46'
-                                        : 'none',
-                                      borderRadius: '4px',
-                                      cursor: 'pointer',
-                                      fontSize: '11px',
-                                    },
-                                    onClick: function (e) {
-                                      e.stopPropagation();
-                                      var fl = Object.assign({}, v.fluidos);
-                                      fl[nombre] = Object.assign(
-                                        {},
-                                        fl[nombre],
-                                        { ok: true }
-                                      );
-                                      props.onActualizar(v.id, { fluidos: fl });
-                                    },
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontSize: '13px',
+                                    fontWeight: '600',
                                   },
-                                  '✓ OK'
-                                ),
-                                React.createElement(
-                                  'button',
-                                  {
-                                    style: {
-                                      padding: '4px 8px',
-                                      background: !fluido.ok
-                                        ? '#b91c1c'
-                                        : '#ef4444',
-                                      color: 'white',
-                                      border: !fluido.ok
-                                        ? '2px solid #991b1b'
-                                        : 'none',
-                                      borderRadius: '4px',
-                                      cursor: 'pointer',
-                                      fontSize: '11px',
-                                    },
-                                    onClick: function (e) {
-                                      e.stopPropagation();
-                                      var fl = Object.assign({}, v.fluidos);
-                                      fl[nombre] = Object.assign(
-                                        {},
-                                        fl[nombre],
-                                        { ok: false }
-                                      );
-                                      props.onActualizar(v.id, { fluidos: fl });
-                                    },
+                                  onClick: function (e) {
+                                    e.stopPropagation();
+                                    props.onActualizar(v.id, {
+                                      estado:
+                                        v.estado === 'operativo'
+                                          ? 'mantenimiento'
+                                          : 'operativo',
+                                    });
                                   },
-                                  '✗ NO'
-                                )
+                                },
+                                v.estado === 'operativo'
+                                  ? '🔧 Pasar a Mantenimiento'
+                                  : '✅ Marcar Operativo'
+                              ),
+                              React.createElement(
+                                'button',
+                                {
+                                  style: {
+                                    padding: '8px 14px',
+                                    background: '#ef4444',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontSize: '13px',
+                                    fontWeight: '600',
+                                  },
+                                  onClick: function (e) {
+                                    e.stopPropagation();
+                                    if (
+                                      window.confirm(
+                                        '¿Eliminar móvil ' + v.nombre + '?'
+                                      )
+                                    ) {
+                                      props.onEliminar(v.id);
+                                    }
+                                  },
+                                },
+                                '🗑️ Eliminar'
                               )
                             ),
-                            React.createElement('input', {
-                              type: 'text',
-                              placeholder: 'Cantidad',
-                              value: fluido.cantidad || '',
-                              onChange: function (e) {
-                                var fl = Object.assign({}, v.fluidos);
-                                fl[nombre] = Object.assign({}, fl[nombre], {
-                                  cantidad: e.target.value,
-                                });
-                                props.onActualizar(v.id, { fluidos: fl });
-                              },
-                              style: {
-                                width: '100%',
-                                padding: '6px',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                fontSize: '12px',
-                                marginBottom: '4px',
-                                boxSizing: 'border-box',
-                              },
-                            }),
-                            React.createElement('input', {
-                              type: 'text',
-                              placeholder: 'Observaciones',
-                              value: fluido.observaciones || '',
-                              onChange: function (e) {
-                                var fl = Object.assign({}, v.fluidos);
-                                fl[nombre] = Object.assign({}, fl[nombre], {
-                                  observaciones: e.target.value,
-                                });
-                                props.onActualizar(v.id, { fluidos: fl });
-                              },
-                              style: {
-                                width: '100%',
-                                padding: '6px',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                fontSize: '12px',
-                                boxSizing: 'border-box',
-                              },
-                            })
-                          );
-                        })
-                      ),
-                      React.createElement(
-                        'h4',
-                        {
-                          style: {
-                            fontWeight: 'bold',
-                            color: '#0369a1',
-                            marginBottom: '12px',
-                          },
-                        },
-                        '💡 Controles y Señales'
-                      ),
-                      React.createElement(
-                        'div',
-                        {
-                          style: {
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
-                            gap: '12px',
-                          },
-                        },
-                        Object.entries(
-                          v.controles || {
-                            luces: { ok: true, observaciones: '' },
-                            lucesEmergencia: { ok: true, observaciones: '' },
-                            sirena: { ok: true, observaciones: '' },
-                            bocina: { ok: true, observaciones: '' },
-                          }
-                        ).map(function (entry) {
-                          var nombre = entry[0];
-                          var control = entry[1];
-                          var etiquetas = {
-                            luces: '💡 Luces',
-                            lucesEmergencia: '🚨 Luces Emergencia',
-                            sirena: '📢 Sirena',
-                            bocina: '📯 Bocina',
-                          };
-                          return React.createElement(
-                            'div',
-                            {
-                              key: nombre,
-                              style: {
-                                background: control.ok ? '#ecfdf5' : '#fee2e2',
-                                padding: '12px',
-                                borderRadius: '8px',
-                                border:
-                                  '2px solid ' +
-                                  (control.ok ? '#a7f3d0' : '#fecaca'),
-                              },
-                            },
                             React.createElement(
                               'div',
                               {
                                 style: {
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  marginBottom: '8px',
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(3, 1fr)',
+                                  gap: '12px',
                                 },
                               },
                               React.createElement(
-                                'span',
+                                'div',
                                 {
                                   style: {
-                                    fontWeight: 'bold',
-                                    fontSize: '13px',
+                                    background: '#f9fafb',
+                                    padding: '14px',
+                                    borderRadius: '10px',
+                                    border: '1px solid #e5e7eb',
                                   },
                                 },
-                                etiquetas[nombre] || nombre
+                                React.createElement(
+                                  'p',
+                                  {
+                                    style: {
+                                      fontSize: '12px',
+                                      color: '#6b7280',
+                                      marginBottom: '4px',
+                                    },
+                                  },
+                                  'Tipo'
+                                ),
+                                React.createElement(
+                                  'p',
+                                  { style: { fontWeight: '600' } },
+                                  v.tipo || 'N/D'
+                                )
                               ),
                               React.createElement(
                                 'div',
-                                { style: { display: 'flex', gap: '4px' } },
+                                {
+                                  style: {
+                                    background: '#f9fafb',
+                                    padding: '14px',
+                                    borderRadius: '10px',
+                                    border: '1px solid #e5e7eb',
+                                  },
+                                },
                                 React.createElement(
-                                  'button',
+                                  'p',
                                   {
                                     style: {
-                                      padding: '4px 8px',
-                                      background: control.ok
-                                        ? '#059669'
-                                        : '#10b981',
-                                      color: 'white',
-                                      border: control.ok
-                                        ? '2px solid #065f46'
-                                        : 'none',
-                                      borderRadius: '4px',
-                                      cursor: 'pointer',
-                                      fontSize: '11px',
-                                    },
-                                    onClick: function (e) {
-                                      e.stopPropagation();
-                                      var co = Object.assign({}, v.controles);
-                                      co[nombre] = Object.assign(
-                                        {},
-                                        co[nombre],
-                                        { ok: true }
-                                      );
-                                      props.onActualizar(v.id, {
-                                        controles: co,
-                                      });
+                                      fontSize: '12px',
+                                      color: '#6b7280',
+                                      marginBottom: '4px',
                                     },
                                   },
-                                  '✓ OK'
+                                  'Patente'
                                 ),
                                 React.createElement(
-                                  'button',
+                                  'p',
+                                  { style: { fontWeight: '600' } },
+                                  v.patente || 'N/D'
+                                )
+                              ),
+                              React.createElement(
+                                'div',
+                                {
+                                  style: {
+                                    background: '#f9fafb',
+                                    padding: '14px',
+                                    borderRadius: '10px',
+                                    border: '1px solid #e5e7eb',
+                                  },
+                                },
+                                React.createElement(
+                                  'p',
                                   {
                                     style: {
-                                      padding: '4px 8px',
-                                      background: !control.ok
-                                        ? '#b91c1c'
-                                        : '#ef4444',
-                                      color: 'white',
-                                      border: !control.ok
-                                        ? '2px solid #991b1b'
-                                        : 'none',
-                                      borderRadius: '4px',
-                                      cursor: 'pointer',
-                                      fontSize: '11px',
-                                    },
-                                    onClick: function (e) {
-                                      e.stopPropagation();
-                                      var co = Object.assign({}, v.controles);
-                                      co[nombre] = Object.assign(
-                                        {},
-                                        co[nombre],
-                                        { ok: false }
-                                      );
-                                      props.onActualizar(v.id, {
-                                        controles: co,
-                                      });
+                                      fontSize: '12px',
+                                      color: '#6b7280',
+                                      marginBottom: '4px',
                                     },
                                   },
-                                  '✗ NO'
+                                  'Año'
+                                ),
+                                React.createElement(
+                                  'p',
+                                  { style: { fontWeight: '600' } },
+                                  v.año || 'N/D'
+                                )
+                              ),
+                              React.createElement(
+                                'div',
+                                {
+                                  style: {
+                                    background: '#f9fafb',
+                                    padding: '14px',
+                                    borderRadius: '10px',
+                                    border: '1px solid #e5e7eb',
+                                  },
+                                },
+                                React.createElement(
+                                  'p',
+                                  {
+                                    style: {
+                                      fontSize: '12px',
+                                      color: '#6b7280',
+                                      marginBottom: '4px',
+                                    },
+                                  },
+                                  'Chasis'
+                                ),
+                                React.createElement(
+                                  'p',
+                                  { style: { fontWeight: '600' } },
+                                  v.chasis || 'N/D'
+                                )
+                              ),
+                              React.createElement(
+                                'div',
+                                {
+                                  style: {
+                                    background: '#f9fafb',
+                                    padding: '14px',
+                                    borderRadius: '10px',
+                                    border: '1px solid #e5e7eb',
+                                  },
+                                },
+                                React.createElement(
+                                  'p',
+                                  {
+                                    style: {
+                                      fontSize: '12px',
+                                      color: '#6b7280',
+                                      marginBottom: '4px',
+                                    },
+                                  },
+                                  'Motor'
+                                ),
+                                React.createElement(
+                                  'p',
+                                  { style: { fontWeight: '600' } },
+                                  v.motor || 'N/D'
+                                )
+                              ),
+                              React.createElement(
+                                'div',
+                                {
+                                  style: {
+                                    background: '#f9fafb',
+                                    padding: '14px',
+                                    borderRadius: '10px',
+                                    border: '1px solid #e5e7eb',
+                                  },
+                                },
+                                React.createElement(
+                                  'p',
+                                  {
+                                    style: {
+                                      fontSize: '12px',
+                                      color: '#6b7280',
+                                      marginBottom: '4px',
+                                    },
+                                  },
+                                  'Estado'
+                                ),
+                                React.createElement(
+                                  'span',
+                                  {
+                                    style:
+                                      v.estado === 'operativo'
+                                        ? styles.badgeOk
+                                        : styles.badgeWarn,
+                                  },
+                                  v.estado === 'operativo'
+                                    ? '✓ OPERATIVO'
+                                    : '🔧 MANTENIMIENTO'
                                 )
                               )
-                            ),
-                            React.createElement('input', {
-                              type: 'text',
-                              placeholder: 'Observaciones',
-                              value: control.observaciones || '',
-                              onChange: function (e) {
-                                var co = Object.assign({}, v.controles);
-                                co[nombre] = Object.assign({}, co[nombre], {
-                                  observaciones: e.target.value,
-                                });
-                                props.onActualizar(v.id, { controles: co });
-                              },
-                              style: {
-                                width: '100%',
-                                padding: '6px',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                fontSize: '12px',
-                                boxSizing: 'border-box',
-                              },
-                            })
-                          );
-                        })
-                      )
+                            )
+                          )
                     ),
 
-                  // TAB COMPARTIMIENTOS
-                  tabActual === 'compartimientos' &&
+                  tabActual === 'equipos' &&
                     React.createElement(
                       'div',
                       null,
-                      // Agregar compartimiento
                       React.createElement(
                         'div',
                         {
                           style: {
-                            background: '#fffbeb',
+                            background: '#fff7ed',
                             padding: '16px',
                             borderRadius: '10px',
-                            border: '2px solid #fde68a',
-                            marginBottom: '20px',
+                            marginBottom: '16px',
+                            border: '1px solid #fed7aa',
                           },
                         },
                         React.createElement(
@@ -2049,7 +7289,575 @@ function Vehiculos(props) {
                           {
                             style: {
                               fontWeight: 'bold',
+                              color: '#c2410c',
+                              marginBottom: '12px',
+                            },
+                          },
+                          '➕ Asignar Equipo'
+                        ),
+                        React.createElement(
+                          'div',
+                          {
+                            style: {
+                              display: 'flex',
+                              gap: '10px',
+                              alignItems: 'center',
+                            },
+                          },
+                          React.createElement(
+                            'select',
+                            {
+                              value: equipoAsignar,
+                              onChange: function (e) {
+                                setEquipoAsignar(e.target.value);
+                              },
+                              style: Object.assign({}, styles.input, {
+                                flex: 1,
+                              }),
+                            },
+                            React.createElement(
+                              'option',
+                              { value: '' },
+                              'Seleccionar equipo disponible...'
+                            ),
+                            equiposDisponibles.map(function (eq) {
+                              return React.createElement(
+                                'option',
+                                { key: eq.id, value: eq.id },
+                                eq.nombre +
+                                  (eq.codigoInterno
+                                    ? ' [' + eq.codigoInterno + ']'
+                                    : '') +
+                                  ' - ' +
+                                  eq.tipo
+                              );
+                            })
+                          ),
+                          React.createElement(
+                            'button',
+                            {
+                              style: {
+                                padding: '10px 18px',
+                                background: '#f97316',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                              },
+                              onClick: function (e) {
+                                e.stopPropagation();
+                                if (!equipoAsignar) {
+                                  alert('Seleccioná un equipo');
+                                  return;
+                                }
+                                props.onAsignarEquipo(v.id, equipoAsignar);
+                                setEquipoAsignar('');
+                              },
+                            },
+                            '➕ Asignar'
+                          )
+                        )
+                      ),
+                      equiposAsignados.length === 0
+                        ? React.createElement(
+                            'p',
+                            {
+                              style: {
+                                color: '#6b7280',
+                                textAlign: 'center',
+                                padding: '24px',
+                              },
+                            },
+                            'No hay equipos asignados'
+                          )
+                        : React.createElement(
+                            'div',
+                            {
+                              style: {
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '8px',
+                              },
+                            },
+                            equiposAsignados.map(function (eq) {
+                              var venc = verificarVencimiento(eq.vencimiento);
+                              return React.createElement(
+                                'div',
+                                {
+                                  key: eq.id,
+                                  style: {
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    padding: '12px 14px',
+                                    background:
+                                      venc === 'vencido'
+                                        ? '#fef2f2'
+                                        : '#fff7ed',
+                                    borderRadius: '8px',
+                                    border:
+                                      '1px solid ' +
+                                      (venc === 'vencido'
+                                        ? '#fecaca'
+                                        : '#fed7aa'),
+                                  },
+                                },
+                                React.createElement(
+                                  'div',
+                                  {
+                                    style: {
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '10px',
+                                    },
+                                  },
+                                  React.createElement(
+                                    'span',
+                                    { style: { fontSize: '20px' } },
+                                    '🧯'
+                                  ),
+                                  React.createElement(
+                                    'div',
+                                    null,
+                                    React.createElement(
+                                      'p',
+                                      {
+                                        style: {
+                                          fontWeight: '600',
+                                          fontSize: '14px',
+                                        },
+                                      },
+                                      eq.nombre
+                                    ),
+                                    React.createElement(
+                                      'div',
+                                      {
+                                        style: {
+                                          display: 'flex',
+                                          gap: '8px',
+                                          flexWrap: 'wrap',
+                                        },
+                                      },
+                                      eq.codigoInterno &&
+                                        React.createElement(
+                                          'span',
+                                          {
+                                            style: {
+                                              fontSize: '11px',
+                                              background: '#fef3c7',
+                                              color: '#92400e',
+                                              padding: '2px 6px',
+                                              borderRadius: '4px',
+                                            },
+                                          },
+                                          '🏷️ ' + eq.codigoInterno
+                                        ),
+                                      eq.tipo &&
+                                        React.createElement(
+                                          'span',
+                                          {
+                                            style: {
+                                              fontSize: '11px',
+                                              color: '#6b7280',
+                                            },
+                                          },
+                                          eq.tipo
+                                        ),
+                                      eq.serial &&
+                                        React.createElement(
+                                          'span',
+                                          {
+                                            style: {
+                                              fontSize: '11px',
+                                              color: '#6b7280',
+                                            },
+                                          },
+                                          'S/N: ' + eq.serial
+                                        ),
+                                      eq.vencimiento &&
+                                        React.createElement(
+                                          'span',
+                                          {
+                                            style: {
+                                              fontSize: '11px',
+                                              color:
+                                                venc === 'vencido'
+                                                  ? '#dc2626'
+                                                  : venc === 'proximo'
+                                                  ? '#d97706'
+                                                  : '#6b7280',
+                                              fontWeight:
+                                                venc !== 'ok' ? '600' : '400',
+                                            },
+                                          },
+                                          '📅 ' +
+                                            eq.vencimiento +
+                                            (venc === 'vencido'
+                                              ? ' ⚠️'
+                                              : venc === 'proximo'
+                                              ? ' ⚠️'
+                                              : '')
+                                        )
+                                    )
+                                  )
+                                ),
+                                React.createElement(
+                                  'button',
+                                  {
+                                    style: {
+                                      padding: '6px 10px',
+                                      background: '#ef4444',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      cursor: 'pointer',
+                                      fontSize: '12px',
+                                    },
+                                    onClick: function (e) {
+                                      e.stopPropagation();
+                                      if (
+                                        window.confirm(
+                                          '¿Desasignar ' + eq.nombre + '?'
+                                        )
+                                      ) {
+                                        props.onDesasignarEquipo(v.id, eq.id);
+                                      }
+                                    },
+                                  },
+                                  '↩️ Quitar'
+                                )
+                              );
+                            })
+                          )
+                    ),
+
+                  tabActual === 'bateria' &&
+                    React.createElement(
+                      'div',
+                      null,
+                      React.createElement(
+                        'div',
+                        {
+                          style: Object.assign({}, styles.card, {
+                            background: '#fffbeb',
+                            border: '2px solid #fde68a',
+                          }),
+                        },
+                        React.createElement(
+                          'h4',
+                          {
+                            style: {
+                              fontWeight: 'bold',
                               color: '#92400e',
+                              marginBottom: '16px',
+                            },
+                          },
+                          '🔋 Estado de Batería'
+                        ),
+                        React.createElement(
+                          'div',
+                          {
+                            style: {
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(3, 1fr)',
+                              gap: '12px',
+                            },
+                          },
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Estado Batería'
+                            ),
+                            React.createElement(
+                              'select',
+                              {
+                                value: bateria.estado || 'bueno',
+                                onChange: function (e) {
+                                  props.onActualizar(v.id, {
+                                    bateria: Object.assign({}, bateria, {
+                                      estado: e.target.value,
+                                    }),
+                                  });
+                                },
+                                style: {
+                                  width: '100%',
+                                  padding: '10px',
+                                  border: '1px solid #d1d5db',
+                                  borderRadius: '8px',
+                                  fontSize: '14px',
+                                  background:
+                                    bateria.estado === 'bueno'
+                                      ? '#ecfdf5'
+                                      : bateria.estado === 'regular'
+                                      ? '#fef3c7'
+                                      : '#fee2e2',
+                                },
+                              },
+                              React.createElement(
+                                'option',
+                                { value: 'bueno' },
+                                '✅ Bueno'
+                              ),
+                              React.createElement(
+                                'option',
+                                { value: 'regular' },
+                                '⚠️ Regular'
+                              ),
+                              React.createElement(
+                                'option',
+                                { value: 'malo' },
+                                '❌ Malo'
+                              )
+                            )
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Voltaje (V)'
+                            ),
+                            React.createElement('input', {
+                              type: 'number',
+                              value: bateria.voltaje || '',
+                              onChange: function (e) {
+                                props.onActualizar(v.id, {
+                                  bateria: Object.assign({}, bateria, {
+                                    voltaje: e.target.value,
+                                  }),
+                                });
+                              },
+                              style: styles.input,
+                              placeholder: 'Ej: 12.6',
+                              step: '0.1',
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Último Reemplazo'
+                            ),
+                            React.createElement('input', {
+                              type: 'date',
+                              value: bateria.ultimoReemplazo || '',
+                              onChange: function (e) {
+                                props.onActualizar(v.id, {
+                                  bateria: Object.assign({}, bateria, {
+                                    ultimoReemplazo: e.target.value,
+                                  }),
+                                });
+                              },
+                              style: styles.input,
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            { style: { gridColumn: 'span 3' } },
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Observaciones'
+                            ),
+                            React.createElement('input', {
+                              type: 'text',
+                              value: bateria.observaciones || '',
+                              onChange: function (e) {
+                                props.onActualizar(v.id, {
+                                  bateria: Object.assign({}, bateria, {
+                                    observaciones: e.target.value,
+                                  }),
+                                });
+                              },
+                              style: styles.input,
+                              placeholder: 'Observaciones de la batería...',
+                            })
+                          )
+                        )
+                      )
+                    ),
+
+                  tabActual === 'fluidos' &&
+                    React.createElement(
+                      'div',
+                      null,
+                      React.createElement(
+                        'div',
+                        {
+                          style: Object.assign({}, styles.card, {
+                            background: '#fffbeb',
+                            border: '2px solid #fde68a',
+                          }),
+                        },
+                        React.createElement(
+                          'h4',
+                          {
+                            style: {
+                              fontWeight: 'bold',
+                              color: '#92400e',
+                              marginBottom: '16px',
+                            },
+                          },
+                          '🛢️ Control de Fluidos'
+                        ),
+                        React.createElement(
+                          'div',
+                          {
+                            style: {
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(2, 1fr)',
+                              gap: '12px',
+                            },
+                          },
+                          [
+                            'aceite',
+                            'refrigerante',
+                            'combustible',
+                            'liquidoFrenos',
+                          ].map(function (fluido) {
+                            var nombresAmigables = {
+                              aceite: '🛢️ Aceite de Motor',
+                              refrigerante: '🌡️ Refrigerante',
+                              combustible: '⛽ Combustible',
+                              liquidoFrenos: '🔴 Líquido de Frenos',
+                            };
+                            var val = (v.fluidos || {})[fluido] || {};
+                            return React.createElement(
+                              'div',
+                              {
+                                key: fluido,
+                                style: {
+                                  background: 'white',
+                                  padding: '14px',
+                                  borderRadius: '10px',
+                                  border: '1px solid #e5e7eb',
+                                },
+                              },
+                              React.createElement(
+                                'h5',
+                                {
+                                  style: {
+                                    fontWeight: 'bold',
+                                    marginBottom: '10px',
+                                    color: '#374151',
+                                  },
+                                },
+                                nombresAmigables[fluido]
+                              ),
+                              React.createElement(
+                                'div',
+                                {
+                                  style: {
+                                    display: 'flex',
+                                    gap: '8px',
+                                    marginBottom: '8px',
+                                  },
+                                },
+                                ['ok', 'bajo', 'critico'].map(function (est) {
+                                  var colores = {
+                                    ok: '#10b981',
+                                    bajo: '#f59e0b',
+                                    critico: '#ef4444',
+                                  };
+                                  var labels = {
+                                    ok: '✓ OK',
+                                    bajo: '⚠️ Bajo',
+                                    critico: '❌ Crítico',
+                                  };
+                                  return React.createElement(
+                                    'button',
+                                    {
+                                      key: est,
+                                      style: {
+                                        flex: 1,
+                                        padding: '6px',
+                                        background:
+                                          val.estado === est
+                                            ? colores[est]
+                                            : '#f3f4f6',
+                                        color:
+                                          val.estado === est
+                                            ? 'white'
+                                            : '#374151',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        fontSize: '12px',
+                                        fontWeight: '600',
+                                      },
+                                      onClick: function (e) {
+                                        e.stopPropagation();
+                                        var f = Object.assign(
+                                          {},
+                                          v.fluidos || {}
+                                        );
+                                        f[fluido] = Object.assign({}, val, {
+                                          estado: est,
+                                        });
+                                        props.onActualizar(v.id, {
+                                          fluidos: f,
+                                        });
+                                      },
+                                    },
+                                    labels[est]
+                                  );
+                                })
+                              ),
+                              React.createElement('input', {
+                                type: 'text',
+                                placeholder: 'Observaciones...',
+                                value: val.observaciones || '',
+                                onChange: function (e) {
+                                  var f = Object.assign({}, v.fluidos || {});
+                                  f[fluido] = Object.assign({}, val, {
+                                    observaciones: e.target.value,
+                                  });
+                                  props.onActualizar(v.id, { fluidos: f });
+                                },
+                                style: {
+                                  width: '100%',
+                                  padding: '6px 8px',
+                                  border: '1px solid #d1d5db',
+                                  borderRadius: '6px',
+                                  fontSize: '12px',
+                                  boxSizing: 'border-box',
+                                },
+                              })
+                            );
+                          })
+                        )
+                      )
+                    ),
+
+                  tabActual === 'compartimientos' &&
+                    React.createElement(
+                      'div',
+                      null,
+                      React.createElement(
+                        'div',
+                        {
+                          style: {
+                            background: '#f0fdf4',
+                            padding: '16px',
+                            borderRadius: '10px',
+                            marginBottom: '16px',
+                            border: '1px solid #bbf7d0',
+                          },
+                        },
+                        React.createElement(
+                          'h4',
+                          {
+                            style: {
+                              fontWeight: 'bold',
+                              color: '#15803d',
                               marginBottom: '12px',
                             },
                           },
@@ -2060,8 +7868,7 @@ function Vehiculos(props) {
                           { style: { display: 'flex', gap: '10px' } },
                           React.createElement('input', {
                             type: 'text',
-                            placeholder:
-                              'Nombre del compartimiento (Ej: Lateral Derecho)',
+                            placeholder: 'Nombre del compartimiento...',
                             value: nuevoCompNombre,
                             onChange: function (e) {
                               setNuevoCompNombre(e.target.value);
@@ -2073,7 +7880,7 @@ function Vehiculos(props) {
                             {
                               style: {
                                 padding: '10px 18px',
-                                background: '#f59e0b',
+                                background: '#15803d',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '8px',
@@ -2084,7 +7891,7 @@ function Vehiculos(props) {
                               onClick: function (e) {
                                 e.stopPropagation();
                                 if (!nuevoCompNombre.trim()) {
-                                  alert('Ingresa un nombre');
+                                  alert('Ingresá un nombre');
                                   return;
                                 }
                                 props.onAgregarCompartimiento(
@@ -2098,32 +7905,17 @@ function Vehiculos(props) {
                           )
                         )
                       ),
-
                       compartimientos.length === 0
                         ? React.createElement(
-                            'div',
+                            'p',
                             {
                               style: {
-                                textAlign: 'center',
-                                padding: '40px',
                                 color: '#6b7280',
+                                textAlign: 'center',
+                                padding: '24px',
                               },
                             },
-                            React.createElement(
-                              'div',
-                              {
-                                style: {
-                                  fontSize: '48px',
-                                  marginBottom: '12px',
-                                },
-                              },
-                              '🗄️'
-                            ),
-                            React.createElement(
-                              'p',
-                              null,
-                              'No hay compartimientos. Agrega uno arriba.'
-                            )
+                            'No hay compartimientos'
                           )
                         : React.createElement(
                             'div',
@@ -2131,34 +7923,26 @@ function Vehiculos(props) {
                               style: {
                                 display: 'flex',
                                 flexDirection: 'column',
-                                gap: '16px',
+                                gap: '12px',
                               },
                             },
                             compartimientos.map(function (comp) {
-                              var compKey = v.id + '_' + comp.id;
-                              var compExp = expandComp[compKey];
-                              var totalItemsComp = (
-                                comp.subcompartimientos || []
-                              ).reduce(function (acc, s) {
-                                return acc + (s.items || []).length;
-                              }, 0);
-
+                              var compExp = expandComp[v.id + '_' + comp.id];
                               return React.createElement(
                                 'div',
                                 {
                                   key: comp.id,
                                   style: {
-                                    border: '2px solid #fde68a',
+                                    border: '2px solid #d1fae5',
                                     borderRadius: '12px',
                                     overflow: 'hidden',
                                   },
                                 },
-                                // Header compartimiento
                                 React.createElement(
                                   'div',
                                   {
                                     style: {
-                                      background: '#fffbeb',
+                                      background: '#ecfdf5',
                                       padding: '14px 16px',
                                       display: 'flex',
                                       justifyContent: 'space-between',
@@ -2168,7 +7952,8 @@ function Vehiculos(props) {
                                     onClick: function (e) {
                                       e.stopPropagation();
                                       var ec = Object.assign({}, expandComp);
-                                      ec[compKey] = !ec[compKey];
+                                      ec[v.id + '_' + comp.id] =
+                                        !ec[v.id + '_' + comp.id];
                                       setExpandComp(ec);
                                     },
                                   },
@@ -2190,12 +7975,12 @@ function Vehiculos(props) {
                                       'div',
                                       null,
                                       React.createElement(
-                                        'h4',
+                                        'p',
                                         {
                                           style: {
-                                            fontWeight: 'bold',
+                                            fontWeight: '700',
                                             fontSize: '15px',
-                                            color: '#92400e',
+                                            color: '#065f46',
                                           },
                                         },
                                         comp.nombre
@@ -2210,7 +7995,11 @@ function Vehiculos(props) {
                                         },
                                         (comp.subcompartimientos || []).length +
                                           ' subcompartimientos · ' +
-                                          totalItemsComp +
+                                          (
+                                            comp.subcompartimientos || []
+                                          ).reduce(function (a, s) {
+                                            return a + (s.items || []).length;
+                                          }, 0) +
                                           ' items'
                                       )
                                     )
@@ -2256,12 +8045,16 @@ function Vehiculos(props) {
                                     ),
                                     React.createElement(
                                       'span',
-                                      { style: { color: '#6b7280' } },
+                                      {
+                                        style: {
+                                          fontSize: '16px',
+                                          color: '#6b7280',
+                                        },
+                                      },
                                       compExp ? '▲' : '▼'
                                     )
                                   )
                                 ),
-
                                 compExp &&
                                   React.createElement(
                                     'div',
@@ -2271,97 +8064,71 @@ function Vehiculos(props) {
                                         background: 'white',
                                       },
                                     },
-                                    // Agregar subcompartimiento
                                     React.createElement(
                                       'div',
                                       {
                                         style: {
-                                          background: '#f0fdf4',
-                                          padding: '12px',
-                                          borderRadius: '8px',
-                                          border: '1px solid #bbf7d0',
-                                          marginBottom: '14px',
+                                          display: 'flex',
+                                          gap: '8px',
+                                          marginBottom: '12px',
                                         },
                                       },
+                                      React.createElement('input', {
+                                        type: 'text',
+                                        placeholder:
+                                          'Nombre del subcompartimiento...',
+                                        value: nuevoSubNombres[comp.id] || '',
+                                        onChange: function (e) {
+                                          var u = Object.assign(
+                                            {},
+                                            nuevoSubNombres
+                                          );
+                                          u[comp.id] = e.target.value;
+                                          setNuevoSubNombres(u);
+                                        },
+                                        style: Object.assign({}, styles.input, {
+                                          flex: 1,
+                                          fontSize: '13px',
+                                        }),
+                                      }),
                                       React.createElement(
-                                        'p',
+                                        'button',
                                         {
                                           style: {
-                                            fontSize: '13px',
+                                            padding: '8px 14px',
+                                            background: '#10b981',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '6px',
                                             fontWeight: '600',
-                                            color: '#15803d',
-                                            marginBottom: '8px',
+                                            cursor: 'pointer',
+                                            fontSize: '13px',
+                                            whiteSpace: 'nowrap',
                                           },
-                                        },
-                                        '➕ Nuevo Subcompartimiento'
-                                      ),
-                                      React.createElement(
-                                        'div',
-                                        {
-                                          style: {
-                                            display: 'flex',
-                                            gap: '8px',
-                                          },
-                                        },
-                                        React.createElement('input', {
-                                          type: 'text',
-                                          placeholder:
-                                            'Nombre (Ej: Estante Superior)',
-                                          value: nuevoSubNombres[comp.id] || '',
-                                          onChange: function (e) {
+                                          onClick: function (e) {
+                                            e.stopPropagation();
+                                            var nombre =
+                                              nuevoSubNombres[comp.id];
+                                            if (!nombre || !nombre.trim()) {
+                                              alert('Ingresá un nombre');
+                                              return;
+                                            }
+                                            props.onAgregarSubcompartimiento(
+                                              v.id,
+                                              comp.id,
+                                              nombre.trim()
+                                            );
                                             var u = Object.assign(
                                               {},
                                               nuevoSubNombres
                                             );
-                                            u[comp.id] = e.target.value;
+                                            u[comp.id] = '';
                                             setNuevoSubNombres(u);
                                           },
-                                          style: Object.assign(
-                                            {},
-                                            styles.input,
-                                            { flex: 1, fontSize: '13px' }
-                                          ),
-                                        }),
-                                        React.createElement(
-                                          'button',
-                                          {
-                                            style: {
-                                              padding: '8px 14px',
-                                              background: '#10b981',
-                                              color: 'white',
-                                              border: 'none',
-                                              borderRadius: '6px',
-                                              fontWeight: '600',
-                                              cursor: 'pointer',
-                                              fontSize: '13px',
-                                              whiteSpace: 'nowrap',
-                                            },
-                                            onClick: function (e) {
-                                              e.stopPropagation();
-                                              var nombre =
-                                                nuevoSubNombres[comp.id];
-                                              if (!nombre || !nombre.trim()) {
-                                                alert('Ingresa un nombre');
-                                                return;
-                                              }
-                                              props.onAgregarSubcompartimiento(
-                                                v.id,
-                                                comp.id,
-                                                nombre.trim()
-                                              );
-                                              var u = Object.assign(
-                                                {},
-                                                nuevoSubNombres
-                                              );
-                                              u[comp.id] = '';
-                                              setNuevoSubNombres(u);
-                                            },
-                                          },
-                                          '➕ Agregar'
-                                        )
+                                        },
+                                        '➕ Agregar Sub'
                                       )
                                     ),
-
                                     (comp.subcompartimientos || []).length === 0
                                       ? React.createElement(
                                           'p',
@@ -2370,7 +8137,7 @@ function Vehiculos(props) {
                                               color: '#6b7280',
                                               fontSize: '13px',
                                               textAlign: 'center',
-                                              padding: '16px',
+                                              padding: '12px',
                                             },
                                           },
                                           'No hay subcompartimientos'
@@ -2381,7 +8148,7 @@ function Vehiculos(props) {
                                             style: {
                                               display: 'flex',
                                               flexDirection: 'column',
-                                              gap: '12px',
+                                              gap: '10px',
                                             },
                                           },
                                           (comp.subcompartimientos || []).map(
@@ -2390,7 +8157,6 @@ function Vehiculos(props) {
                                                 comp.id + '_' + sub.id;
                                               var itemSelKey = subKey + '_item';
                                               var cantSelKey = subKey + '_cant';
-
                                               return React.createElement(
                                                 'div',
                                                 {
@@ -2401,13 +8167,12 @@ function Vehiculos(props) {
                                                     overflow: 'hidden',
                                                   },
                                                 },
-                                                // Header subcompartimiento
                                                 React.createElement(
                                                   'div',
                                                   {
                                                     style: {
                                                       background: '#f9fafb',
-                                                      padding: '12px 14px',
+                                                      padding: '10px 14px',
                                                       display: 'flex',
                                                       justifyContent:
                                                         'space-between',
@@ -2416,47 +8181,27 @@ function Vehiculos(props) {
                                                   },
                                                   React.createElement(
                                                     'div',
-                                                    {
-                                                      style: {
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '8px',
-                                                      },
-                                                    },
+                                                    null,
                                                     React.createElement(
-                                                      'span',
+                                                      'p',
                                                       {
                                                         style: {
-                                                          fontSize: '16px',
+                                                          fontWeight: '600',
+                                                          fontSize: '14px',
                                                         },
                                                       },
-                                                      '📂'
+                                                      '📂 ' + sub.nombre
                                                     ),
                                                     React.createElement(
-                                                      'div',
-                                                      null,
-                                                      React.createElement(
-                                                        'p',
-                                                        {
-                                                          style: {
-                                                            fontWeight: '600',
-                                                            fontSize: '14px',
-                                                            color: '#374151',
-                                                          },
+                                                      'p',
+                                                      {
+                                                        style: {
+                                                          fontSize: '12px',
+                                                          color: '#6b7280',
                                                         },
-                                                        sub.nombre
-                                                      ),
-                                                      React.createElement(
-                                                        'p',
-                                                        {
-                                                          style: {
-                                                            fontSize: '11px',
-                                                            color: '#6b7280',
-                                                          },
-                                                        },
-                                                        (sub.items || [])
-                                                          .length + ' items'
-                                                      )
+                                                      },
+                                                      (sub.items || []).length +
+                                                        ' items'
                                                     )
                                                   ),
                                                   React.createElement(
@@ -2467,7 +8212,7 @@ function Vehiculos(props) {
                                                         background: '#ef4444',
                                                         color: 'white',
                                                         border: 'none',
-                                                        borderRadius: '5px',
+                                                        borderRadius: '4px',
                                                         cursor: 'pointer',
                                                         fontSize: '11px',
                                                       },
@@ -2491,25 +8236,16 @@ function Vehiculos(props) {
                                                     '🗑️'
                                                   )
                                                 ),
-
-                                                // Agregar item al subcompartimiento
                                                 React.createElement(
                                                   'div',
                                                   {
-                                                    style: {
-                                                      padding: '12px',
-                                                      background: '#fafafa',
-                                                      borderTop:
-                                                        '1px solid #e5e7eb',
-                                                    },
+                                                    style: { padding: '12px' },
                                                   },
                                                   React.createElement(
                                                     'div',
                                                     {
                                                       style: {
-                                                        display: 'grid',
-                                                        gridTemplateColumns:
-                                                          '2fr 1fr auto',
+                                                        display: 'flex',
                                                         gap: '8px',
                                                         marginBottom: '10px',
                                                       },
@@ -2530,39 +8266,36 @@ function Vehiculos(props) {
                                                             e.target.value;
                                                           setItemSelSubcomp(u);
                                                         },
-                                                        style: {
-                                                          padding: '7px',
-                                                          border:
-                                                            '1px solid #d1d5db',
-                                                          borderRadius: '6px',
-                                                          fontSize: '12px',
-                                                        },
+                                                        style: Object.assign(
+                                                          {},
+                                                          styles.input,
+                                                          {
+                                                            flex: 1,
+                                                            fontSize: '12px',
+                                                          }
+                                                        ),
                                                       },
                                                       React.createElement(
                                                         'option',
                                                         { value: '' },
                                                         'Seleccionar item del inventario...'
                                                       ),
-                                                      props.inventario
-                                                        .filter(function (i) {
-                                                          return (
-                                                            i.estado !== 'baja'
-                                                          );
-                                                        })
-                                                        .map(function (item) {
+                                                      props.inventario.map(
+                                                        function (i) {
                                                           return React.createElement(
                                                             'option',
                                                             {
-                                                              key: item.id,
-                                                              value: item.id,
+                                                              key: i.id,
+                                                              value: i.id,
                                                             },
-                                                            item.nombre +
+                                                            i.nombre +
                                                               ' [' +
-                                                              item.categoria +
+                                                              i.categoria +
                                                               '] - Stock: ' +
-                                                              (item.stock || 0)
+                                                              (i.stock || 0)
                                                           );
-                                                        })
+                                                        }
+                                                      )
                                                     ),
                                                     React.createElement(
                                                       'input',
@@ -2584,22 +8317,22 @@ function Vehiculos(props) {
                                                           setCantSelSubcomp(u);
                                                         },
                                                         style: {
-                                                          padding: '7px',
+                                                          width: '70px',
+                                                          padding: '8px',
                                                           border:
                                                             '1px solid #d1d5db',
                                                           borderRadius: '6px',
                                                           fontSize: '12px',
                                                         },
                                                         min: '1',
-                                                        placeholder: 'Cant.',
                                                       }
                                                     ),
                                                     React.createElement(
                                                       'button',
                                                       {
                                                         style: {
-                                                          padding: '7px 12px',
-                                                          background: '#3b82f6',
+                                                          padding: '8px 12px',
+                                                          background: '#10b981',
                                                           color: 'white',
                                                           border: 'none',
                                                           borderRadius: '6px',
@@ -2620,7 +8353,7 @@ function Vehiculos(props) {
                                                             ] || 1;
                                                           if (!itemId) {
                                                             alert(
-                                                              'Selecciona un item'
+                                                              'Seleccioná un item'
                                                             );
                                                             return;
                                                           }
@@ -2638,20 +8371,11 @@ function Vehiculos(props) {
                                                             );
                                                           u1[itemSelKey] = '';
                                                           setItemSelSubcomp(u1);
-                                                          var u2 =
-                                                            Object.assign(
-                                                              {},
-                                                              cantSelSubcomp
-                                                            );
-                                                          u2[cantSelKey] = 1;
-                                                          setCantSelSubcomp(u2);
                                                         },
                                                       },
                                                       '➕ Agregar'
                                                     )
                                                   ),
-
-                                                  // Lista de items del subcompartimiento
                                                   (sub.items || []).length === 0
                                                     ? React.createElement(
                                                         'p',
@@ -2660,10 +8384,9 @@ function Vehiculos(props) {
                                                             color: '#9ca3af',
                                                             fontSize: '12px',
                                                             textAlign: 'center',
-                                                            padding: '8px',
                                                           },
                                                         },
-                                                        'Sin items asignados'
+                                                        'Sin items'
                                                       )
                                                     : React.createElement(
                                                         'div',
@@ -2677,16 +8400,6 @@ function Vehiculos(props) {
                                                         },
                                                         (sub.items || []).map(
                                                           function (item) {
-                                                            var catColores = {
-                                                              herramienta:
-                                                                '#3b82f6',
-                                                              equipo: '#8b5cf6',
-                                                              material:
-                                                                '#10b981',
-                                                              repuesto:
-                                                                '#f59e0b',
-                                                              EPP: '#ef4444',
-                                                            };
                                                             return React.createElement(
                                                               'div',
                                                               {
@@ -2710,52 +8423,35 @@ function Vehiculos(props) {
                                                               },
                                                               React.createElement(
                                                                 'div',
-                                                                {
-                                                                  style: {
-                                                                    display:
-                                                                      'flex',
-                                                                    alignItems:
-                                                                      'center',
-                                                                    gap: '8px',
-                                                                    flex: 1,
-                                                                  },
-                                                                },
+                                                                null,
                                                                 React.createElement(
-                                                                  'span',
+                                                                  'p',
                                                                   {
                                                                     style: {
-                                                                      background:
-                                                                        catColores[
-                                                                          item
-                                                                            .categoria
-                                                                        ] ||
-                                                                        '#6b7280',
-                                                                      color:
-                                                                        'white',
-                                                                      padding:
-                                                                        '2px 6px',
-                                                                      borderRadius:
-                                                                        '4px',
-                                                                      fontSize:
-                                                                        '10px',
                                                                       fontWeight:
                                                                         '600',
-                                                                    },
-                                                                  },
-                                                                  item.categoria ||
-                                                                    '-'
-                                                                ),
-                                                                React.createElement(
-                                                                  'span',
-                                                                  {
-                                                                    style: {
                                                                       fontSize:
                                                                         '13px',
-                                                                      fontWeight:
-                                                                        '500',
                                                                     },
                                                                   },
                                                                   item.nombre
+                                                                ),
+                                                                React.createElement(
+                                                                  'p',
+                                                                  {
+                                                                    style: {
+                                                                      fontSize:
+                                                                        '11px',
+                                                                      color:
+                                                                        '#6b7280',
+                                                                    },
+                                                                  },
+                                                                  item.categoria +
+                                                                    ' · ' +
+                                                                    item.cantidadEsperada +
+                                                                    ' ' +
+                                                                    (item.unidad ||
+                                                                      'u')
                                                                 )
                                                               ),
                                                               React.createElement(
@@ -2764,9 +8460,9 @@ function Vehiculos(props) {
                                                                   style: {
                                                                     display:
                                                                       'flex',
+                                                                    gap: '6px',
                                                                     alignItems:
                                                                       'center',
-                                                                    gap: '6px',
                                                                   },
                                                                 },
                                                                 React.createElement(
@@ -2774,7 +8470,7 @@ function Vehiculos(props) {
                                                                   {
                                                                     style: {
                                                                       padding:
-                                                                        '2px 7px',
+                                                                        '3px 8px',
                                                                       background:
                                                                         '#e5e7eb',
                                                                       border:
@@ -2783,31 +8479,28 @@ function Vehiculos(props) {
                                                                         '4px',
                                                                       cursor:
                                                                         'pointer',
+                                                                      fontSize:
+                                                                        '12px',
                                                                       fontWeight:
                                                                         'bold',
-                                                                      fontSize:
-                                                                        '13px',
                                                                     },
                                                                     onClick:
                                                                       function (
                                                                         e
                                                                       ) {
                                                                         e.stopPropagation();
-                                                                        if (
-                                                                          (item.cantidadEsperada ||
-                                                                            0) >
-                                                                          1
-                                                                        ) {
-                                                                          props.onActualizarCantidadItemSubcomp(
-                                                                            v.id,
-                                                                            comp.id,
-                                                                            sub.id,
-                                                                            item.itemId,
+                                                                        props.onActualizarCantidadItemSubcomp(
+                                                                          v.id,
+                                                                          comp.id,
+                                                                          sub.id,
+                                                                          item.itemId,
+                                                                          Math.max(
+                                                                            1,
                                                                             (item.cantidadEsperada ||
-                                                                              0) -
+                                                                              1) -
                                                                               1
-                                                                          );
-                                                                        }
+                                                                          )
+                                                                        );
                                                                       },
                                                                   },
                                                                   '-'
@@ -2821,28 +8514,23 @@ function Vehiculos(props) {
                                                                       color:
                                                                         '#1e40af',
                                                                       padding:
-                                                                        '2px 10px',
+                                                                        '3px 10px',
                                                                       borderRadius:
-                                                                        '6px',
+                                                                        '4px',
                                                                       fontWeight:
                                                                         '700',
                                                                       fontSize:
                                                                         '13px',
-                                                                      minWidth:
-                                                                        '32px',
-                                                                      textAlign:
-                                                                        'center',
                                                                     },
                                                                   },
-                                                                  item.cantidadEsperada ||
-                                                                    0
+                                                                  item.cantidadEsperada
                                                                 ),
                                                                 React.createElement(
                                                                   'button',
                                                                   {
                                                                     style: {
                                                                       padding:
-                                                                        '2px 7px',
+                                                                        '3px 8px',
                                                                       background:
                                                                         '#e5e7eb',
                                                                       border:
@@ -2851,10 +8539,10 @@ function Vehiculos(props) {
                                                                         '4px',
                                                                       cursor:
                                                                         'pointer',
+                                                                      fontSize:
+                                                                        '12px',
                                                                       fontWeight:
                                                                         'bold',
-                                                                      fontSize:
-                                                                        '13px',
                                                                     },
                                                                     onClick:
                                                                       function (
@@ -2867,7 +8555,7 @@ function Vehiculos(props) {
                                                                           sub.id,
                                                                           item.itemId,
                                                                           (item.cantidadEsperada ||
-                                                                            0) +
+                                                                            1) +
                                                                             1
                                                                         );
                                                                       },
@@ -2875,24 +8563,11 @@ function Vehiculos(props) {
                                                                   '+'
                                                                 ),
                                                                 React.createElement(
-                                                                  'span',
-                                                                  {
-                                                                    style: {
-                                                                      fontSize:
-                                                                        '11px',
-                                                                      color:
-                                                                        '#6b7280',
-                                                                    },
-                                                                  },
-                                                                  item.unidad ||
-                                                                    'u'
-                                                                ),
-                                                                React.createElement(
                                                                   'button',
                                                                   {
                                                                     style: {
                                                                       padding:
-                                                                        '4px 8px',
+                                                                        '3px 8px',
                                                                       background:
                                                                         '#ef4444',
                                                                       color:
@@ -2927,7 +8602,7 @@ function Vehiculos(props) {
                                                                         }
                                                                       },
                                                                   },
-                                                                  '🗑️'
+                                                                  '✕'
                                                                 )
                                                               )
                                                             );
@@ -2945,7 +8620,6 @@ function Vehiculos(props) {
                           )
                     ),
 
-                  // TAB ITEMS GENERALES
                   tabActual === 'items' &&
                     React.createElement(
                       'div',
@@ -2977,7 +8651,7 @@ function Vehiculos(props) {
                           {
                             style: {
                               display: 'grid',
-                              gridTemplateColumns: '2fr 1fr auto',
+                              gridTemplateColumns: '1fr auto auto',
                               gap: '10px',
                               alignItems: 'end',
                             },
@@ -2988,7 +8662,7 @@ function Vehiculos(props) {
                             React.createElement(
                               'label',
                               { style: styles.label },
-                              'Item'
+                              'Item del Inventario'
                             ),
                             React.createElement(
                               'select',
@@ -3002,23 +8676,21 @@ function Vehiculos(props) {
                               React.createElement(
                                 'option',
                                 { value: '' },
-                                'Seleccionar...'
+                                'Seleccionar item...'
                               ),
                               props.inventario
                                 .filter(function (i) {
-                                  return (
-                                    i.estado !== 'baja' && (i.stock || 0) > 0
-                                  );
+                                  return (i.stock || 0) > 0;
                                 })
-                                .map(function (item) {
+                                .map(function (i) {
                                   return React.createElement(
                                     'option',
-                                    { key: item.id, value: item.id },
-                                    item.nombre +
-                                      ' [' +
-                                      item.categoria +
-                                      '] - Stock: ' +
-                                      (item.stock || 0)
+                                    { key: i.id, value: i.id },
+                                    i.nombre +
+                                      ' - Stock: ' +
+                                      (i.stock || 0) +
+                                      ' ' +
+                                      (i.unidad || 'u')
                                   );
                                 })
                             )
@@ -3037,7 +8709,9 @@ function Vehiculos(props) {
                               onChange: function (e) {
                                 setCantAsignar(parseInt(e.target.value) || 1);
                               },
-                              style: styles.input,
+                              style: Object.assign({}, styles.input, {
+                                width: '80px',
+                              }),
                               min: '1',
                             })
                           ),
@@ -3057,7 +8731,7 @@ function Vehiculos(props) {
                               onClick: function (e) {
                                 e.stopPropagation();
                                 if (!itemAsignar) {
-                                  alert('Selecciona un item');
+                                  alert('Seleccioná un item');
                                   return;
                                 }
                                 props.onAsignarItem(
@@ -3083,7 +8757,7 @@ function Vehiculos(props) {
                                 padding: '24px',
                               },
                             },
-                            'No hay items generales asignados'
+                            'No hay items asignados'
                           )
                         : React.createElement(
                             'div',
@@ -3095,16 +8769,6 @@ function Vehiculos(props) {
                               },
                             },
                             itemsAsignados.map(function (item) {
-                              var itemInv = props.inventario.find(function (i) {
-                                return i.id === item.itemId;
-                              });
-                              var catColores = {
-                                herramienta: '#3b82f6',
-                                equipo: '#8b5cf6',
-                                material: '#10b981',
-                                repuesto: '#f59e0b',
-                                EPP: '#ef4444',
-                              };
                               return React.createElement(
                                 'div',
                                 {
@@ -3121,57 +8785,30 @@ function Vehiculos(props) {
                                 },
                                 React.createElement(
                                   'div',
-                                  {
-                                    style: {
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '10px',
-                                      flex: 1,
-                                    },
-                                  },
+                                  null,
                                   React.createElement(
-                                    'span',
+                                    'p',
                                     {
                                       style: {
-                                        background:
-                                          catColores[item.categoria] ||
-                                          '#6b7280',
-                                        color: 'white',
-                                        padding: '3px 8px',
-                                        borderRadius: '6px',
-                                        fontSize: '11px',
                                         fontWeight: '600',
+                                        fontSize: '14px',
                                       },
                                     },
-                                    item.categoria || '-'
+                                    item.nombre
                                   ),
                                   React.createElement(
-                                    'div',
-                                    null,
-                                    React.createElement(
-                                      'p',
-                                      {
-                                        style: {
-                                          fontWeight: '600',
-                                          fontSize: '14px',
-                                        },
+                                    'p',
+                                    {
+                                      style: {
+                                        fontSize: '12px',
+                                        color: '#6b7280',
                                       },
-                                      item.nombre
-                                    ),
-                                    itemInv &&
-                                      React.createElement(
-                                        'p',
-                                        {
-                                          style: {
-                                            fontSize: '11px',
-                                            color: '#6b7280',
-                                          },
-                                        },
-                                        'Stock inventario: ' +
-                                          (itemInv.stock || 0) +
-                                          ' ' +
-                                          (itemInv.unidad || 'u')
-                                      )
+                                    },
+                                    item.categoria +
+                                      ' · ' +
+                                      item.cantidad +
+                                      ' ' +
+                                      (item.unidad || 'u')
                                   )
                                 ),
                                 React.createElement(
@@ -3179,55 +8816,15 @@ function Vehiculos(props) {
                                   {
                                     style: {
                                       display: 'flex',
-                                      alignItems: 'center',
                                       gap: '6px',
+                                      alignItems: 'center',
                                     },
                                   },
                                   React.createElement(
                                     'button',
                                     {
                                       style: {
-                                        padding: '4px 8px',
-                                        background: '#e5e7eb',
-                                        border: 'none',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold',
-                                      },
-                                      onClick: function (e) {
-                                        e.stopPropagation();
-                                        if ((item.cantidad || 0) > 1) {
-                                          props.onActualizarCantidadItem(
-                                            v.id,
-                                            item.itemId,
-                                            (item.cantidad || 0) - 1
-                                          );
-                                        }
-                                      },
-                                    },
-                                    '-'
-                                  ),
-                                  React.createElement(
-                                    'span',
-                                    {
-                                      style: {
-                                        background: '#dbeafe',
-                                        color: '#1e40af',
-                                        padding: '4px 12px',
-                                        borderRadius: '8px',
-                                        fontWeight: '700',
-                                        fontSize: '14px',
-                                        minWidth: '40px',
-                                        textAlign: 'center',
-                                      },
-                                    },
-                                    item.cantidad || 0
-                                  ),
-                                  React.createElement(
-                                    'button',
-                                    {
-                                      style: {
-                                        padding: '4px 8px',
+                                        padding: '4px 10px',
                                         background: '#e5e7eb',
                                         border: 'none',
                                         borderRadius: '4px',
@@ -3239,7 +8836,42 @@ function Vehiculos(props) {
                                         props.onActualizarCantidadItem(
                                           v.id,
                                           item.itemId,
-                                          (item.cantidad || 0) + 1
+                                          Math.max(1, (item.cantidad || 1) - 1)
+                                        );
+                                      },
+                                    },
+                                    '-'
+                                  ),
+                                  React.createElement(
+                                    'span',
+                                    {
+                                      style: {
+                                        background: '#dbeafe',
+                                        color: '#1e40af',
+                                        padding: '4px 12px',
+                                        borderRadius: '6px',
+                                        fontWeight: '700',
+                                      },
+                                    },
+                                    item.cantidad
+                                  ),
+                                  React.createElement(
+                                    'button',
+                                    {
+                                      style: {
+                                        padding: '4px 10px',
+                                        background: '#e5e7eb',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                      },
+                                      onClick: function (e) {
+                                        e.stopPropagation();
+                                        props.onActualizarCantidadItem(
+                                          v.id,
+                                          item.itemId,
+                                          (item.cantidad || 1) + 1
                                         );
                                       },
                                     },
@@ -3279,7 +8911,6 @@ function Vehiculos(props) {
                           )
                     ),
 
-                  // TAB ERAs
                   tabActual === 'eras' &&
                     React.createElement(
                       'div',
@@ -3310,49 +8941,44 @@ function Vehiculos(props) {
                           'div',
                           {
                             style: {
-                              display: 'grid',
-                              gridTemplateColumns: '1fr auto',
+                              display: 'flex',
                               gap: '10px',
-                              alignItems: 'end',
+                              alignItems: 'center',
                             },
                           },
                           React.createElement(
-                            'div',
-                            null,
-                            React.createElement(
-                              'label',
-                              { style: styles.label },
-                              'ERA Disponible'
-                            ),
-                            React.createElement(
-                              'select',
-                              {
-                                value: eraAsignar,
-                                onChange: function (e) {
-                                  setEraAsignar(e.target.value);
-                                },
-                                style: styles.input,
+                            'select',
+                            {
+                              value: eraAsignar,
+                              onChange: function (e) {
+                                setEraAsignar(e.target.value);
                               },
-                              React.createElement(
+                              style: Object.assign({}, styles.input, {
+                                flex: 1,
+                              }),
+                            },
+                            React.createElement(
+                              'option',
+                              { value: '' },
+                              'Seleccionar ERA disponible...'
+                            ),
+                            erasDisponibles.map(function (era) {
+                              return React.createElement(
                                 'option',
-                                { value: '' },
-                                'Seleccionar ERA...'
-                              ),
-                              erasDisponibles.map(function (era) {
-                                return React.createElement(
-                                  'option',
-                                  { key: era.id, value: era.id },
-                                  era.marca +
-                                    ' ' +
-                                    era.modelo +
-                                    ' [' +
-                                    era.serial +
-                                    '] - ' +
-                                    era.presion +
-                                    ' bar'
-                                );
-                              })
-                            )
+                                { key: era.id, value: era.id },
+                                era.marca +
+                                  ' ' +
+                                  era.modelo +
+                                  ' [' +
+                                  era.serial +
+                                  '] - ' +
+                                  era.presion +
+                                  ' bar' +
+                                  (era.codigoInterno
+                                    ? ' · ' + era.codigoInterno
+                                    : '')
+                              );
+                            })
                           ),
                           React.createElement(
                             'button',
@@ -3370,7 +8996,7 @@ function Vehiculos(props) {
                               onClick: function (e) {
                                 e.stopPropagation();
                                 if (!eraAsignar) {
-                                  alert('Selecciona una ERA');
+                                  alert('Seleccioná una ERA');
                                   return;
                                 }
                                 props.onAsignarERA(v.id, eraAsignar);
@@ -3416,14 +9042,14 @@ function Vehiculos(props) {
                                 {
                                   key: era.id,
                                   style: {
-                                    padding: '14px',
+                                    padding: '12px 14px',
                                     background: tieneAlerta
                                       ? '#fef2f2'
                                       : '#f5f3ff',
-                                    borderRadius: '10px',
+                                    borderRadius: '8px',
                                     border:
-                                      '2px solid ' +
-                                      (tieneAlerta ? '#ef4444' : '#ddd6fe'),
+                                      '1px solid ' +
+                                      (tieneAlerta ? '#fecaca' : '#ddd6fe'),
                                   },
                                 },
                                 React.createElement(
@@ -3433,144 +9059,162 @@ function Vehiculos(props) {
                                       display: 'flex',
                                       justifyContent: 'space-between',
                                       alignItems: 'center',
-                                      marginBottom: '8px',
                                     },
                                   },
                                   React.createElement(
                                     'div',
                                     null,
                                     React.createElement(
-                                      'h4',
+                                      'p',
                                       {
                                         style: {
-                                          fontWeight: 'bold',
-                                          fontSize: '15px',
+                                          fontWeight: '600',
+                                          fontSize: '14px',
                                           color: '#7c3aed',
                                         },
                                       },
                                       '🎽 ' + era.marca + ' ' + era.modelo
                                     ),
                                     React.createElement(
-                                      'p',
+                                      'div',
                                       {
                                         style: {
-                                          fontSize: '12px',
-                                          color: '#6b7280',
+                                          display: 'flex',
+                                          gap: '8px',
+                                          flexWrap: 'wrap',
+                                          marginTop: '4px',
                                         },
                                       },
-                                      '🔖 ' + era.serial
+                                      era.codigoInterno &&
+                                        React.createElement(
+                                          'span',
+                                          {
+                                            style: {
+                                              fontSize: '11px',
+                                              background: '#ede9fe',
+                                              color: '#7c3aed',
+                                              padding: '2px 6px',
+                                              borderRadius: '4px',
+                                              fontWeight: '600',
+                                            },
+                                          },
+                                          '🏷️ ' + era.codigoInterno
+                                        ),
+                                      React.createElement(
+                                        'span',
+                                        {
+                                          style: {
+                                            fontSize: '11px',
+                                            color: '#6b7280',
+                                          },
+                                        },
+                                        '🔖 ' + era.serial
+                                      ),
+                                      React.createElement(
+                                        'span',
+                                        {
+                                          style: {
+                                            fontSize: '11px',
+                                            background:
+                                              (era.presion || 0) >= 280
+                                                ? '#d1fae5'
+                                                : '#fee2e2',
+                                            color:
+                                              (era.presion || 0) >= 280
+                                                ? '#065f46'
+                                                : '#dc2626',
+                                            padding: '2px 6px',
+                                            borderRadius: '4px',
+                                            fontWeight: '600',
+                                          },
+                                        },
+                                        (era.presion || 0) + ' bar'
+                                      ),
+                                      era.vencimientoTubo &&
+                                        React.createElement(
+                                          'span',
+                                          {
+                                            style: {
+                                              fontSize: '11px',
+                                              color:
+                                                vencTubo === 'vencido'
+                                                  ? '#dc2626'
+                                                  : vencTubo === 'proximo'
+                                                  ? '#d97706'
+                                                  : '#6b7280',
+                                              fontWeight:
+                                                vencTubo !== 'ok'
+                                                  ? '600'
+                                                  : '400',
+                                            },
+                                          },
+                                          '🧪 Tubo: ' +
+                                            era.vencimientoTubo +
+                                            (vencTubo === 'vencido'
+                                              ? ' ⚠️'
+                                              : vencTubo === 'proximo'
+                                              ? ' ⚠️'
+                                              : '')
+                                        ),
+                                      era.pruebaHidraulica &&
+                                        React.createElement(
+                                          'span',
+                                          {
+                                            style: {
+                                              fontSize: '11px',
+                                              color:
+                                                vencPH === 'vencido'
+                                                  ? '#dc2626'
+                                                  : vencPH === 'proximo'
+                                                  ? '#d97706'
+                                                  : '#6b7280',
+                                              fontWeight:
+                                                vencPH !== 'ok' ? '600' : '400',
+                                            },
+                                          },
+                                          '🔧 PH: ' +
+                                            era.pruebaHidraulica +
+                                            (vencPH === 'vencido'
+                                              ? ' ⚠️'
+                                              : vencPH === 'proximo'
+                                              ? ' ⚠️'
+                                              : '')
+                                        )
                                     )
                                   ),
                                   React.createElement(
-                                    'div',
+                                    'button',
                                     {
                                       style: {
-                                        display: 'flex',
-                                        gap: '8px',
-                                        alignItems: 'center',
+                                        padding: '6px 10px',
+                                        background: '#ef4444',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        fontSize: '12px',
+                                      },
+                                      onClick: function (e) {
+                                        e.stopPropagation();
+                                        if (
+                                          window.confirm(
+                                            '¿Desasignar ERA ' +
+                                              era.serial +
+                                              '?'
+                                          )
+                                        ) {
+                                          props.onDesasignarERA(v.id, era.id);
+                                        }
                                       },
                                     },
-                                    React.createElement(
-                                      'span',
-                                      {
-                                        style: {
-                                          background:
-                                            (era.presion || 0) >= 280
-                                              ? '#d1fae5'
-                                              : '#fee2e2',
-                                          color:
-                                            (era.presion || 0) >= 280
-                                              ? '#065f46'
-                                              : '#dc2626',
-                                          padding: '4px 10px',
-                                          borderRadius: '8px',
-                                          fontSize: '12px',
-                                          fontWeight: '700',
-                                        },
-                                      },
-                                      era.presion + ' bar'
-                                    ),
-                                    React.createElement(
-                                      'button',
-                                      {
-                                        style: {
-                                          padding: '6px 10px',
-                                          background: '#ef4444',
-                                          color: 'white',
-                                          border: 'none',
-                                          borderRadius: '6px',
-                                          cursor: 'pointer',
-                                          fontSize: '12px',
-                                        },
-                                        onClick: function (e) {
-                                          e.stopPropagation();
-                                          if (
-                                            window.confirm('¿Desasignar ERA?')
-                                          ) {
-                                            props.onDesasignarERA(v.id, era.id);
-                                          }
-                                        },
-                                      },
-                                      '↩️ Quitar'
-                                    )
+                                    '↩️ Quitar'
                                   )
-                                ),
-                                React.createElement(
-                                  'div',
-                                  {
-                                    style: {
-                                      display: 'flex',
-                                      gap: '8px',
-                                      flexWrap: 'wrap',
-                                    },
-                                  },
-                                  era.pruebaHidraulica &&
-                                    React.createElement(
-                                      'span',
-                                      {
-                                        style: {
-                                          fontSize: '11px',
-                                          background:
-                                            vencPH === 'vencido'
-                                              ? '#fee2e2'
-                                              : '#f3f4f6',
-                                          color:
-                                            vencPH === 'vencido'
-                                              ? '#dc2626'
-                                              : '#374151',
-                                          padding: '3px 8px',
-                                          borderRadius: '6px',
-                                        },
-                                      },
-                                      '🔧 PH: ' + era.pruebaHidraulica
-                                    ),
-                                  era.vencimientoTubo &&
-                                    React.createElement(
-                                      'span',
-                                      {
-                                        style: {
-                                          fontSize: '11px',
-                                          background:
-                                            vencTubo === 'vencido'
-                                              ? '#fee2e2'
-                                              : '#f3f4f6',
-                                          color:
-                                            vencTubo === 'vencido'
-                                              ? '#dc2626'
-                                              : '#374151',
-                                          padding: '3px 8px',
-                                          borderRadius: '6px',
-                                        },
-                                      },
-                                      '🧪 Tubo: ' + era.vencimientoTubo
-                                    )
                                 )
                               );
                             })
                           )
                     ),
 
-                  // TAB VTV
                   tabActual === 'vtv' &&
                     React.createElement(
                       'div',
@@ -3578,23 +9222,37 @@ function Vehiculos(props) {
                       React.createElement(
                         'div',
                         {
-                          style: {
-                            background: '#f0f9ff',
-                            padding: '20px',
-                            borderRadius: '12px',
-                            border: '2px solid #bae6fd',
-                          },
+                          style: Object.assign({}, styles.card, {
+                            background: vtvBg,
+                            border:
+                              '2px solid ' +
+                              (vtvEstado === 'apta'
+                                ? '#a7f3d0'
+                                : vtvEstado === 'proxima'
+                                ? '#fde68a'
+                                : vtvEstado === 'vencida'
+                                ? '#fecaca'
+                                : '#e5e7eb'),
+                          }),
                         },
                         React.createElement(
                           'h4',
                           {
                             style: {
                               fontWeight: 'bold',
-                              color: '#0891b2',
+                              color: vtvColor,
                               marginBottom: '16px',
+                              fontSize: '16px',
                             },
                           },
-                          '🚗 Verificación Técnica Vehicular'
+                          '🚗 Control VTV - ' +
+                            (vtvEstado === 'apta'
+                              ? '✅ APTA'
+                              : vtvEstado === 'proxima'
+                              ? '⚠️ PRÓXIMA A VENCER'
+                              : vtvEstado === 'vencida'
+                              ? '❌ VENCIDA'
+                              : '📋 Sin datos')
                         ),
                         React.createElement(
                           'div',
@@ -3603,50 +9261,8 @@ function Vehiculos(props) {
                               display: 'grid',
                               gridTemplateColumns: 'repeat(3, 1fr)',
                               gap: '12px',
-                              marginBottom: '16px',
                             },
                           },
-                          React.createElement(
-                            'div',
-                            null,
-                            React.createElement(
-                              'label',
-                              { style: styles.label },
-                              'Estado VTV'
-                            ),
-                            React.createElement(
-                              'select',
-                              {
-                                value: v.vtv && v.vtv.apta ? 'apta' : 'no-apta',
-                                onChange: function (e) {
-                                  props.onActualizar(v.id, {
-                                    vtv: Object.assign({}, v.vtv || {}, {
-                                      apta: e.target.value === 'apta',
-                                    }),
-                                  });
-                                },
-                                style: {
-                                  width: '100%',
-                                  padding: '10px',
-                                  border: '1px solid #d1d5db',
-                                  borderRadius: '8px',
-                                  fontSize: '14px',
-                                  background:
-                                    v.vtv && v.vtv.apta ? '#ecfdf5' : '#fee2e2',
-                                },
-                              },
-                              React.createElement(
-                                'option',
-                                { value: 'apta' },
-                                '✅ APTA'
-                              ),
-                              React.createElement(
-                                'option',
-                                { value: 'no-apta' },
-                                '❌ NO APTA'
-                              )
-                            )
-                          ),
                           React.createElement(
                             'div',
                             null,
@@ -3657,7 +9273,7 @@ function Vehiculos(props) {
                             ),
                             React.createElement('input', {
                               type: 'date',
-                              value: (v.vtv && v.vtv.vencimiento) || '',
+                              value: (v.vtv || {}).vencimiento || '',
                               onChange: function (e) {
                                 props.onActualizar(v.id, {
                                   vtv: Object.assign({}, v.vtv || {}, {
@@ -3665,24 +9281,7 @@ function Vehiculos(props) {
                                   }),
                                 });
                               },
-                              style: {
-                                width: '100%',
-                                padding: '10px',
-                                border:
-                                  '1px solid ' +
-                                  getBorderColor(
-                                    verificarVencimiento(
-                                      v.vtv && v.vtv.vencimiento
-                                    )
-                                  ),
-                                borderRadius: '8px',
-                                fontSize: '14px',
-                                background: getBgColor(
-                                  verificarVencimiento(
-                                    v.vtv && v.vtv.vencimiento
-                                  )
-                                ),
-                              },
+                              style: styles.input,
                             })
                           ),
                           React.createElement(
@@ -3691,11 +9290,76 @@ function Vehiculos(props) {
                             React.createElement(
                               'label',
                               { style: styles.label },
+                              'N° Certificado'
+                            ),
+                            React.createElement('input', {
+                              type: 'text',
+                              value: (v.vtv || {}).certificado || '',
+                              onChange: function (e) {
+                                props.onActualizar(v.id, {
+                                  vtv: Object.assign({}, v.vtv || {}, {
+                                    certificado: e.target.value,
+                                  }),
+                                });
+                              },
+                              style: styles.input,
+                              placeholder: 'Número de certificado',
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Planta de Revisión'
+                            ),
+                            React.createElement('input', {
+                              type: 'text',
+                              value: (v.vtv || {}).planta || '',
+                              onChange: function (e) {
+                                props.onActualizar(v.id, {
+                                  vtv: Object.assign({}, v.vtv || {}, {
+                                    planta: e.target.value,
+                                  }),
+                                });
+                              },
+                              style: styles.input,
+                              placeholder: 'Nombre de la planta',
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
+                              'Fecha Última Revisión'
+                            ),
+                            React.createElement('input', {
+                              type: 'date',
+                              value: (v.vtv || {}).ultimaRevision || '',
+                              onChange: function (e) {
+                                props.onActualizar(v.id, {
+                                  vtv: Object.assign({}, v.vtv || {}, {
+                                    ultimaRevision: e.target.value,
+                                  }),
+                                });
+                              },
+                              style: styles.input,
+                            })
+                          ),
+                          React.createElement(
+                            'div',
+                            { style: { gridColumn: 'span 2' } },
+                            React.createElement(
+                              'label',
+                              { style: styles.label },
                               'Observaciones'
                             ),
                             React.createElement('input', {
                               type: 'text',
-                              value: (v.vtv && v.vtv.observaciones) || '',
+                              value: (v.vtv || {}).observaciones || '',
                               onChange: function (e) {
                                 props.onActualizar(v.id, {
                                   vtv: Object.assign({}, v.vtv || {}, {
@@ -3703,14 +9367,8 @@ function Vehiculos(props) {
                                   }),
                                 });
                               },
-                              style: {
-                                width: '100%',
-                                padding: '10px',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '8px',
-                                fontSize: '14px',
-                              },
-                              placeholder: 'Observaciones VTV...',
+                              style: styles.input,
+                              placeholder: 'Observaciones de la VTV...',
                             })
                           )
                         ),
@@ -3719,3843 +9377,156 @@ function Vehiculos(props) {
                             'div',
                             {
                               style: {
-                                padding: '12px 16px',
-                                background: 'rgba(0,0,0,0.05)',
+                                marginTop: '16px',
+                                padding: '12px',
+                                background: 'white',
                                 borderRadius: '8px',
                                 textAlign: 'center',
-                                fontWeight: '700',
-                                fontSize: '14px',
-                                color: vtvColor,
                               },
                             },
-                            vtvEstado === 'apta'
-                              ? '✅ VTV vigente - ' +
-                                  diasVtv +
-                                  ' días restantes'
-                              : vtvEstado === 'proxima'
-                              ? '⚠️ VTV próxima a vencer - ' + diasVtv + ' días'
-                              : vtvEstado === 'vencida'
-                              ? '❌ VTV vencida hace ' +
-                                Math.abs(diasVtv) +
-                                ' días'
-                              : ''
-                          )
-                      )
-                    )
-                )
-            );
-          })
-        )
-  );
-}
-
-// ============================================
-// CHECKLISTS CON COMPARTIMIENTOS
-// ============================================
-function Checklists(props) {
-  var vehSelState = useState(null);
-  var vehiculoSel = vehSelState[0];
-  var setVehiculoSel = vehSelState[1];
-  var tipoState = useState(null);
-  var tipo = tipoState[0];
-  var setTipo = tipoState[1];
-  var compSelState = useState(null);
-  var compSel = compSelState[0];
-  var setCompSel = compSelState[1];
-  var estadoFluidosState = useState({});
-  var estadoFluidos = estadoFluidosState[0];
-  var setEstadoFluidos = estadoFluidosState[1];
-  var estadoLucesState = useState({});
-  var estadoLuces = estadoLucesState[0];
-  var setEstadoLuces = estadoLucesState[1];
-  var estadoItemsState = useState({});
-  var estadoItems = estadoItemsState[0];
-  var setEstadoItems = estadoItemsState[1];
-  var estadoERAsState = useState({});
-  var estadoERAs = estadoERAsState[0];
-  var setEstadoERAs = estadoERAsState[1];
-  var estadoCompsState = useState({});
-  var estadoComps = estadoCompsState[0];
-  var setEstadoComps = estadoCompsState[1];
-  var itemsInventarioState = useState([]);
-  var itemsInventario = itemsInventarioState[0];
-  var setItemsInventario = itemsInventarioState[1];
-  var obsState = useState('');
-  var obs = obsState[0];
-  var setObs = obsState[1];
-  var vistaHistState = useState(false);
-  var vistaHist = vistaHistState[0];
-  var setVistaHist = vistaHistState[1];
-  var guardandoState = useState(false);
-  var guardando = guardandoState[0];
-  var setGuardando = guardandoState[1];
-
-  var nombresAmigablesFluidos = {
-    aceite: '🛢️ Aceite de Motor',
-    refrigerante: '🌡️ Refrigerante',
-    combustible: '⛽ Combustible',
-    liquidoFrenos: '🔴 Líquido de Frenos',
-  };
-  var nombresAmigablesLuces = {
-    luces: '💡 Luces',
-    lucesEmergencia: '🚨 Luces de Emergencia',
-    sirena: '📢 Sirena',
-    bocina: '📯 Bocina',
-  };
-
-  var iniciarChecklist = function (vehiculo, tipoCheck, comp) {
-    setVehiculoSel(vehiculo);
-    setTipo(tipoCheck);
-    setCompSel(comp || null);
-    setObs('');
-    setItemsInventario([]);
-
-    if (tipoCheck === 'fluidos') {
-      var ef = {};
-      Object.keys(vehiculo.fluidos || {}).forEach(function (n) {
-        ef[n] = { ok: null, observaciones: '' };
-      });
-      setEstadoFluidos(ef);
-      var el = {};
-      Object.keys(
-        vehiculo.controles || {
-          luces: true,
-          lucesEmergencia: true,
-          sirena: true,
-          bocina: true,
-        }
-      ).forEach(function (n) {
-        el[n] = { ok: null, observaciones: '' };
-      });
-      setEstadoLuces(el);
-    }
-
-    if (tipoCheck === 'items') {
-      var ei = {};
-      (vehiculo.itemsAsignados || []).forEach(function (item) {
-        ei[item.itemId] = {
-          ok: null,
-          observaciones: '',
-          nombre: item.nombre,
-          cantidadEsperada: item.cantidad,
-          cantidadReal: item.cantidad,
-          categoria: item.categoria,
-        };
-      });
-      setEstadoItems(ei);
-    }
-
-    if (tipoCheck === 'eras') {
-      var ee = {};
-      var erasAsignadas = (vehiculo.erasAsignadas || [])
-        .map(function (eraId) {
-          return props.eras.find(function (e) {
-            return e.id === eraId;
-          });
-        })
-        .filter(Boolean);
-      erasAsignadas.forEach(function (era) {
-        ee[era.id] = {
-          ok: null,
-          observaciones: '',
-          presionReal: era.presion || 0,
-          nombre: era.marca + ' ' + era.modelo,
-          serial: era.serial,
-        };
-      });
-      setEstadoERAs(ee);
-    }
-
-    if (tipoCheck === 'compartimiento' && comp) {
-      var ec = {};
-      (comp.subcompartimientos || []).forEach(function (sub) {
-        ec[sub.id] = { nombre: sub.nombre, items: {} };
-        (sub.items || []).forEach(function (item) {
-          ec[sub.id].items[item.itemId] = {
-            ok: null,
-            observaciones: '',
-            nombre: item.nombre,
-            cantidadEsperada: item.cantidadEsperada,
-            cantidadReal: item.cantidadEsperada,
-            categoria: item.categoria,
-          };
-        });
-      });
-      setEstadoComps(ec);
-    }
-  };
-
-  var cancelar = function () {
-    setVehiculoSel(null);
-    setTipo(null);
-    setCompSel(null);
-    setEstadoFluidos({});
-    setEstadoLuces({});
-    setEstadoItems({});
-    setEstadoERAs({});
-    setEstadoComps({});
-    setItemsInventario([]);
-    setObs('');
-  };
-
-  var guardar = async function () {
-    var todosItems = [];
-    var sinResponder = 0;
-
-    if (tipo === 'fluidos') {
-      var itemsFluidos = Object.entries(estadoFluidos).map(function (e) {
-        return {
-          nombre: e[0],
-          nombreAmigable: nombresAmigablesFluidos[e[0]] || e[0],
-          ok: e[1].ok,
-          observaciones: e[1].observaciones,
-        };
-      });
-      var itemsLuces = Object.entries(estadoLuces).map(function (e) {
-        return {
-          nombre: e[0],
-          nombreAmigable: nombresAmigablesLuces[e[0]] || e[0],
-          ok: e[1].ok,
-          observaciones: e[1].observaciones,
-        };
-      });
-      sinResponder =
-        itemsFluidos.filter(function (i) {
-          return i.ok === null;
-        }).length +
-        itemsLuces.filter(function (i) {
-          return i.ok === null;
-        }).length;
-      todosItems = itemsFluidos.concat(itemsLuces);
-    }
-
-    if (tipo === 'items') {
-      var itemsCheck = Object.entries(estadoItems).map(function (e) {
-        return {
-          itemId: e[0],
-          nombre: e[1].nombre,
-          categoria: e[1].categoria,
-          cantidadEsperada: e[1].cantidadEsperada,
-          cantidadReal: e[1].cantidadReal,
-          ok: e[1].ok,
-          observaciones: e[1].observaciones,
-        };
-      });
-      sinResponder = itemsCheck.filter(function (i) {
-        return i.ok === null;
-      }).length;
-      todosItems = itemsCheck;
-    }
-
-    if (tipo === 'eras') {
-      var erasCheck = Object.entries(estadoERAs).map(function (e) {
-        return {
-          eraId: e[0],
-          nombre: e[1].nombre,
-          serial: e[1].serial,
-          presionReal: e[1].presionReal,
-          ok: e[1].ok,
-          observaciones: e[1].observaciones,
-        };
-      });
-      sinResponder = erasCheck.filter(function (i) {
-        return i.ok === null;
-      }).length;
-      todosItems = erasCheck;
-    }
-
-    if (tipo === 'compartimiento') {
-      Object.entries(estadoComps).forEach(function (subEntry) {
-        var subId = subEntry[0];
-        var subData = subEntry[1];
-        Object.entries(subData.items || {}).forEach(function (itemEntry) {
-          var itemId = itemEntry[0];
-          var itemData = itemEntry[1];
-          todosItems.push({
-            subId: subId,
-            subNombre: subData.nombre,
-            itemId: itemId,
-            nombre: itemData.nombre,
-            categoria: itemData.categoria,
-            cantidadEsperada: itemData.cantidadEsperada,
-            cantidadReal: itemData.cantidadReal,
-            ok: itemData.ok,
-            observaciones: itemData.observaciones,
-          });
-          if (itemData.ok === null) sinResponder++;
-        });
-      });
-    }
-
-    if (sinResponder > 0) {
-      alert('Faltan ' + sinResponder + ' items por responder');
-      return;
-    }
-
-    setGuardando(true);
-    try {
-      var itemsInvUsados = itemsInventario.filter(function (i) {
-        return i.itemId && i.usado && i.cantidad > 0;
-      });
-      for (var i = 0; i < itemsInvUsados.length; i++) {
-        await props.onDescontarStock(
-          itemsInvUsados[i].itemId,
-          itemsInvUsados[i].cantidad,
-          props.usuario ? props.usuario.nombre : 'Checklist',
-          'Usado en checklist - ' + (vehiculoSel ? vehiculoSel.nombre : '')
-        );
-      }
-      var registro = {
-        vehiculoId: vehiculoSel.id,
-        vehiculoNombre: vehiculoSel.nombre,
-        tipo: tipo,
-        compartimientoNombre: compSel ? compSel.nombre : '',
-        items: todosItems,
-        itemsInventarioUsados: itemsInventario,
-        observacionGeneral: obs,
-        usuario: props.usuario ? props.usuario.nombre : '-',
-        fecha: new Date().toLocaleString(),
-        resultado: todosItems.every(function (i) {
-          return i.ok;
-        })
-          ? 'ok'
-          : 'con_observaciones',
-      };
-      var id = await props.onGuardar(registro);
-      if (id) {
-        alert('✅ Checklist guardado correctamente');
-        cancelar();
-      }
-    } catch (err) {
-      alert('❌ Error: ' + err.message);
-    } finally {
-      setGuardando(false);
-    }
-  };
-
-  var agregarItemInventario = function () {
-    setItemsInventario(
-      itemsInventario.concat([
-        { itemId: '', cantidad: 1, usado: false, observaciones: '' },
-      ])
-    );
-  };
-  var actualizarItemInventario = function (idx, campo, valor) {
-    setItemsInventario(
-      itemsInventario.map(function (item, i) {
-        return i === idx ? Object.assign({}, item, { [campo]: valor }) : item;
-      })
-    );
-  };
-  var eliminarItemInventario = function (idx) {
-    setItemsInventario(
-      itemsInventario.filter(function (_, i) {
-        return i !== idx;
-      })
-    );
-  };
-
-  // VISTA FORMULARIO CHECKLIST
-  if (vehiculoSel && tipo) {
-    return React.createElement(
-      'div',
-      null,
-      React.createElement(
-        'div',
-        {
-          style: {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '20px',
-          },
-        },
-        React.createElement(
-          'h2',
-          { style: styles.pageTitle },
-          tipo === 'fluidos'
-            ? '🛢️ Control Fluidos y Señales'
-            : tipo === 'items'
-            ? '📦 Control Items Generales'
-            : tipo === 'eras'
-            ? '🎽 Control ERAs'
-            : '🗄️ Control Compartimiento: ' + (compSel ? compSel.nombre : '')
-        ),
-        React.createElement(
-          'button',
-          {
-            style: Object.assign({}, styles.btnPrimary, {
-              background: '#6b7280',
-            }),
-            onClick: cancelar,
-          },
-          '✖ Cancelar'
-        )
-      ),
-
-      // Info vehículo
-      React.createElement(
-        'div',
-        {
-          style: Object.assign({}, styles.card, {
-            background: '#f0f9ff',
-            border: '2px solid #0ea5e9',
-            marginBottom: '20px',
-          }),
-        },
-        React.createElement(
-          'div',
-          { style: { display: 'flex', alignItems: 'center', gap: '16px' } },
-          React.createElement('div', { style: { fontSize: '40px' } }, '🚛'),
-          React.createElement(
-            'div',
-            null,
-            React.createElement(
-              'h3',
-              {
-                style: {
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  color: '#0369a1',
-                },
-              },
-              vehiculoSel.nombre
-            ),
-            React.createElement(
-              'p',
-              { style: { color: '#6b7280', fontSize: '13px' } },
-              vehiculoSel.tipo +
-                (vehiculoSel.patente ? ' · ' + vehiculoSel.patente : '')
-            ),
-            React.createElement(
-              'p',
-              { style: { color: '#6b7280', fontSize: '12px' } },
-              '👤 ' +
-                (props.usuario ? props.usuario.nombre : '-') +
-                ' | 📅 ' +
-                new Date().toLocaleString()
-            )
-          )
-        )
-      ),
-
-      // CHECKLIST FLUIDOS
-      tipo === 'fluidos' &&
-        React.createElement(
-          'div',
-          null,
-          React.createElement(
-            'div',
-            {
-              style: Object.assign({}, styles.card, {
-                border: '2px solid #fde68a',
-                background: '#fffbeb',
-                marginBottom: '16px',
-              }),
-            },
-            React.createElement(
-              'h3',
-              {
-                style: {
-                  fontWeight: 'bold',
-                  color: '#92400e',
-                  marginBottom: '16px',
-                },
-              },
-              '🛢️ Control de Fluidos'
-            ),
-            Object.keys(estadoFluidos).length === 0
-              ? React.createElement(
-                  'p',
-                  { style: { color: '#6b7280' } },
-                  'No hay fluidos registrados'
-                )
-              : React.createElement(
-                  'div',
-                  {
-                    style: {
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '12px',
-                    },
-                  },
-                  Object.entries(estadoFluidos).map(function (entry) {
-                    var nombre = entry[0];
-                    var fluido = entry[1];
-                    return React.createElement(
-                      'div',
-                      {
-                        key: nombre,
-                        style: {
-                          background:
-                            fluido.ok === null
-                              ? 'white'
-                              : fluido.ok
-                              ? '#ecfdf5'
-                              : '#fee2e2',
-                          padding: '16px',
-                          borderRadius: '10px',
-                          border:
-                            '2px solid ' +
-                            (fluido.ok === null
-                              ? '#d1d5db'
-                              : fluido.ok
-                              ? '#10b981'
-                              : '#ef4444'),
-                        },
-                      },
-                      React.createElement(
-                        'div',
-                        {
-                          style: {
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '10px',
-                            flexWrap: 'wrap',
-                            gap: '8px',
-                          },
-                        },
-                        React.createElement(
-                          'h4',
-                          { style: { fontWeight: 'bold', fontSize: '15px' } },
-                          nombresAmigablesFluidos[nombre] || nombre
-                        ),
-                        React.createElement(
-                          'div',
-                          { style: { display: 'flex', gap: '8px' } },
-                          React.createElement(
-                            'button',
-                            {
-                              style: {
-                                padding: '8px 18px',
-                                background:
-                                  fluido.ok === true ? '#059669' : '#10b981',
-                                color: 'white',
-                                border:
-                                  fluido.ok === true
-                                    ? '3px solid #065f46'
-                                    : 'none',
-                                borderRadius: '8px',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                              },
-                              onClick: function () {
-                                var u = Object.assign({}, estadoFluidos);
-                                u[nombre] = Object.assign({}, fluido, {
-                                  ok: true,
-                                });
-                                setEstadoFluidos(u);
-                              },
-                            },
-                            '✓ OK'
-                          ),
-                          React.createElement(
-                            'button',
-                            {
-                              style: {
-                                padding: '8px 18px',
-                                background:
-                                  fluido.ok === false ? '#b91c1c' : '#ef4444',
-                                color: 'white',
-                                border:
-                                  fluido.ok === false
-                                    ? '3px solid #991b1b'
-                                    : 'none',
-                                borderRadius: '8px',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                              },
-                              onClick: function () {
-                                var u = Object.assign({}, estadoFluidos);
-                                u[nombre] = Object.assign({}, fluido, {
-                                  ok: false,
-                                });
-                                setEstadoFluidos(u);
-                              },
-                            },
-                            '✗ NO OK'
-                          )
-                        )
-                      ),
-                      React.createElement('input', {
-                        type: 'text',
-                        placeholder: 'Observaciones...',
-                        value: fluido.observaciones,
-                        onChange: function (e) {
-                          var u = Object.assign({}, estadoFluidos);
-                          u[nombre] = Object.assign({}, fluido, {
-                            observaciones: e.target.value,
-                          });
-                          setEstadoFluidos(u);
-                        },
-                        style: {
-                          width: '100%',
-                          padding: '8px',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '6px',
-                          fontSize: '13px',
-                          boxSizing: 'border-box',
-                        },
-                      })
-                    );
-                  })
-                )
-          ),
-          React.createElement(
-            'div',
-            {
-              style: Object.assign({}, styles.card, {
-                border: '2px solid #bae6fd',
-                background: '#f0f9ff',
-                marginBottom: '16px',
-              }),
-            },
-            React.createElement(
-              'h3',
-              {
-                style: {
-                  fontWeight: 'bold',
-                  color: '#0369a1',
-                  marginBottom: '16px',
-                },
-              },
-              '💡 Control de Luces y Señales'
-            ),
-            React.createElement(
-              'div',
-              {
-                style: {
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '12px',
-                },
-              },
-              Object.entries(estadoLuces).map(function (entry) {
-                var nombre = entry[0];
-                var control = entry[1];
-                return React.createElement(
-                  'div',
-                  {
-                    key: nombre,
-                    style: {
-                      background:
-                        control.ok === null
-                          ? 'white'
-                          : control.ok
-                          ? '#ecfdf5'
-                          : '#fee2e2',
-                      padding: '16px',
-                      borderRadius: '10px',
-                      border:
-                        '2px solid ' +
-                        (control.ok === null
-                          ? '#d1d5db'
-                          : control.ok
-                          ? '#10b981'
-                          : '#ef4444'),
-                    },
-                  },
-                  React.createElement(
-                    'div',
-                    {
-                      style: {
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: '10px',
-                        flexWrap: 'wrap',
-                        gap: '8px',
-                      },
-                    },
-                    React.createElement(
-                      'h4',
-                      { style: { fontWeight: 'bold', fontSize: '15px' } },
-                      nombresAmigablesLuces[nombre] || nombre
-                    ),
-                    React.createElement(
-                      'div',
-                      { style: { display: 'flex', gap: '8px' } },
-                      React.createElement(
-                        'button',
-                        {
-                          style: {
-                            padding: '8px 18px',
-                            background:
-                              control.ok === true ? '#059669' : '#10b981',
-                            color: 'white',
-                            border:
-                              control.ok === true
-                                ? '3px solid #065f46'
-                                : 'none',
-                            borderRadius: '8px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                          },
-                          onClick: function () {
-                            var u = Object.assign({}, estadoLuces);
-                            u[nombre] = Object.assign({}, control, {
-                              ok: true,
-                            });
-                            setEstadoLuces(u);
-                          },
-                        },
-                        '✓ OK'
-                      ),
-                      React.createElement(
-                        'button',
-                        {
-                          style: {
-                            padding: '8px 18px',
-                            background:
-                              control.ok === false ? '#b91c1c' : '#ef4444',
-                            color: 'white',
-                            border:
-                              control.ok === false
-                                ? '3px solid #991b1b'
-                                : 'none',
-                            borderRadius: '8px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                          },
-                          onClick: function () {
-                            var u = Object.assign({}, estadoLuces);
-                            u[nombre] = Object.assign({}, control, {
-                              ok: false,
-                            });
-                            setEstadoLuces(u);
-                          },
-                        },
-                        '✗ NO OK'
-                      )
-                    )
-                  ),
-                  React.createElement('input', {
-                    type: 'text',
-                    placeholder: 'Observaciones...',
-                    value: control.observaciones,
-                    onChange: function (e) {
-                      var u = Object.assign({}, estadoLuces);
-                      u[nombre] = Object.assign({}, control, {
-                        observaciones: e.target.value,
-                      });
-                      setEstadoLuces(u);
-                    },
-                    style: {
-                      width: '100%',
-                      padding: '8px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      fontSize: '13px',
-                      boxSizing: 'border-box',
-                    },
-                  })
-                );
-              })
-            )
-          )
-        ),
-
-      // CHECKLIST COMPARTIMIENTO
-      tipo === 'compartimiento' &&
-        compSel &&
-        React.createElement(
-          'div',
-          null,
-          React.createElement(
-            'div',
-            {
-              style: Object.assign({}, styles.card, {
-                border: '2px solid #fde68a',
-                background: '#fffbeb',
-                marginBottom: '16px',
-              }),
-            },
-            React.createElement(
-              'h3',
-              {
-                style: {
-                  fontWeight: 'bold',
-                  color: '#92400e',
-                  marginBottom: '16px',
-                },
-              },
-              '🗄️ ' + compSel.nombre
-            ),
-            (compSel.subcompartimientos || []).length === 0
-              ? React.createElement(
-                  'p',
-                  {
-                    style: {
-                      color: '#6b7280',
-                      textAlign: 'center',
-                      padding: '24px',
-                    },
-                  },
-                  'No hay subcompartimientos en este compartimiento'
-                )
-              : React.createElement(
-                  'div',
-                  {
-                    style: {
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '16px',
-                    },
-                  },
-                  (compSel.subcompartimientos || []).map(function (sub) {
-                    var subEstado = estadoComps[sub.id] || {
-                      nombre: sub.nombre,
-                      items: {},
-                    };
-                    return React.createElement(
-                      'div',
-                      {
-                        key: sub.id,
-                        style: {
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '10px',
-                          overflow: 'hidden',
-                        },
-                      },
-                      React.createElement(
-                        'div',
-                        {
-                          style: {
-                            background: '#f9fafb',
-                            padding: '12px 16px',
-                            borderBottom: '1px solid #e5e7eb',
-                          },
-                        },
-                        React.createElement(
-                          'h4',
-                          {
-                            style: {
-                              fontWeight: 'bold',
-                              fontSize: '15px',
-                              color: '#374151',
-                            },
-                          },
-                          '📂 ' + sub.nombre
-                        ),
-                        React.createElement(
-                          'p',
-                          { style: { fontSize: '12px', color: '#6b7280' } },
-                          (sub.items || []).length + ' items a verificar'
-                        )
-                      ),
-                      React.createElement(
-                        'div',
-                        { style: { padding: '14px' } },
-                        (sub.items || []).length === 0
-                          ? React.createElement(
+                            React.createElement(
                               'p',
                               {
                                 style: {
-                                  color: '#9ca3af',
-                                  fontSize: '13px',
-                                  textAlign: 'center',
+                                  fontSize: '16px',
+                                  fontWeight: '700',
+                                  color: vtvColor,
                                 },
                               },
-                              'Sin items'
+                              diasVtv < 0
+                                ? '❌ Vencida hace ' +
+                                    Math.abs(diasVtv) +
+                                    ' días'
+                                : diasVtv === 0
+                                ? '⚠️ Vence HOY'
+                                : '📅 Vence en ' + diasVtv + ' días'
                             )
-                          : React.createElement(
-                              'div',
-                              {
-                                style: {
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  gap: '10px',
-                                },
-                              },
-                              (sub.items || []).map(function (item) {
-                                var itemEstado = subEstado.items[
-                                  item.itemId
-                                ] || {
-                                  ok: null,
-                                  observaciones: '',
-                                  cantidadEsperada: item.cantidadEsperada,
-                                  cantidadReal: item.cantidadEsperada,
-                                };
-                                return React.createElement(
-                                  'div',
-                                  {
-                                    key: item.itemId,
-                                    style: {
-                                      background:
-                                        itemEstado.ok === null
-                                          ? 'white'
-                                          : itemEstado.ok
-                                          ? '#ecfdf5'
-                                          : '#fee2e2',
-                                      padding: '14px',
-                                      borderRadius: '8px',
-                                      border:
-                                        '2px solid ' +
-                                        (itemEstado.ok === null
-                                          ? '#d1d5db'
-                                          : itemEstado.ok
-                                          ? '#10b981'
-                                          : '#ef4444'),
-                                    },
-                                  },
-                                  React.createElement(
-                                    'div',
-                                    {
-                                      style: {
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'flex-start',
-                                        marginBottom: '10px',
-                                        flexWrap: 'wrap',
-                                        gap: '8px',
-                                      },
-                                    },
-                                    React.createElement(
-                                      'div',
-                                      null,
-                                      React.createElement(
-                                        'h4',
-                                        {
-                                          style: {
-                                            fontWeight: 'bold',
-                                            fontSize: '14px',
-                                            marginBottom: '6px',
-                                          },
-                                        },
-                                        item.nombre
-                                      ),
-                                      React.createElement(
-                                        'div',
-                                        {
-                                          style: {
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '8px',
-                                            flexWrap: 'wrap',
-                                          },
-                                        },
-                                        React.createElement(
-                                          'span',
-                                          {
-                                            style: {
-                                              fontSize: '12px',
-                                              background: '#dbeafe',
-                                              color: '#1e40af',
-                                              padding: '2px 8px',
-                                              borderRadius: '6px',
-                                              fontWeight: '600',
-                                            },
-                                          },
-                                          'Esperado: ' +
-                                            item.cantidadEsperada +
-                                            ' ' +
-                                            (item.unidad || 'u')
-                                        ),
-                                        React.createElement(
-                                          'div',
-                                          {
-                                            style: {
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              gap: '4px',
-                                            },
-                                          },
-                                          React.createElement(
-                                            'span',
-                                            {
-                                              style: {
-                                                fontSize: '12px',
-                                                color: '#374151',
-                                                fontWeight: '600',
-                                              },
-                                            },
-                                            'Real:'
-                                          ),
-                                          React.createElement(
-                                            'button',
-                                            {
-                                              style: {
-                                                padding: '2px 8px',
-                                                background: '#e5e7eb',
-                                                border: 'none',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer',
-                                                fontWeight: 'bold',
-                                              },
-                                              onClick: function () {
-                                                var u = Object.assign(
-                                                  {},
-                                                  estadoComps
-                                                );
-                                                if (!u[sub.id])
-                                                  u[sub.id] = {
-                                                    nombre: sub.nombre,
-                                                    items: {},
-                                                  };
-                                                u[sub.id].items[item.itemId] =
-                                                  Object.assign(
-                                                    {},
-                                                    itemEstado,
-                                                    {
-                                                      cantidadReal: Math.max(
-                                                        0,
-                                                        (itemEstado.cantidadReal ||
-                                                          0) - 1
-                                                      ),
-                                                    }
-                                                  );
-                                                setEstadoComps(u);
-                                              },
-                                            },
-                                            '-'
-                                          ),
-                                          React.createElement(
-                                            'span',
-                                            {
-                                              style: {
-                                                background:
-                                                  (itemEstado.cantidadReal ||
-                                                    0) < item.cantidadEsperada
-                                                    ? '#fee2e2'
-                                                    : '#d1fae5',
-                                                color:
-                                                  (itemEstado.cantidadReal ||
-                                                    0) < item.cantidadEsperada
-                                                    ? '#dc2626'
-                                                    : '#059669',
-                                                padding: '2px 10px',
-                                                borderRadius: '6px',
-                                                fontWeight: '700',
-                                                fontSize: '14px',
-                                                minWidth: '36px',
-                                                textAlign: 'center',
-                                              },
-                                            },
-                                            itemEstado.cantidadReal || 0
-                                          ),
-                                          React.createElement(
-                                            'button',
-                                            {
-                                              style: {
-                                                padding: '2px 8px',
-                                                background: '#e5e7eb',
-                                                border: 'none',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer',
-                                                fontWeight: 'bold',
-                                              },
-                                              onClick: function () {
-                                                var u = Object.assign(
-                                                  {},
-                                                  estadoComps
-                                                );
-                                                if (!u[sub.id])
-                                                  u[sub.id] = {
-                                                    nombre: sub.nombre,
-                                                    items: {},
-                                                  };
-                                                u[sub.id].items[item.itemId] =
-                                                  Object.assign(
-                                                    {},
-                                                    itemEstado,
-                                                    {
-                                                      cantidadReal:
-                                                        (itemEstado.cantidadReal ||
-                                                          0) + 1,
-                                                    }
-                                                  );
-                                                setEstadoComps(u);
-                                              },
-                                            },
-                                            '+'
-                                          ),
-                                          React.createElement(
-                                            'span',
-                                            {
-                                              style: {
-                                                fontSize: '11px',
-                                                color: '#6b7280',
-                                              },
-                                            },
-                                            item.unidad || 'u'
-                                          )
-                                        )
-                                      )
-                                    ),
-                                    React.createElement(
-                                      'div',
-                                      {
-                                        style: { display: 'flex', gap: '8px' },
-                                      },
-                                      React.createElement(
-                                        'button',
-                                        {
-                                          style: {
-                                            padding: '8px 16px',
-                                            background:
-                                              itemEstado.ok === true
-                                                ? '#059669'
-                                                : '#10b981',
-                                            color: 'white',
-                                            border:
-                                              itemEstado.ok === true
-                                                ? '3px solid #065f46'
-                                                : 'none',
-                                            borderRadius: '8px',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            fontSize: '13px',
-                                          },
-                                          onClick: function () {
-                                            var u = Object.assign(
-                                              {},
-                                              estadoComps
-                                            );
-                                            if (!u[sub.id])
-                                              u[sub.id] = {
-                                                nombre: sub.nombre,
-                                                items: {},
-                                              };
-                                            u[sub.id].items[item.itemId] =
-                                              Object.assign({}, itemEstado, {
-                                                ok: true,
-                                                nombre: item.nombre,
-                                                categoria: item.categoria,
-                                                cantidadEsperada:
-                                                  item.cantidadEsperada,
-                                              });
-                                            setEstadoComps(u);
-                                          },
-                                        },
-                                        '✓ OK'
-                                      ),
-                                      React.createElement(
-                                        'button',
-                                        {
-                                          style: {
-                                            padding: '8px 16px',
-                                            background:
-                                              itemEstado.ok === false
-                                                ? '#b91c1c'
-                                                : '#ef4444',
-                                            color: 'white',
-                                            border:
-                                              itemEstado.ok === false
-                                                ? '3px solid #991b1b'
-                                                : 'none',
-                                            borderRadius: '8px',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            fontSize: '13px',
-                                          },
-                                          onClick: function () {
-                                            var u = Object.assign(
-                                              {},
-                                              estadoComps
-                                            );
-                                            if (!u[sub.id])
-                                              u[sub.id] = {
-                                                nombre: sub.nombre,
-                                                items: {},
-                                              };
-                                            u[sub.id].items[item.itemId] =
-                                              Object.assign({}, itemEstado, {
-                                                ok: false,
-                                                nombre: item.nombre,
-                                                categoria: item.categoria,
-                                                cantidadEsperada:
-                                                  item.cantidadEsperada,
-                                              });
-                                            setEstadoComps(u);
-                                          },
-                                        },
-                                        '✗ FALTA'
-                                      )
-                                    )
-                                  ),
-                                  React.createElement('input', {
-                                    type: 'text',
-                                    placeholder: 'Observaciones...',
-                                    value: itemEstado.observaciones || '',
-                                    onChange: function (e) {
-                                      var u = Object.assign({}, estadoComps);
-                                      if (!u[sub.id])
-                                        u[sub.id] = {
-                                          nombre: sub.nombre,
-                                          items: {},
-                                        };
-                                      u[sub.id].items[item.itemId] =
-                                        Object.assign({}, itemEstado, {
-                                          observaciones: e.target.value,
-                                        });
-                                      setEstadoComps(u);
-                                    },
-                                    style: {
-                                      width: '100%',
-                                      padding: '8px',
-                                      border: '1px solid #d1d5db',
-                                      borderRadius: '6px',
-                                      fontSize: '13px',
-                                      boxSizing: 'border-box',
-                                    },
-                                  })
-                                );
-                              })
-                            )
+                          )
                       )
-                    );
-                  })
-                )
-          )
-        ),
-
-      // CHECKLIST ITEMS GENERALES
-      tipo === 'items' &&
-        React.createElement(
-          'div',
-          null,
-          Object.keys(estadoItems).length === 0
-            ? React.createElement(
-                'div',
-                {
-                  style: Object.assign({}, styles.card, {
-                    textAlign: 'center',
-                    padding: '40px',
-                  }),
-                },
-                React.createElement(
-                  'div',
-                  { style: { fontSize: '48px', marginBottom: '12px' } },
-                  '📦'
-                ),
-                React.createElement(
-                  'p',
-                  { style: { color: '#6b7280' } },
-                  'No hay items generales asignados'
-                )
-              )
-            : React.createElement(
-                'div',
-                {
-                  style: Object.assign({}, styles.card, {
-                    border: '2px solid #bbf7d0',
-                    background: '#f0fdf4',
-                    marginBottom: '16px',
-                  }),
-                },
-                React.createElement(
-                  'h3',
-                  {
-                    style: {
-                      fontWeight: 'bold',
-                      color: '#15803d',
-                      marginBottom: '16px',
-                    },
-                  },
-                  '📦 Items Generales (' + Object.keys(estadoItems).length + ')'
-                ),
-                React.createElement(
-                  'div',
-                  {
-                    style: {
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '12px',
-                    },
-                  },
-                  Object.entries(estadoItems).map(function (entry) {
-                    var itemId = entry[0];
-                    var item = entry[1];
-                    return React.createElement(
-                      'div',
-                      {
-                        key: itemId,
-                        style: {
-                          background:
-                            item.ok === null
-                              ? 'white'
-                              : item.ok
-                              ? '#ecfdf5'
-                              : '#fee2e2',
-                          padding: '16px',
-                          borderRadius: '10px',
-                          border:
-                            '2px solid ' +
-                            (item.ok === null
-                              ? '#d1d5db'
-                              : item.ok
-                              ? '#10b981'
-                              : '#ef4444'),
-                        },
-                      },
-                      React.createElement(
-                        'div',
-                        {
-                          style: {
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'flex-start',
-                            marginBottom: '10px',
-                            flexWrap: 'wrap',
-                            gap: '8px',
-                          },
-                        },
-                        React.createElement(
-                          'div',
-                          null,
-                          React.createElement(
-                            'h4',
-                            {
-                              style: {
-                                fontWeight: 'bold',
-                                fontSize: '15px',
-                                marginBottom: '4px',
-                              },
-                            },
-                            item.nombre
-                          ),
-                          React.createElement(
-                            'div',
-                            {
-                              style: {
-                                display: 'flex',
-                                gap: '8px',
-                                alignItems: 'center',
-                                flexWrap: 'wrap',
-                              },
-                            },
-                            React.createElement(
-                              'span',
-                              {
-                                style: {
-                                  fontSize: '12px',
-                                  background: '#dbeafe',
-                                  color: '#1e40af',
-                                  padding: '2px 8px',
-                                  borderRadius: '6px',
-                                  fontWeight: '600',
-                                },
-                              },
-                              'Esperado: ' + item.cantidadEsperada
-                            ),
-                            React.createElement(
-                              'div',
-                              {
-                                style: {
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                },
-                              },
-                              React.createElement(
-                                'span',
-                                {
-                                  style: {
-                                    fontSize: '12px',
-                                    color: '#374151',
-                                    fontWeight: '600',
-                                  },
-                                },
-                                'Real:'
-                              ),
-                              React.createElement(
-                                'button',
-                                {
-                                  style: {
-                                    padding: '2px 8px',
-                                    background: '#e5e7eb',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                  },
-                                  onClick: function () {
-                                    var u = Object.assign({}, estadoItems);
-                                    u[itemId] = Object.assign({}, item, {
-                                      cantidadReal: Math.max(
-                                        0,
-                                        (item.cantidadReal || 0) - 1
-                                      ),
-                                    });
-                                    setEstadoItems(u);
-                                  },
-                                },
-                                '-'
-                              ),
-                              React.createElement(
-                                'span',
-                                {
-                                  style: {
-                                    background:
-                                      item.cantidadReal < item.cantidadEsperada
-                                        ? '#fee2e2'
-                                        : '#d1fae5',
-                                    color:
-                                      item.cantidadReal < item.cantidadEsperada
-                                        ? '#dc2626'
-                                        : '#059669',
-                                    padding: '2px 10px',
-                                    borderRadius: '6px',
-                                    fontWeight: '700',
-                                    fontSize: '14px',
-                                    minWidth: '36px',
-                                    textAlign: 'center',
-                                  },
-                                },
-                                item.cantidadReal || 0
-                              ),
-                              React.createElement(
-                                'button',
-                                {
-                                  style: {
-                                    padding: '2px 8px',
-                                    background: '#e5e7eb',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                  },
-                                  onClick: function () {
-                                    var u = Object.assign({}, estadoItems);
-                                    u[itemId] = Object.assign({}, item, {
-                                      cantidadReal:
-                                        (item.cantidadReal || 0) + 1,
-                                    });
-                                    setEstadoItems(u);
-                                  },
-                                },
-                                '+'
-                              )
-                            )
-                          )
-                        ),
-                        React.createElement(
-                          'div',
-                          { style: { display: 'flex', gap: '8px' } },
-                          React.createElement(
-                            'button',
-                            {
-                              style: {
-                                padding: '8px 18px',
-                                background:
-                                  item.ok === true ? '#059669' : '#10b981',
-                                color: 'white',
-                                border:
-                                  item.ok === true
-                                    ? '3px solid #065f46'
-                                    : 'none',
-                                borderRadius: '8px',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                              },
-                              onClick: function () {
-                                var u = Object.assign({}, estadoItems);
-                                u[itemId] = Object.assign({}, item, {
-                                  ok: true,
-                                });
-                                setEstadoItems(u);
-                              },
-                            },
-                            '✓ OK'
-                          ),
-                          React.createElement(
-                            'button',
-                            {
-                              style: {
-                                padding: '8px 18px',
-                                background:
-                                  item.ok === false ? '#b91c1c' : '#ef4444',
-                                color: 'white',
-                                border:
-                                  item.ok === false
-                                    ? '3px solid #991b1b'
-                                    : 'none',
-                                borderRadius: '8px',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                              },
-                              onClick: function () {
-                                var u = Object.assign({}, estadoItems);
-                                u[itemId] = Object.assign({}, item, {
-                                  ok: false,
-                                });
-                                setEstadoItems(u);
-                              },
-                            },
-                            '✗ FALTA'
-                          )
-                        )
-                      ),
-                      React.createElement('input', {
-                        type: 'text',
-                        placeholder: 'Observaciones...',
-                        value: item.observaciones,
-                        onChange: function (e) {
-                          var u = Object.assign({}, estadoItems);
-                          u[itemId] = Object.assign({}, item, {
-                            observaciones: e.target.value,
-                          });
-                          setEstadoItems(u);
-                        },
-                        style: {
-                          width: '100%',
-                          padding: '8px',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '6px',
-                          fontSize: '13px',
-                          boxSizing: 'border-box',
-                        },
-                      })
-                    );
-                  })
-                )
-              )
-        ),
-
-      // CHECKLIST ERAs
-      tipo === 'eras' &&
-        React.createElement(
-          'div',
-          null,
-          Object.keys(estadoERAs).length === 0
-            ? React.createElement(
-                'div',
-                {
-                  style: Object.assign({}, styles.card, {
-                    textAlign: 'center',
-                    padding: '40px',
-                  }),
-                },
-                React.createElement(
-                  'div',
-                  { style: { fontSize: '48px', marginBottom: '12px' } },
-                  '🎽'
-                ),
-                React.createElement(
-                  'p',
-                  { style: { color: '#6b7280' } },
-                  'No hay ERAs asignadas'
-                )
-              )
-            : React.createElement(
-                'div',
-                {
-                  style: Object.assign({}, styles.card, {
-                    border: '2px solid #ddd6fe',
-                    background: '#f5f3ff',
-                    marginBottom: '16px',
-                  }),
-                },
-                React.createElement(
-                  'h3',
-                  {
-                    style: {
-                      fontWeight: 'bold',
-                      color: '#7c3aed',
-                      marginBottom: '16px',
-                    },
-                  },
-                  '🎽 Control de ERAs'
-                ),
-                React.createElement(
-                  'div',
-                  {
-                    style: {
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '12px',
-                    },
-                  },
-                  Object.entries(estadoERAs).map(function (entry) {
-                    var eraId = entry[0];
-                    var estado = entry[1];
-                    return React.createElement(
-                      'div',
-                      {
-                        key: eraId,
-                        style: {
-                          background:
-                            estado.ok === null
-                              ? 'white'
-                              : estado.ok
-                              ? '#ecfdf5'
-                              : '#fee2e2',
-                          padding: '16px',
-                          borderRadius: '10px',
-                          border:
-                            '2px solid ' +
-                            (estado.ok === null
-                              ? '#d1d5db'
-                              : estado.ok
-                              ? '#10b981'
-                              : '#ef4444'),
-                        },
-                      },
-                      React.createElement(
-                        'div',
-                        {
-                          style: {
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'flex-start',
-                            marginBottom: '10px',
-                            flexWrap: 'wrap',
-                            gap: '8px',
-                          },
-                        },
-                        React.createElement(
-                          'div',
-                          null,
-                          React.createElement(
-                            'h4',
-                            {
-                              style: {
-                                fontWeight: 'bold',
-                                fontSize: '15px',
-                                color: '#7c3aed',
-                                marginBottom: '4px',
-                              },
-                            },
-                            '🎽 ' + estado.nombre
-                          ),
-                          React.createElement(
-                            'p',
-                            {
-                              style: {
-                                fontSize: '12px',
-                                color: '#6b7280',
-                                marginBottom: '8px',
-                              },
-                            },
-                            '🔖 ' + estado.serial
-                          ),
-                          React.createElement(
-                            'div',
-                            {
-                              style: {
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                              },
-                            },
-                            React.createElement(
-                              'span',
-                              {
-                                style: {
-                                  fontSize: '12px',
-                                  background: '#ede9fe',
-                                  color: '#7c3aed',
-                                  padding: '2px 8px',
-                                  borderRadius: '6px',
-                                  fontWeight: '600',
-                                },
-                              },
-                              'Presión reg.: ' +
-                                (props.eras.find(function (e) {
-                                  return e.id === eraId;
-                                })
-                                  ? props.eras.find(function (e) {
-                                      return e.id === eraId;
-                                    }).presion
-                                  : 0) +
-                                ' bar'
-                            ),
-                            React.createElement(
-                              'div',
-                              {
-                                style: {
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                },
-                              },
-                              React.createElement(
-                                'span',
-                                {
-                                  style: {
-                                    fontSize: '12px',
-                                    fontWeight: '600',
-                                  },
-                                },
-                                'Real:'
-                              ),
-                              React.createElement(
-                                'button',
-                                {
-                                  style: {
-                                    padding: '2px 8px',
-                                    background: '#e5e7eb',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                  },
-                                  onClick: function () {
-                                    var u = Object.assign({}, estadoERAs);
-                                    u[eraId] = Object.assign({}, estado, {
-                                      presionReal: Math.max(
-                                        0,
-                                        (estado.presionReal || 0) - 10
-                                      ),
-                                    });
-                                    setEstadoERAs(u);
-                                  },
-                                },
-                                '-'
-                              ),
-                              React.createElement(
-                                'span',
-                                {
-                                  style: {
-                                    background:
-                                      (estado.presionReal || 0) >= 280
-                                        ? '#d1fae5'
-                                        : '#fee2e2',
-                                    color:
-                                      (estado.presionReal || 0) >= 280
-                                        ? '#059669'
-                                        : '#dc2626',
-                                    padding: '2px 10px',
-                                    borderRadius: '6px',
-                                    fontWeight: '700',
-                                    fontSize: '14px',
-                                    minWidth: '60px',
-                                    textAlign: 'center',
-                                  },
-                                },
-                                (estado.presionReal || 0) + ' bar'
-                              ),
-                              React.createElement(
-                                'button',
-                                {
-                                  style: {
-                                    padding: '2px 8px',
-                                    background: '#e5e7eb',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                  },
-                                  onClick: function () {
-                                    var u = Object.assign({}, estadoERAs);
-                                    u[eraId] = Object.assign({}, estado, {
-                                      presionReal:
-                                        (estado.presionReal || 0) + 10,
-                                    });
-                                    setEstadoERAs(u);
-                                  },
-                                },
-                                '+'
-                              )
-                            )
-                          )
-                        ),
-                        React.createElement(
-                          'div',
-                          { style: { display: 'flex', gap: '8px' } },
-                          React.createElement(
-                            'button',
-                            {
-                              style: {
-                                padding: '8px 18px',
-                                background:
-                                  estado.ok === true ? '#059669' : '#10b981',
-                                color: 'white',
-                                border:
-                                  estado.ok === true
-                                    ? '3px solid #065f46'
-                                    : 'none',
-                                borderRadius: '8px',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                              },
-                              onClick: function () {
-                                var u = Object.assign({}, estadoERAs);
-                                u[eraId] = Object.assign({}, estado, {
-                                  ok: true,
-                                });
-                                setEstadoERAs(u);
-                              },
-                            },
-                            '✓ OK'
-                          ),
-                          React.createElement(
-                            'button',
-                            {
-                              style: {
-                                padding: '8px 18px',
-                                background:
-                                  estado.ok === false ? '#b91c1c' : '#ef4444',
-                                color: 'white',
-                                border:
-                                  estado.ok === false
-                                    ? '3px solid #991b1b'
-                                    : 'none',
-                                borderRadius: '8px',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                              },
-                              onClick: function () {
-                                var u = Object.assign({}, estadoERAs);
-                                u[eraId] = Object.assign({}, estado, {
-                                  ok: false,
-                                });
-                                setEstadoERAs(u);
-                              },
-                            },
-                            '✗ NO OK'
-                          )
-                        )
-                      ),
-                      React.createElement('input', {
-                        type: 'text',
-                        placeholder: 'Observaciones...',
-                        value: estado.observaciones,
-                        onChange: function (e) {
-                          var u = Object.assign({}, estadoERAs);
-                          u[eraId] = Object.assign({}, estado, {
-                            observaciones: e.target.value,
-                          });
-                          setEstadoERAs(u);
-                        },
-                        style: {
-                          width: '100%',
-                          padding: '8px',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '6px',
-                          fontSize: '13px',
-                          boxSizing: 'border-box',
-                        },
-                      })
-                    );
-                  })
-                )
-              )
-        ),
-
-      // ITEMS INVENTARIO USADOS
-      React.createElement(
-        'div',
-        {
-          style: Object.assign({}, styles.card, {
-            border: '2px solid #a855f7',
-            background: '#fdf4ff',
-            marginBottom: '16px',
-          }),
-        },
-        React.createElement(
-          'div',
-          {
-            style: {
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '14px',
-            },
-          },
-          React.createElement(
-            'h3',
-            {
-              style: { fontWeight: 'bold', color: '#7e22ce', fontSize: '16px' },
-            },
-            '📦 Items de Inventario Utilizados'
-          ),
-          React.createElement(
-            'button',
-            {
-              style: {
-                padding: '8px 14px',
-                background: '#a855f7',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                fontSize: '13px',
-              },
-              onClick: agregarItemInventario,
-            },
-            '➕ Agregar'
-          )
-        ),
-        itemsInventario.length === 0
-          ? React.createElement(
-              'p',
-              {
-                style: {
-                  color: '#6b7280',
-                  fontSize: '13px',
-                  textAlign: 'center',
-                  padding: '12px',
-                },
-              },
-              'No se han registrado items utilizados'
-            )
-          : React.createElement(
-              'div',
-              {
-                style: {
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px',
-                },
-              },
-              itemsInventario.map(function (item, idx) {
-                var itemDatos = props.inventario.find(function (i) {
-                  return i.id === item.itemId;
-                });
-                return React.createElement(
-                  'div',
-                  {
-                    key: idx,
-                    style: {
-                      background: 'white',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: '1px solid #e9d5ff',
-                    },
-                  },
-                  React.createElement(
-                    'div',
-                    {
-                      style: {
-                        display: 'grid',
-                        gridTemplateColumns: '2fr 1fr 1fr auto',
-                        gap: '10px',
-                        alignItems: 'end',
-                      },
-                    },
-                    React.createElement(
-                      'div',
-                      null,
-                      React.createElement(
-                        'label',
-                        {
-                          style: {
-                            fontSize: '11px',
-                            color: '#6b7280',
-                            display: 'block',
-                            marginBottom: '3px',
-                          },
-                        },
-                        'Item'
-                      ),
-                      React.createElement(
-                        'select',
-                        {
-                          value: item.itemId,
-                          onChange: function (e) {
-                            actualizarItemInventario(
-                              idx,
-                              'itemId',
-                              e.target.value
-                            );
-                          },
-                          style: {
-                            width: '100%',
-                            padding: '8px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            fontSize: '12px',
-                          },
-                        },
-                        React.createElement(
-                          'option',
-                          { value: '' },
-                          'Seleccionar...'
-                        ),
-                        props.inventario
-                          .filter(function (i) {
-                            return i.estado !== 'baja';
-                          })
-                          .map(function (i) {
-                            return React.createElement(
-                              'option',
-                              { key: i.id, value: i.id },
-                              i.nombre + ' [Stock: ' + (i.stock || 0) + ']'
-                            );
-                          })
-                      )
-                    ),
-                    React.createElement(
-                      'div',
-                      null,
-                      React.createElement(
-                        'label',
-                        {
-                          style: {
-                            fontSize: '11px',
-                            color: '#6b7280',
-                            display: 'block',
-                            marginBottom: '3px',
-                          },
-                        },
-                        'Cantidad'
-                      ),
-                      React.createElement('input', {
-                        type: 'number',
-                        value: item.cantidad,
-                        onChange: function (e) {
-                          actualizarItemInventario(
-                            idx,
-                            'cantidad',
-                            parseInt(e.target.value) || 1
-                          );
-                        },
-                        style: {
-                          width: '100%',
-                          padding: '8px',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                        },
-                        min: '1',
-                        max: itemDatos ? itemDatos.stock : 9999,
-                      })
-                    ),
-                    React.createElement(
-                      'div',
-                      null,
-                      React.createElement(
-                        'label',
-                        {
-                          style: {
-                            fontSize: '11px',
-                            color: '#6b7280',
-                            display: 'block',
-                            marginBottom: '3px',
-                          },
-                        },
-                        'Descontar'
-                      ),
-                      React.createElement(
-                        'button',
-                        {
-                          style: {
-                            width: '100%',
-                            padding: '8px',
-                            background: item.usado ? '#059669' : '#e5e7eb',
-                            color: item.usado ? 'white' : '#374151',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                          },
-                          onClick: function () {
-                            actualizarItemInventario(idx, 'usado', !item.usado);
-                          },
-                        },
-                        item.usado ? '✅ Sí' : '⬜ No'
-                      )
-                    ),
-                    React.createElement(
-                      'button',
-                      {
-                        style: {
-                          padding: '8px 10px',
-                          background: '#ef4444',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontSize: '13px',
-                          alignSelf: 'flex-end',
-                        },
-                        onClick: function () {
-                          eliminarItemInventario(idx);
-                        },
-                      },
-                      '🗑️'
                     )
-                  ),
-                  item.itemId &&
-                    React.createElement('input', {
-                      type: 'text',
-                      placeholder: 'Observaciones del uso...',
-                      value: item.observaciones,
-                      onChange: function (e) {
-                        actualizarItemInventario(
-                          idx,
-                          'observaciones',
-                          e.target.value
-                        );
-                      },
-                      style: {
-                        width: '100%',
-                        padding: '7px',
-                        border: '1px solid #e9d5ff',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        boxSizing: 'border-box',
-                        marginTop: '8px',
-                      },
-                    })
-                );
-              })
-            )
-      ),
-
-      // OBSERVACION GENERAL Y GUARDAR
-      React.createElement(
-        'div',
-        {
-          style: Object.assign({}, styles.card, {
-            background: '#fffbeb',
-            border: '1px solid #fde68a',
-            marginBottom: '16px',
-          }),
-        },
-        React.createElement(
-          'label',
-          {
-            style: {
-              display: 'block',
-              fontWeight: '600',
-              marginBottom: '8px',
-              color: '#92400e',
-            },
-          },
-          '📝 Observación General'
-        ),
-        React.createElement('textarea', {
-          value: obs,
-          onChange: function (e) {
-            setObs(e.target.value);
-          },
-          placeholder: 'Observaciones generales...',
-          style: {
-            width: '100%',
-            padding: '12px',
-            border: '1px solid #d1d5db',
-            borderRadius: '8px',
-            fontSize: '14px',
-            minHeight: '80px',
-            resize: 'vertical',
-            boxSizing: 'border-box',
-          },
-        })
-      ),
-      React.createElement(
-        'div',
-        { style: { display: 'flex', gap: '12px' } },
-        React.createElement(
-          'button',
-          {
-            style: {
-              flex: 1,
-              padding: '16px',
-              background: guardando ? '#9ca3af' : '#10b981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              fontWeight: '700',
-              fontSize: '16px',
-              cursor: guardando ? 'not-allowed' : 'pointer',
-            },
-            onClick: guardar,
-            disabled: guardando,
-          },
-          guardando ? '⏳ Guardando...' : '💾 Guardar Checklist'
-        ),
-        React.createElement(
-          'button',
-          {
-            style: {
-              flex: 1,
-              padding: '16px',
-              background: '#6b7280',
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              fontWeight: '700',
-              fontSize: '16px',
-              cursor: 'pointer',
-            },
-            onClick: cancelar,
-          },
-          '✖ Cancelar'
+                )
+            );
+          })
         )
-      )
-    );
-  }
-
-  // VISTA PRINCIPAL CHECKLISTS
-  return React.createElement(
-    'div',
-    null,
-    React.createElement(
-      'div',
-      {
-        style: {
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-        },
-      },
-      React.createElement('h2', { style: styles.pageTitle }, '📋 Checklists'),
-      React.createElement(
-        'button',
-        {
-          style: Object.assign({}, styles.btnPrimary, {
-            background: vistaHist ? '#2563eb' : '#6b7280',
-          }),
-          onClick: function () {
-            setVistaHist(!vistaHist);
-          },
-        },
-        vistaHist ? '🚛 Ver Móviles' : '📜 Ver Historial'
-      )
-    ),
-
-    !vistaHist &&
-      React.createElement(
-        'div',
-        null,
-        props.vehiculos.length === 0
-          ? React.createElement(
-              'div',
-              {
-                style: Object.assign({}, styles.card, {
-                  textAlign: 'center',
-                  padding: '60px',
-                }),
-              },
-              React.createElement(
-                'div',
-                { style: { fontSize: '64px', marginBottom: '16px' } },
-                '🚛'
-              ),
-              React.createElement(
-                'h3',
-                { style: { color: '#6b7280' } },
-                'No hay móviles registrados'
-              )
-            )
-          : React.createElement(
-              'div',
-              {
-                style: {
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '16px',
-                },
-              },
-              props.vehiculos.map(function (v) {
-                var itemsAsignados = v.itemsAsignados || [];
-                var erasAsignadas = (v.erasAsignadas || [])
-                  .map(function (eraId) {
-                    return props.eras.find(function (e) {
-                      return e.id === eraId;
-                    });
-                  })
-                  .filter(Boolean);
-                var compartimientos = v.compartimientos || [];
-                var ultimosChecks = props.checklists.filter(function (c) {
-                  return c.vehiculoId === v.id;
-                });
-                var ultimoCheck =
-                  ultimosChecks.length > 0 ? ultimosChecks[0] : null;
-
-                return React.createElement(
-                  'div',
-                  {
-                    key: v.id,
-                    style: Object.assign({}, styles.card, {
-                      border:
-                        '2px solid ' +
-                        (v.estado === 'operativo' ? '#10b981' : '#f59e0b'),
-                    }),
-                  },
-                  React.createElement(
-                    'div',
-                    {
-                      style: {
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '16px',
-                        marginBottom: '16px',
-                      },
-                    },
-                    React.createElement(
-                      'div',
-                      {
-                        style: {
-                          width: '56px',
-                          height: '56px',
-                          background:
-                            v.estado === 'operativo'
-                              ? 'linear-gradient(135deg, #10b981, #059669)'
-                              : 'linear-gradient(135deg, #f59e0b, #d97706)',
-                          borderRadius: '12px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '28px',
-                          flexShrink: 0,
-                        },
-                      },
-                      '🚛'
-                    ),
-                    React.createElement(
-                      'div',
-                      { style: { flex: 1 } },
-                      React.createElement(
-                        'h3',
-                        {
-                          style: {
-                            fontSize: '18px',
-                            fontWeight: 'bold',
-                            marginBottom: '4px',
-                          },
-                        },
-                        v.nombre
-                      ),
-                      React.createElement(
-                        'p',
-                        {
-                          style: {
-                            color: '#6b7280',
-                            fontSize: '13px',
-                            marginBottom: '4px',
-                          },
-                        },
-                        v.tipo + (v.patente ? ' · ' + v.patente : '')
-                      ),
-                      ultimoCheck &&
-                        React.createElement(
-                          'p',
-                          { style: { fontSize: '11px', color: '#9ca3af' } },
-                          '📅 Último: ' +
-                            ultimoCheck.fecha +
-                            ' (' +
-                            (ultimoCheck.tipo === 'compartimiento'
-                              ? 'Comp: ' + ultimoCheck.compartimientoNombre
-                              : ultimoCheck.tipo) +
-                            ')'
-                        )
-                    )
-                  ),
-
-                  React.createElement(
-                    'div',
-                    {
-                      style: {
-                        display: 'grid',
-                        gridTemplateColumns:
-                          'repeat(auto-fit, minmax(160px, 1fr))',
-                        gap: '8px',
-                        marginBottom: compartimientos.length > 0 ? '12px' : '0',
-                      },
-                    },
-                    React.createElement(
-                      'button',
-                      {
-                        style: {
-                          padding: '12px',
-                          background: '#0ea5e9',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '8px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          fontSize: '13px',
-                        },
-                        onClick: function () {
-                          iniciarChecklist(v, 'fluidos');
-                        },
-                      },
-                      '🛢️ Fluidos y Señales'
-                    ),
-                    React.createElement(
-                      'button',
-                      {
-                        style: {
-                          padding: '12px',
-                          background:
-                            itemsAsignados.length === 0 ? '#d1d5db' : '#10b981',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '8px',
-                          fontWeight: '600',
-                          cursor:
-                            itemsAsignados.length === 0
-                              ? 'not-allowed'
-                              : 'pointer',
-                          fontSize: '13px',
-                        },
-                        onClick: function () {
-                          if (itemsAsignados.length > 0) {
-                            iniciarChecklist(v, 'items');
-                          } else {
-                            alert('No hay items generales asignados');
-                          }
-                        },
-                      },
-                      '📦 Items (' + itemsAsignados.length + ')'
-                    ),
-                    React.createElement(
-                      'button',
-                      {
-                        style: {
-                          padding: '12px',
-                          background:
-                            erasAsignadas.length === 0 ? '#d1d5db' : '#8b5cf6',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '8px',
-                          fontWeight: '600',
-                          cursor:
-                            erasAsignadas.length === 0
-                              ? 'not-allowed'
-                              : 'pointer',
-                          fontSize: '13px',
-                        },
-                        onClick: function () {
-                          if (erasAsignadas.length > 0) {
-                            iniciarChecklist(v, 'eras');
-                          } else {
-                            alert('No hay ERAs asignadas');
-                          }
-                        },
-                      },
-                      '🎽 ERAs (' + erasAsignadas.length + ')'
-                    )
-                  ),
-
-                  compartimientos.length > 0 &&
-                    React.createElement(
-                      'div',
-                      null,
-                      React.createElement(
-                        'p',
-                        {
-                          style: {
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            color: '#92400e',
-                            marginBottom: '8px',
-                          },
-                        },
-                        '🗄️ Checklist por Compartimiento:'
-                      ),
-                      React.createElement(
-                        'div',
-                        {
-                          style: {
-                            display: 'grid',
-                            gridTemplateColumns:
-                              'repeat(auto-fit, minmax(180px, 1fr))',
-                            gap: '8px',
-                          },
-                        },
-                        compartimientos.map(function (comp) {
-                          var totalItems = (
-                            comp.subcompartimientos || []
-                          ).reduce(function (acc, s) {
-                            return acc + (s.items || []).length;
-                          }, 0);
-                          return React.createElement(
-                            'button',
-                            {
-                              key: comp.id,
-                              style: {
-                                padding: '10px 14px',
-                                background:
-                                  totalItems === 0 ? '#f3f4f6' : '#fffbeb',
-                                color: totalItems === 0 ? '#9ca3af' : '#92400e',
-                                border:
-                                  '2px solid ' +
-                                  (totalItems === 0 ? '#e5e7eb' : '#fde68a'),
-                                borderRadius: '8px',
-                                fontWeight: '600',
-                                cursor:
-                                  totalItems === 0 ? 'not-allowed' : 'pointer',
-                                fontSize: '12px',
-                                textAlign: 'left',
-                              },
-                              onClick: function () {
-                                if (totalItems === 0) {
-                                  alert('Este compartimiento no tiene items');
-                                  return;
-                                }
-                                iniciarChecklist(v, 'compartimiento', comp);
-                              },
-                            },
-                            React.createElement(
-                              'div',
-                              {
-                                style: {
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '6px',
-                                },
-                              },
-                              React.createElement('span', null, '🗄️'),
-                              React.createElement(
-                                'div',
-                                null,
-                                React.createElement(
-                                  'p',
-                                  {
-                                    style: {
-                                      margin: 0,
-                                      fontSize: '12px',
-                                      fontWeight: '700',
-                                    },
-                                  },
-                                  comp.nombre
-                                ),
-                                React.createElement(
-                                  'p',
-                                  {
-                                    style: {
-                                      margin: 0,
-                                      fontSize: '11px',
-                                      opacity: 0.8,
-                                    },
-                                  },
-                                  (comp.subcompartimientos || []).length +
-                                    ' sub · ' +
-                                    totalItems +
-                                    ' items'
-                                )
-                              )
-                            )
-                          );
-                        })
-                      )
-                    )
-                );
-              })
-            )
-      ),
-
-    vistaHist &&
-      React.createElement(
-        'div',
-        null,
-        props.checklists.length === 0
-          ? React.createElement(
-              'div',
-              {
-                style: Object.assign({}, styles.card, {
-                  textAlign: 'center',
-                  padding: '60px',
-                }),
-              },
-              React.createElement(
-                'div',
-                { style: { fontSize: '64px', marginBottom: '16px' } },
-                '📋'
-              ),
-              React.createElement(
-                'h3',
-                { style: { color: '#6b7280' } },
-                'No hay checklists registrados'
-              )
-            )
-          : React.createElement(
-              'div',
-              {
-                style: {
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '16px',
-                },
-              },
-              props.checklists.map(function (c) {
-                var todosOk =
-                  (c.items || []).length > 0 &&
-                  (c.items || []).every(function (i) {
-                    return i.ok;
-                  });
-                var itemsNok = (c.items || []).filter(function (i) {
-                  return !i.ok;
-                });
-                var invUsados = (c.itemsInventarioUsados || []).filter(
-                  function (i) {
-                    return i.usado;
-                  }
-                );
-                var tipoIcono =
-                  c.tipo === 'fluidos'
-                    ? '🛢️'
-                    : c.tipo === 'items'
-                    ? '📦'
-                    : c.tipo === 'eras'
-                    ? '🎽'
-                    : '🗄️';
-                var tipoLabel =
-                  c.tipo === 'fluidos'
-                    ? 'Fluidos y Señales'
-                    : c.tipo === 'items'
-                    ? 'Items Generales'
-                    : c.tipo === 'eras'
-                    ? 'ERAs'
-                    : 'Compartimiento: ' + (c.compartimientoNombre || '');
-                var tipoColor =
-                  c.tipo === 'fluidos'
-                    ? '#0ea5e9'
-                    : c.tipo === 'items'
-                    ? '#10b981'
-                    : c.tipo === 'eras'
-                    ? '#8b5cf6'
-                    : '#f59e0b';
-
-                return React.createElement(
-                  'div',
-                  {
-                    key: c.id,
-                    style: Object.assign({}, styles.card, {
-                      border: '2px solid ' + (todosOk ? '#10b981' : '#f59e0b'),
-                    }),
-                  },
-                  React.createElement(
-                    'div',
-                    {
-                      style: {
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        flexWrap: 'wrap',
-                        gap: '12px',
-                        marginBottom: '12px',
-                      },
-                    },
-                    React.createElement(
-                      'div',
-                      null,
-                      React.createElement(
-                        'div',
-                        {
-                          style: {
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            marginBottom: '6px',
-                          },
-                        },
-                        React.createElement(
-                          'span',
-                          { style: { fontSize: '22px' } },
-                          tipoIcono
-                        ),
-                        React.createElement(
-                          'h3',
-                          { style: { fontSize: '17px', fontWeight: 'bold' } },
-                          c.vehiculoNombre
-                        ),
-                        React.createElement(
-                          'span',
-                          {
-                            style: {
-                              background: tipoColor,
-                              color: 'white',
-                              padding: '3px 10px',
-                              borderRadius: '10px',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                            },
-                          },
-                          tipoLabel
-                        )
-                      ),
-                      React.createElement(
-                        'div',
-                        {
-                          style: {
-                            display: 'flex',
-                            gap: '12px',
-                            flexWrap: 'wrap',
-                          },
-                        },
-                        React.createElement(
-                          'span',
-                          { style: { fontSize: '12px', color: '#6b7280' } },
-                          '👤 ' + c.usuario
-                        ),
-                        React.createElement(
-                          'span',
-                          { style: { fontSize: '12px', color: '#6b7280' } },
-                          '📅 ' + c.fecha
-                        ),
-                        React.createElement(
-                          'span',
-                          { style: { fontSize: '12px', color: '#6b7280' } },
-                          '📊 ' + (c.items || []).length + ' items'
-                        ),
-                        invUsados.length > 0 &&
-                          React.createElement(
-                            'span',
-                            {
-                              style: {
-                                fontSize: '12px',
-                                background: '#ede9fe',
-                                color: '#7c3aed',
-                                padding: '2px 8px',
-                                borderRadius: '6px',
-                              },
-                            },
-                            '📦 ' + invUsados.length + ' usados'
-                          )
-                      )
-                    ),
-                    React.createElement(
-                      'div',
-                      {
-                        style: {
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                        },
-                      },
-                      React.createElement(
-                        'span',
-                        {
-                          style: {
-                            background: todosOk ? '#d1fae5' : '#fef3c7',
-                            color: todosOk ? '#065f46' : '#92400e',
-                            padding: '6px 14px',
-                            borderRadius: '10px',
-                            fontSize: '13px',
-                            fontWeight: '700',
-                          },
-                        },
-                        todosOk ? '✅ TODO OK' : '⚠️ CON OBSERVACIONES'
-                      ),
-                      React.createElement(
-                        'button',
-                        {
-                          style: {
-                            background: '#ef4444',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            padding: '6px 12px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                          },
-                          onClick: function () {
-                            if (window.confirm('¿Eliminar este registro?')) {
-                              props.onEliminar(c.id);
-                            }
-                          },
-                        },
-                        '🗑️'
-                      )
-                    )
-                  ),
-
-                  itemsNok.length > 0 &&
-                    React.createElement(
-                      'div',
-                      {
-                        style: {
-                          background: '#fef3c7',
-                          padding: '10px 14px',
-                          borderRadius: '8px',
-                          marginBottom: '10px',
-                        },
-                      },
-                      React.createElement(
-                        'p',
-                        {
-                          style: {
-                            fontWeight: '600',
-                            color: '#92400e',
-                            marginBottom: '6px',
-                            fontSize: '13px',
-                          },
-                        },
-                        '⚠️ Items con problemas:'
-                      ),
-                      itemsNok.slice(0, 5).map(function (item, i) {
-                        return React.createElement(
-                          'p',
-                          {
-                            key: i,
-                            style: {
-                              fontSize: '12px',
-                              color: '#78350f',
-                              paddingLeft: '12px',
-                            },
-                          },
-                          '• ' +
-                            (item.nombreAmigable ||
-                              item.nombre ||
-                              item.serial ||
-                              '-') +
-                            (item.subNombre
-                              ? ' [' + item.subNombre + ']'
-                              : '') +
-                            (item.cantidadReal !== undefined
-                              ? ' (Real: ' +
-                                item.cantidadReal +
-                                ' / Esp: ' +
-                                item.cantidadEsperada +
-                                ')'
-                              : '') +
-                            (item.presionReal !== undefined
-                              ? ' (Presión: ' + item.presionReal + ' bar)'
-                              : '') +
-                            (item.observaciones
-                              ? ': ' + item.observaciones
-                              : '')
-                        );
-                      }),
-                      itemsNok.length > 5 &&
-                        React.createElement(
-                          'p',
-                          {
-                            style: {
-                              fontSize: '12px',
-                              color: '#78350f',
-                              paddingLeft: '12px',
-                            },
-                          },
-                          '... y ' + (itemsNok.length - 5) + ' más'
-                        )
-                    ),
-
-                  invUsados.length > 0 &&
-                    React.createElement(
-                      'div',
-                      {
-                        style: {
-                          background: '#f5f3ff',
-                          padding: '10px 14px',
-                          borderRadius: '8px',
-                          marginBottom: '10px',
-                        },
-                      },
-                      React.createElement(
-                        'p',
-                        {
-                          style: {
-                            fontWeight: '600',
-                            color: '#7e22ce',
-                            marginBottom: '6px',
-                            fontSize: '13px',
-                          },
-                        },
-                        '📦 Items utilizados:'
-                      ),
-                      invUsados.map(function (item, i) {
-                        var itemDatos = props.inventario
-                          ? props.inventario.find(function (inv) {
-                              return inv.id === item.itemId;
-                            })
-                          : null;
-                        return React.createElement(
-                          'p',
-                          {
-                            key: i,
-                            style: {
-                              fontSize: '12px',
-                              color: '#6b21a8',
-                              paddingLeft: '12px',
-                            },
-                          },
-                          '• ' +
-                            (itemDatos ? itemDatos.nombre : item.itemId) +
-                            ' x' +
-                            item.cantidad +
-                            (item.observaciones
-                              ? ' - ' + item.observaciones
-                              : '')
-                        );
-                      })
-                    ),
-
-                  c.observacionGeneral &&
-                    React.createElement(
-                      'div',
-                      {
-                        style: {
-                          background: '#f9fafb',
-                          padding: '10px 14px',
-                          borderRadius: '8px',
-                        },
-                      },
-                      React.createElement(
-                        'p',
-                        { style: { fontSize: '13px', color: '#374151' } },
-                        '📝 ' + c.observacionGeneral
-                      )
-                    )
-                );
-              })
-            )
-      )
   );
 }
 
-// ============================================
-// PANEL
-// ============================================
-function Panel(props) {
-  var operativos = props.vehiculos.filter(function (v) {
-    return v.estado === 'operativo';
-  }).length;
-  var activos = props.eras.filter(function (e) {
-    return e.estado === 'activo';
-  }).length;
-  var vtvAptas = props.vehiculos.filter(function (v) {
-    return (
-      v.vtv &&
-      v.vtv.apta &&
-      v.vtv.vencimiento &&
-      new Date(v.vtv.vencimiento) >= new Date()
-    );
-  }).length;
-  var equiposVencidos = props.equipos.filter(function (eq) {
-    return (
-      eq.proximoMantenimiento && new Date(eq.proximoMantenimiento) < new Date()
-    );
-  }).length;
-  var totalCompartimientos = props.vehiculos.reduce(function (acc, v) {
-    return acc + (v.compartimientos || []).length;
-  }, 0);
-
-  var alertas = [];
-  props.itemsBajoStock.forEach(function (item) {
-    alertas.push({
-      texto:
-        '📦 ' +
-        item.nombre +
-        ' - Stock bajo (' +
-        (item.stock || 0) +
-        ' ' +
-        (item.unidad || 'u') +
-        ')',
-      tipo: 'stock',
-    });
-  });
-  props.equipos.forEach(function (eq) {
-    if (
-      eq.proximoMantenimiento &&
-      new Date(eq.proximoMantenimiento) < new Date()
-    ) {
-      alertas.push({
-        texto: '🧯 ' + eq.nombre + ' - Mantenimiento vencido',
-        tipo: 'equipo',
-      });
-    }
-  });
-  props.vehiculos.forEach(function (v) {
-    if (v.vtv && v.vtv.vencimiento) {
-      var dias = Math.ceil(
-        (new Date(v.vtv.vencimiento) - new Date()) / (1000 * 60 * 60 * 24)
-      );
-      if (dias < 0)
-        alertas.push({
-          texto: '🚛 ' + v.nombre + ' - VTV VENCIDA',
-          tipo: 'vtv',
-        });
-      else if (dias <= 30)
-        alertas.push({
-          texto: '🚛 ' + v.nombre + ' - VTV vence en ' + dias + ' días',
-          tipo: 'vtv',
-        });
-    }
-    if (v.pruebaHidraulica) {
-      var diasPH = Math.ceil(
-        (new Date(v.pruebaHidraulica) - new Date()) / (1000 * 60 * 60 * 24)
-      );
-      if (diasPH < 0)
-        alertas.push({
-          texto: '🚛 ' + v.nombre + ' - Prueba Hidráulica VENCIDA',
-          tipo: 'hidraulica',
-        });
-    }
-  });
-  props.eras.forEach(function (era) {
-    if (era.vencimientoTubo) {
-      var dias = Math.ceil(
-        (new Date(era.vencimientoTubo) - new Date()) / (1000 * 60 * 60 * 24)
-      );
-      if (dias < 0)
-        alertas.push({
-          texto: '🎽 ' + era.marca + ' ' + era.modelo + ' - Tubo VENCIDO',
-          tipo: 'era',
-        });
-      else if (dias <= 30)
-        alertas.push({
-          texto:
-            '🎽 ' +
-            era.marca +
-            ' ' +
-            era.modelo +
-            ' - Tubo vence en ' +
-            dias +
-            ' días',
-          tipo: 'era',
-        });
-    }
-  });
-  props.personal.forEach(function (p) {
-    if (p.licencia) {
-      var dias = Math.ceil(
-        (new Date(p.licencia) - new Date()) / (1000 * 60 * 60 * 24)
-      );
-      if (dias < 0)
-        alertas.push({
-          texto: '👤 ' + p.nombre + ' ' + p.apellido + ' - Licencia VENCIDA',
-          tipo: 'personal',
-        });
-      else if (dias <= 30)
-        alertas.push({
-          texto:
-            '👤 ' +
-            p.nombre +
-            ' ' +
-            p.apellido +
-            ' - Licencia vence en ' +
-            dias +
-            ' días',
-          tipo: 'personal',
-        });
-    }
-  });
-
-  var kpis = [
-    {
-      icon: '🚛',
-      valor: props.vehiculos.length,
-      label: 'Móviles (' + operativos + ' operativos)',
-      bg: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-      vista: 'vehiculos',
-    },
-    {
-      icon: '🗄️',
-      valor: totalCompartimientos,
-      label: 'Compartimientos',
-      bg: 'linear-gradient(135deg, #f59e0b, #d97706)',
-      vista: 'vehiculos',
-    },
-    {
-      icon: '🎽',
-      valor: activos,
-      label: 'ERAs Activas',
-      bg: 'linear-gradient(135deg, #10b981, #059669)',
-      vista: 'eras',
-    },
-    {
-      icon: '🚗',
-      valor: vtvAptas,
-      label: 'VTV Aptas',
-      bg: 'linear-gradient(135deg, #06b6d4, #0891b2)',
-      vista: 'vehiculos',
-    },
-    {
-      icon: '📦',
-      valor: props.inventario.length,
-      label: 'Items Inventario',
-      bg: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-      vista: 'inventario',
-    },
-    {
-      icon: '⚠️',
-      valor: alertas.length,
-      label: 'Alertas Activas',
-      bg: 'linear-gradient(135deg, #ef4444, #dc2626)',
-      vista: null,
-    },
-  ];
-
-  return React.createElement(
-    'div',
-    null,
-    React.createElement(
-      'h2',
-      { style: styles.pageTitle },
-      '📊 Panel de Control'
-    ),
-    React.createElement(
-      'div',
-      { style: styles.grid },
-      kpis.map(function (k, i) {
-        return React.createElement(
-          'div',
-          {
-            key: i,
-            style: Object.assign({}, styles.kpi, {
-              background: k.bg,
-              cursor: k.vista ? 'pointer' : 'default',
-            }),
-            onClick: function () {
-              if (k.vista) props.setVista(k.vista);
-            },
-          },
-          React.createElement(
-            'div',
-            { style: { fontSize: '32px', marginBottom: '8px' } },
-            k.icon
-          ),
-          React.createElement(
-            'div',
-            {
-              style: {
-                fontSize: '32px',
-                fontWeight: 'bold',
-                marginBottom: '4px',
-              },
-            },
-            k.valor
-          ),
-          React.createElement(
-            'div',
-            { style: { fontSize: '12px', opacity: 0.9 } },
-            k.label
-          )
-        );
-      })
-    ),
-
-    alertas.length > 0 &&
-      React.createElement(
-        'div',
-        {
-          style: Object.assign({}, styles.card, {
-            border: '2px solid #ef4444',
-            marginBottom: '24px',
-          }),
-        },
-        React.createElement(
-          'h3',
-          { style: Object.assign({}, styles.cardTitle, { color: '#dc2626' }) },
-          '🚨 Alertas del Sistema (' + alertas.length + ')'
-        ),
-        React.createElement(
-          'div',
-          { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
-          alertas.map(function (a, i) {
-            return React.createElement(
-              'div',
-              {
-                key: i,
-                style: {
-                  background: '#fef2f2',
-                  padding: '10px 14px',
-                  borderRadius: '8px',
-                  borderLeft: '4px solid #ef4444',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  color: '#991b1b',
-                },
-              },
-              a.texto
-            );
-          })
-        )
-      ),
-
-    props.itemsBajoStock.length > 0 &&
-      React.createElement(
-        'div',
-        {
-          style: Object.assign({}, styles.card, {
-            border: '2px solid #f59e0b',
-            marginBottom: '24px',
-          }),
-        },
-        React.createElement(
-          'h3',
-          { style: Object.assign({}, styles.cardTitle, { color: '#d97706' }) },
-          '📦 Items con Bajo Stock'
-        ),
-        React.createElement(
-          'div',
-          {
-            style: {
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '12px',
-            },
-          },
-          props.itemsBajoStock.map(function (item) {
-            return React.createElement(
-              'div',
-              {
-                key: item.id,
-                style: {
-                  background: '#fffbeb',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: '1px solid #fde68a',
-                },
-              },
-              React.createElement(
-                'p',
-                {
-                  style: {
-                    fontWeight: '600',
-                    fontSize: '14px',
-                    marginBottom: '4px',
-                  },
-                },
-                item.nombre
-              ),
-              React.createElement(
-                'p',
-                {
-                  style: {
-                    fontSize: '12px',
-                    color: '#6b7280',
-                    marginBottom: '8px',
-                  },
-                },
-                item.categoria
-              ),
-              React.createElement(
-                'div',
-                { style: { display: 'flex', justifyContent: 'space-between' } },
-                React.createElement(
-                  'span',
-                  {
-                    style: {
-                      background: '#fee2e2',
-                      color: '#dc2626',
-                      padding: '2px 8px',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      fontWeight: '700',
-                    },
-                  },
-                  'Stock: ' + (item.stock || 0) + ' ' + (item.unidad || 'u')
-                ),
-                React.createElement(
-                  'span',
-                  { style: { fontSize: '11px', color: '#9ca3af' } },
-                  'Mín: ' + (item.stockMinimo || 5)
-                )
-              )
-            );
-          })
-        )
-      ),
-
-    props.vehiculos.length > 0 &&
-      React.createElement(
-        'div',
-        { style: Object.assign({}, styles.card, { marginBottom: '24px' }) },
-        React.createElement(
-          'h3',
-          { style: styles.cardTitle },
-          '🚛 Estado de Móviles'
-        ),
-        React.createElement(
-          'div',
-          { style: { display: 'flex', flexDirection: 'column', gap: '10px' } },
-          props.vehiculos.map(function (v) {
-            var compartimientos = v.compartimientos || [];
-            var totalItems = compartimientos.reduce(function (acc, c) {
-              return (
-                acc +
-                (c.subcompartimientos || []).reduce(function (acc2, s) {
-                  return acc2 + (s.items || []).length;
-                }, 0)
-              );
-            }, 0);
-            var vtvEstado = 'sin-datos';
-            if (v.vtv && v.vtv.vencimiento) {
-              var dias = Math.ceil(
-                (new Date(v.vtv.vencimiento) - new Date()) /
-                  (1000 * 60 * 60 * 24)
-              );
-              if (!v.vtv.apta || dias < 0) vtvEstado = 'vencida';
-              else if (dias <= 30) vtvEstado = 'proxima';
-              else vtvEstado = 'apta';
-            }
-            return React.createElement(
-              'div',
-              {
-                key: v.id,
-                style: {
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '12px 16px',
-                  background: '#f9fafb',
-                  borderRadius: '10px',
-                  border: '1px solid #e5e7eb',
-                  flexWrap: 'wrap',
-                  gap: '8px',
-                },
-              },
-              React.createElement(
-                'div',
-                {
-                  style: { display: 'flex', alignItems: 'center', gap: '12px' },
-                },
-                React.createElement(
-                  'span',
-                  { style: { fontSize: '24px' } },
-                  '🚛'
-                ),
-                React.createElement(
-                  'div',
-                  null,
-                  React.createElement(
-                    'p',
-                    {
-                      style: {
-                        fontWeight: '700',
-                        fontSize: '15px',
-                        marginBottom: '2px',
-                      },
-                    },
-                    v.nombre
-                  ),
-                  React.createElement(
-                    'p',
-                    { style: { fontSize: '12px', color: '#6b7280' } },
-                    v.tipo + (v.patente ? ' · ' + v.patente : '')
-                  )
-                )
-              ),
-              React.createElement(
-                'div',
-                {
-                  style: {
-                    display: 'flex',
-                    gap: '8px',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                  },
-                },
-                compartimientos.length > 0 &&
-                  React.createElement(
-                    'span',
-                    {
-                      style: {
-                        fontSize: '12px',
-                        background: '#fef3c7',
-                        color: '#92400e',
-                        padding: '3px 8px',
-                        borderRadius: '6px',
-                        fontWeight: '600',
-                      },
-                    },
-                    '🗄️ ' +
-                      compartimientos.length +
-                      ' comp · ' +
-                      totalItems +
-                      ' items'
-                  ),
-                React.createElement(
-                  'span',
-                  {
-                    style: {
-                      fontSize: '12px',
-                      background: '#ede9fe',
-                      color: '#7c3aed',
-                      padding: '3px 8px',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                    },
-                  },
-                  '🎽 ' + (v.erasAsignadas || []).length + ' ERAs'
-                ),
-                React.createElement(
-                  'span',
-                  {
-                    style: {
-                      background:
-                        vtvEstado === 'apta'
-                          ? '#d1fae5'
-                          : vtvEstado === 'proxima'
-                          ? '#fef3c7'
-                          : vtvEstado === 'vencida'
-                          ? '#fee2e2'
-                          : '#f3f4f6',
-                      color:
-                        vtvEstado === 'apta'
-                          ? '#065f46'
-                          : vtvEstado === 'proxima'
-                          ? '#92400e'
-                          : vtvEstado === 'vencida'
-                          ? '#dc2626'
-                          : '#6b7280',
-                      padding: '3px 10px',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                    },
-                  },
-                  vtvEstado === 'apta'
-                    ? '🚗 VTV OK'
-                    : vtvEstado === 'proxima'
-                    ? '🚗 VTV PRÓXIMA'
-                    : vtvEstado === 'vencida'
-                    ? '🚗 VTV VENCIDA'
-                    : '🚗 VTV S/D'
-                ),
-                React.createElement(
-                  'span',
-                  {
-                    style: {
-                      background:
-                        v.estado === 'operativo' ? '#d1fae5' : '#fef3c7',
-                      color: v.estado === 'operativo' ? '#065f46' : '#92400e',
-                      padding: '3px 10px',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                    },
-                  },
-                  v.estado === 'operativo' ? '✅ Operativo' : '🔧 Mantenimiento'
-                )
-              )
-            );
-          })
-        )
-      ),
-
-    props.checklists &&
-      props.checklists.length > 0 &&
-      React.createElement(
-        'div',
-        { style: styles.card },
-        React.createElement(
-          'h3',
-          { style: styles.cardTitle },
-          '📋 Últimos Checklists'
-        ),
-        React.createElement(
-          'div',
-          { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
-          props.checklists.slice(0, 5).map(function (c) {
-            var todosOk = (c.items || []).every(function (i) {
-              return i.ok;
-            });
-            var tipoIcono =
-              c.tipo === 'fluidos'
-                ? '🛢️'
-                : c.tipo === 'items'
-                ? '📦'
-                : c.tipo === 'eras'
-                ? '🎽'
-                : '🗄️';
-            var tipoLabel =
-              c.tipo === 'fluidos'
-                ? 'Fluidos'
-                : c.tipo === 'items'
-                ? 'Items'
-                : c.tipo === 'eras'
-                ? 'ERAs'
-                : 'Comp: ' + (c.compartimientoNombre || '');
-            return React.createElement(
-              'div',
-              {
-                key: c.id,
-                style: {
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '10px 14px',
-                  background: todosOk ? '#ecfdf5' : '#fef3c7',
-                  borderRadius: '8px',
-                  border: '1px solid ' + (todosOk ? '#a7f3d0' : '#fde68a'),
-                  flexWrap: 'wrap',
-                  gap: '8px',
-                },
-              },
-              React.createElement(
-                'div',
-                {
-                  style: { display: 'flex', alignItems: 'center', gap: '10px' },
-                },
-                React.createElement(
-                  'span',
-                  { style: { fontSize: '18px' } },
-                  tipoIcono
-                ),
-                React.createElement(
-                  'div',
-                  null,
-                  React.createElement(
-                    'p',
-                    {
-                      style: {
-                        fontWeight: '600',
-                        fontSize: '14px',
-                        marginBottom: '2px',
-                      },
-                    },
-                    c.vehiculoNombre + ' - ' + tipoLabel
-                  ),
-                  React.createElement(
-                    'p',
-                    { style: { fontSize: '11px', color: '#6b7280' } },
-                    '👤 ' + c.usuario + ' | 📅 ' + c.fecha
-                  )
-                )
-              ),
-              React.createElement(
-                'span',
-                {
-                  style: {
-                    background: todosOk ? '#d1fae5' : '#fef3c7',
-                    color: todosOk ? '#065f46' : '#92400e',
-                    padding: '4px 12px',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    fontWeight: '700',
-                  },
-                },
-                todosOk ? '✅ OK' : '⚠️ Obs.'
-              )
-            );
-          })
-        )
-      )
-  );
-}
-// ============================================
-// LOGIN
-// ============================================
-function Login(props) {
-  var emailState = useState('');
-  var email = emailState[0];
-  var setEmail = emailState[1];
-  var passwordState = useState('');
-  var password = passwordState[0];
-  var setPassword = passwordState[1];
-  var errorState = useState('');
-  var error = errorState[0];
-  var setError = errorState[1];
-
-  var handleSubmit = function (e) {
-    e.preventDefault();
-    if (!email.trim()) {
-      setError('Ingresa tu email');
-      return;
-    }
-    if (!password.trim()) {
-      setError('Ingresa tu contraseña');
-      return;
-    }
-    if (password.length < 4) {
-      setError('Contraseña muy corta');
-      return;
-    }
-    setError('');
-    props.onLogin(email, password);
-  };
-
-  return React.createElement(
-    'div',
-    {
-      style: {
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1e3a5f 0%, #dc2626 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-      },
-    },
-    React.createElement(
-      'div',
-      {
-        style: {
-          background: 'white',
-          borderRadius: '20px',
-          padding: '48px 40px',
-          maxWidth: '420px',
-          width: '100%',
-          boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
-        },
-      },
-      React.createElement(
-        'div',
-        { style: { textAlign: 'center', marginBottom: '36px' } },
-        React.createElement(
-          'div',
-          {
-            style: {
-              width: '80px',
-              height: '80px',
-              background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
-              borderRadius: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '40px',
-              margin: '0 auto 16px',
-            },
-          },
-          '🚒'
-        ),
-        React.createElement(
-          'h1',
-          {
-            style: {
-              fontSize: '26px',
-              fontWeight: 'bold',
-              color: '#111827',
-              marginBottom: '8px',
-            },
-          },
-          'Gestión de Bomberos'
-        ),
-        React.createElement(
-          'p',
-          { style: { color: '#6b7280', fontSize: '14px' } },
-          'Sistema de gestión integral'
-        )
-      ),
-      React.createElement(
-        'form',
-        { onSubmit: handleSubmit },
-        React.createElement(
-          'div',
-          { style: { marginBottom: '20px' } },
-          React.createElement(
-            'label',
-            {
-              style: {
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#374151',
-                marginBottom: '8px',
-              },
-            },
-            '📧 Email'
-          ),
-          React.createElement('input', {
-            type: 'email',
-            value: email,
-            onChange: function (e) {
-              setEmail(e.target.value);
-              setError('');
-            },
-            style: {
-              width: '100%',
-              padding: '12px 16px',
-              border: '2px solid #e5e7eb',
-              borderRadius: '10px',
-              fontSize: '15px',
-              outline: 'none',
-              boxSizing: 'border-box',
-              transition: 'border-color 0.2s',
-            },
-            placeholder: 'usuario@bomberos.com',
-            required: true,
-          })
-        ),
-        React.createElement(
-          'div',
-          { style: { marginBottom: '24px' } },
-          React.createElement(
-            'label',
-            {
-              style: {
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#374151',
-                marginBottom: '8px',
-              },
-            },
-            '🔒 Contraseña'
-          ),
-          React.createElement('input', {
-            type: 'password',
-            value: password,
-            onChange: function (e) {
-              setPassword(e.target.value);
-              setError('');
-            },
-            style: {
-              width: '100%',
-              padding: '12px 16px',
-              border: '2px solid #e5e7eb',
-              borderRadius: '10px',
-              fontSize: '15px',
-              outline: 'none',
-              boxSizing: 'border-box',
-            },
-            placeholder: '••••••••',
-            required: true,
-          })
-        ),
-        error &&
-          React.createElement(
-            'div',
-            {
-              style: {
-                background: '#fee2e2',
-                border: '1px solid #fecaca',
-                padding: '10px 14px',
-                borderRadius: '8px',
-                marginBottom: '16px',
-                color: '#dc2626',
-                fontSize: '13px',
-                fontWeight: '600',
-              },
-            },
-            '⚠️ ' + error
-          ),
-        React.createElement(
-          'button',
-          {
-            type: 'submit',
-            style: {
-              width: '100%',
-              padding: '14px',
-              background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              fontWeight: '700',
-              fontSize: '16px',
-              cursor: 'pointer',
-              letterSpacing: '0.5px',
-            },
-          },
-          '🚒 Ingresar al Sistema'
-        )
-      ),
-      React.createElement(
-        'div',
-        {
-          style: {
-            marginTop: '24px',
-            padding: '16px',
-            background: '#f9fafb',
-            borderRadius: '10px',
-            border: '1px solid #e5e7eb',
-          },
-        },
-        React.createElement(
-          'p',
-          {
-            style: {
-              fontSize: '12px',
-              color: '#6b7280',
-              textAlign: 'center',
-              marginBottom: '8px',
-              fontWeight: '600',
-            },
-          },
-          '💡 Acceso de prueba'
-        ),
-        React.createElement(
-          'p',
-          {
-            style: { fontSize: '12px', color: '#9ca3af', textAlign: 'center' },
-          },
-          'Email: admin@bomberos.com'
-        ),
-        React.createElement(
-          'p',
-          {
-            style: { fontSize: '12px', color: '#9ca3af', textAlign: 'center' },
-          },
-          'Contraseña: 1234'
-        )
-      )
-    )
-  );
-}
 // ============================================
 // INVENTARIO
 // ============================================
 function Inventario(props) {
-  var mostrarFormState = useState(false);
-  var mostrarForm = mostrarFormState[0];
-  var setMostrarForm = mostrarFormState[1];
-  var filtroState = useState('todos');
-  var filtro = filtroState[0];
-  var setFiltro = filtroState[1];
-  var busquedaState = useState('');
-  var busqueda = busquedaState[0];
-  var setBusqueda = busquedaState[1];
-  var itemSelState = useState(null);
-  var itemSel = itemSelState[0];
-  var setItemSel = itemSelState[1];
-  var guardandoState = useState(false);
-  var guardando = guardandoState[0];
-  var setGuardando = guardandoState[1];
-  var categorias = ['herramienta', 'equipo', 'material', 'repuesto', 'EPP'];
-  var estadoInicial = {
+  var formState = useState({
     nombre: '',
-    codigo: '',
     categoria: 'herramienta',
     stock: 0,
     stockMinimo: 5,
-    estado: 'disponible',
-    unidad: 'unidad',
+    unidad: 'u',
     descripcion: '',
-  };
-  var formState = useState(estadoInicial);
+    ubicacion: '',
+    codigoInterno: '',
+  });
   var form = formState[0];
   var setForm = formState[1];
+  var mostrarFormState = useState(false);
+  var mostrarForm = mostrarFormState[0];
+  var setMostrarForm = mostrarFormState[1];
+  var editandoState = useState(null);
+  var editando = editandoState[0];
+  var setEditando = editandoState[1];
+  var formEditState = useState({});
+  var formEdit = formEditState[0];
+  var setFormEdit = formEditState[1];
+  var busquedaState = useState('');
+  var busqueda = busquedaState[0];
+  var setBusqueda = busquedaState[1];
+  var categoriaFiltroState = useState('');
+  var categoriaFiltro = categoriaFiltroState[0];
+  var setCategoriaFiltro = categoriaFiltroState[1];
+  var movModalState = useState(null);
+  var movModal = movModalState[0];
+  var setMovModal = movModalState[1];
+  var cantMovState = useState(1);
+  var cantMov = cantMovState[0];
+  var setCantMov = cantMovState[1];
+  var respMovState = useState('');
+  var respMov = respMovState[0];
+  var setRespMov = respMovState[1];
+  var motivoMovState = useState('');
+  var motivoMov = motivoMovState[0];
+  var setMotivoMov = motivoMovState[1];
+
+  var categorias = [
+    'herramienta',
+    'equipo',
+    'material',
+    'repuesto',
+    'EPP',
+    'otro',
+  ];
   var catColores = {
     herramienta: '#3b82f6',
     equipo: '#8b5cf6',
     material: '#10b981',
     repuesto: '#f59e0b',
     EPP: '#ef4444',
+    otro: '#6b7280',
   };
 
-  var itemsFiltrados = props.inventario.filter(function (item) {
-    var matchFiltro = filtro === 'todos' || item.categoria === filtro;
+  var inventarioFiltrado = props.inventario.filter(function (i) {
     var matchBusqueda =
       !busqueda ||
-      (item.nombre &&
-        item.nombre.toLowerCase().includes(busqueda.toLowerCase())) ||
-      (item.codigo &&
-        item.codigo.toLowerCase().includes(busqueda.toLowerCase()));
-    return matchFiltro && matchBusqueda;
+      i.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+      (i.codigoInterno || '').toLowerCase().includes(busqueda.toLowerCase());
+    var matchCategoria = !categoriaFiltro || i.categoria === categoriaFiltro;
+    return matchBusqueda && matchCategoria;
   });
+
+  var iniciarEdicion = function (item) {
+    setEditando(item.id);
+    setFormEdit({
+      nombre: item.nombre,
+      categoria: item.categoria,
+      stock: item.stock,
+      stockMinimo: item.stockMinimo,
+      unidad: item.unidad,
+      descripcion: item.descripcion || '',
+      ubicacion: item.ubicacion || '',
+      codigoInterno: item.codigoInterno || '',
+    });
+  };
+
+  var guardarEdicion = async function (itemId) {
+    await props.onActualizar(itemId, formEdit);
+    setEditando(null);
+    alert('✅ Item actualizado correctamente');
+  };
 
   var handleSubmit = async function (e) {
     e.preventDefault();
-    if (!form.nombre || !form.nombre.trim()) {
+    if (!form.nombre.trim()) {
       alert('El nombre es obligatorio');
       return;
     }
-    setGuardando(true);
-    try {
-      var id = await props.onAgregar({
-        nombre: form.nombre.trim(),
-        codigo: form.codigo ? form.codigo.trim() : '',
-        categoria: form.categoria,
-        stock: parseInt(form.stock) || 0,
-        stockMinimo: parseInt(form.stockMinimo) || 5,
-        estado: form.estado,
-        unidad: form.unidad,
-        descripcion: form.descripcion ? form.descripcion.trim() : '',
+    var id = await props.onAgregar(form);
+    if (id) {
+      setForm({
+        nombre: '',
+        categoria: 'herramienta',
+        stock: 0,
+        stockMinimo: 5,
+        unidad: 'u',
+        descripcion: '',
+        ubicacion: '',
+        codigoInterno: '',
       });
-      if (id) {
-        alert('✅ Item guardado');
-        setForm(estadoInicial);
-        setMostrarForm(false);
-      }
-    } catch (err) {
-      alert('❌ Error: ' + err.message);
-    } finally {
-      setGuardando(false);
+      setMostrarForm(false);
+      alert('✅ Item agregado');
     }
   };
-
-  var movimientosItem = itemSel
-    ? props.movimientos.filter(function (m) {
-        return m.itemId === itemSel.id;
-      })
-    : [];
 
   return React.createElement(
     'div',
     null,
-
     React.createElement(
       'div',
       {
@@ -7564,98 +9535,70 @@ function Inventario(props) {
           justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: '24px',
-          flexWrap: 'wrap',
-          gap: '12px',
         },
       },
       React.createElement('h2', { style: styles.pageTitle }, '📦 Inventario'),
       React.createElement(
         'button',
         {
-          style: Object.assign({}, styles.btnPrimary, {
-            background: '#10b981',
-          }),
+          style: styles.btnPrimary,
           onClick: function () {
             setMostrarForm(!mostrarForm);
-            setForm(estadoInicial);
           },
         },
         mostrarForm ? '✖ Cancelar' : '➕ Nuevo Item'
       )
     ),
 
-    React.createElement(
-      'div',
-      {
-        style: {
-          display: 'flex',
-          gap: '8px',
-          marginBottom: '16px',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-        },
-      },
-      React.createElement('input', {
-        type: 'text',
-        placeholder: '🔍 Buscar...',
-        value: busqueda,
-        onChange: function (e) {
-          setBusqueda(e.target.value);
-        },
-        style: Object.assign({}, styles.input, { maxWidth: '260px' }),
-      }),
-      React.createElement(
-        'button',
-        {
-          style: filtro === 'todos' ? styles.navBtnActive : styles.navBtn,
-          onClick: function () {
-            setFiltro('todos');
-          },
-        },
-        'Todos (' + props.inventario.length + ')'
-      ),
-      categorias.map(function (cat) {
-        var count = props.inventario.filter(function (i) {
-          return i.categoria === cat;
-        }).length;
-        return React.createElement(
-          'button',
-          {
-            key: cat,
-            style:
-              filtro === cat
-                ? Object.assign({}, styles.navBtnActive, {
-                    background: catColores[cat],
-                  })
-                : styles.navBtn,
-            onClick: function () {
-              setFiltro(cat);
-            },
-          },
-          cat + ' (' + count + ')'
-        );
-      })
-    ),
-
-    props.itemsBajoStock &&
-      props.itemsBajoStock.length > 0 &&
+    props.itemsBajoStock.length > 0 &&
       React.createElement(
         'div',
         {
           style: {
             background: '#fef3c7',
-            border: '1px solid #f59e0b',
-            padding: '12px 16px',
-            borderRadius: '10px',
-            marginBottom: '16px',
+            border: '2px solid #f59e0b',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '20px',
           },
         },
         React.createElement(
-          'p',
-          { style: { color: '#92400e', fontWeight: '600', fontSize: '13px' } },
-          '⚠️ ' +
-            props.itemsBajoStock.length +
-            ' items con stock bajo el mínimo'
+          'h4',
+          {
+            style: {
+              fontWeight: 'bold',
+              color: '#92400e',
+              marginBottom: '8px',
+            },
+          },
+          '⚠️ Items con stock bajo'
+        ),
+        React.createElement(
+          'div',
+          { style: { display: 'flex', flexWrap: 'wrap', gap: '8px' } },
+          props.itemsBajoStock.map(function (i) {
+            return React.createElement(
+              'span',
+              {
+                key: i.id,
+                style: {
+                  background: '#fef3c7',
+                  border: '1px solid #f59e0b',
+                  color: '#92400e',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                },
+              },
+              (i.codigoInterno ? '[' + i.codigoInterno + '] ' : '') +
+                i.nombre +
+                ': ' +
+                (i.stock || 0) +
+                ' ' +
+                (i.unidad || 'u')
+            );
+          })
         )
       ),
 
@@ -7664,14 +9607,14 @@ function Inventario(props) {
         'div',
         {
           style: Object.assign({}, styles.card, {
-            background: '#f0fdf4',
-            border: '2px solid #22c55e',
+            background: '#f0f9ff',
+            border: '2px solid #0ea5e9',
             marginBottom: '24px',
           }),
         },
         React.createElement(
           'h3',
-          { style: Object.assign({}, styles.cardTitle, { color: '#15803d' }) },
+          { style: Object.assign({}, styles.cardTitle, { color: '#0369a1' }) },
           '➕ Nuevo Item'
         ),
         React.createElement(
@@ -7699,21 +9642,26 @@ function Inventario(props) {
                 },
                 style: styles.input,
                 required: true,
-                placeholder: 'Ej: Manguera 45mm',
               })
             ),
             React.createElement(
               'div',
               null,
-              React.createElement('label', { style: styles.label }, 'Código'),
+              React.createElement(
+                'label',
+                { style: styles.label },
+                '🏷️ Código Interno'
+              ),
               React.createElement('input', {
                 type: 'text',
-                value: form.codigo,
+                value: form.codigoInterno,
                 onChange: function (e) {
-                  setForm(Object.assign({}, form, { codigo: e.target.value }));
+                  setForm(
+                    Object.assign({}, form, { codigoInterno: e.target.value })
+                  );
                 },
                 style: styles.input,
-                placeholder: 'Ej: HER-001',
+                placeholder: 'Ej: INV-001',
               })
             ),
             React.createElement(
@@ -7752,7 +9700,11 @@ function Inventario(props) {
                 type: 'number',
                 value: form.stock,
                 onChange: function (e) {
-                  setForm(Object.assign({}, form, { stock: e.target.value }));
+                  setForm(
+                    Object.assign({}, form, {
+                      stock: parseInt(e.target.value) || 0,
+                    })
+                  );
                 },
                 style: styles.input,
                 min: '0',
@@ -7771,7 +9723,9 @@ function Inventario(props) {
                 value: form.stockMinimo,
                 onChange: function (e) {
                   setForm(
-                    Object.assign({}, form, { stockMinimo: e.target.value })
+                    Object.assign({}, form, {
+                      stockMinimo: parseInt(e.target.value) || 0,
+                    })
                   );
                 },
                 style: styles.input,
@@ -7782,56 +9736,39 @@ function Inventario(props) {
               'div',
               null,
               React.createElement('label', { style: styles.label }, 'Unidad'),
-              React.createElement(
-                'select',
-                {
-                  value: form.unidad,
-                  onChange: function (e) {
-                    setForm(
-                      Object.assign({}, form, { unidad: e.target.value })
-                    );
-                  },
-                  style: styles.input,
+              React.createElement('input', {
+                type: '            text',
+                value: form.unidad,
+                onChange: function (e) {
+                  setForm(Object.assign({}, form, { unidad: e.target.value }));
                 },
-                ['unidad', 'litro', 'metro', 'kg', 'par', 'caja'].map(function (
-                  u
-                ) {
-                  return React.createElement('option', { key: u, value: u }, u);
-                })
-              )
+                style: styles.input,
+                placeholder: 'u, kg, lt...',
+              })
             ),
             React.createElement(
               'div',
               null,
-              React.createElement('label', { style: styles.label }, 'Estado'),
               React.createElement(
-                'select',
-                {
-                  value: form.estado,
-                  onChange: function (e) {
-                    setForm(
-                      Object.assign({}, form, { estado: e.target.value })
-                    );
-                  },
-                  style: styles.input,
+                'label',
+                { style: styles.label },
+                'Ubicación'
+              ),
+              React.createElement('input', {
+                type: 'text',
+                value: form.ubicacion,
+                onChange: function (e) {
+                  setForm(
+                    Object.assign({}, form, { ubicacion: e.target.value })
+                  );
                 },
-                React.createElement(
-                  'option',
-                  { value: 'disponible' },
-                  'Disponible'
-                ),
-                React.createElement('option', { value: 'en_uso' }, 'En Uso'),
-                React.createElement(
-                  'option',
-                  { value: 'mantenimiento' },
-                  'Mantenimiento'
-                ),
-                React.createElement('option', { value: 'baja' }, 'Baja')
-              )
+                style: styles.input,
+                placeholder: 'Ej: Estante A',
+              })
             ),
             React.createElement(
               'div',
-              { style: { gridColumn: '1 / -1' } },
+              { style: { gridColumn: 'span 2' } },
               React.createElement(
                 'label',
                 { style: styles.label },
@@ -7846,7 +9783,7 @@ function Inventario(props) {
                   );
                 },
                 style: styles.input,
-                placeholder: 'Descripción opcional...',
+                placeholder: 'Descripción del item...',
               })
             )
           ),
@@ -7854,25 +9791,534 @@ function Inventario(props) {
             'button',
             {
               type: 'submit',
-              disabled: guardando,
               style: {
                 width: '100%',
-                padding: '14px',
-                background: guardando ? '#9ca3af' : '#10b981',
+                padding: '12px',
+                background: '#10b981',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: '700',
-                cursor: guardando ? 'not-allowed' : 'pointer',
-                fontSize: '15px',
+                cursor: 'pointer',
               },
             },
-            guardando ? '⏳ Guardando...' : '💾 Guardar Item'
+            '💾 Agregar Item'
           )
         )
       ),
 
-    itemSel &&
+    React.createElement(
+      'div',
+      {
+        style: {
+          display: 'flex',
+          gap: '12px',
+          marginBottom: '20px',
+          flexWrap: 'wrap',
+        },
+      },
+      React.createElement('input', {
+        type: 'text',
+        placeholder: '🔍 Buscar por nombre o código...',
+        value: busqueda,
+        onChange: function (e) {
+          setBusqueda(e.target.value);
+        },
+        style: Object.assign({}, styles.input, { flex: 1, minWidth: '200px' }),
+      }),
+      React.createElement(
+        'select',
+        {
+          value: categoriaFiltro,
+          onChange: function (e) {
+            setCategoriaFiltro(e.target.value);
+          },
+          style: Object.assign({}, styles.input, { width: '180px' }),
+        },
+        React.createElement('option', { value: '' }, 'Todas las categorías'),
+        categorias.map(function (c) {
+          return React.createElement('option', { key: c, value: c }, c);
+        })
+      )
+    ),
+
+    React.createElement(
+      'div',
+      { style: { display: 'flex', flexDirection: 'column', gap: '10px' } },
+      inventarioFiltrado.map(function (item) {
+        var bajStock = (item.stock || 0) <= (item.stockMinimo || 5);
+        var isEditando = editando === item.id;
+        return React.createElement(
+          'div',
+          {
+            key: item.id,
+            style: Object.assign({}, styles.card, {
+              border: '2px solid ' + (bajStock ? '#f59e0b' : '#e5e7eb'),
+              background: bajStock ? '#fffbeb' : 'white',
+              marginBottom: '0',
+            }),
+          },
+          isEditando
+            ? React.createElement(
+                'div',
+                null,
+                React.createElement(
+                  'h4',
+                  {
+                    style: {
+                      fontWeight: 'bold',
+                      color: '#0369a1',
+                      marginBottom: '12px',
+                    },
+                  },
+                  '✏️ Editando: ' + item.nombre
+                ),
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: '12px',
+                      marginBottom: '12px',
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    null,
+                    React.createElement(
+                      'label',
+                      { style: styles.label },
+                      'Nombre'
+                    ),
+                    React.createElement('input', {
+                      type: 'text',
+                      value: formEdit.nombre || '',
+                      onChange: function (e) {
+                        setFormEdit(
+                          Object.assign({}, formEdit, {
+                            nombre: e.target.value,
+                          })
+                        );
+                      },
+                      style: styles.input,
+                    })
+                  ),
+                  React.createElement(
+                    'div',
+                    null,
+                    React.createElement(
+                      'label',
+                      { style: styles.label },
+                      '🏷️ Código Interno'
+                    ),
+                    React.createElement('input', {
+                      type: 'text',
+                      value: formEdit.codigoInterno || '',
+                      onChange: function (e) {
+                        setFormEdit(
+                          Object.assign({}, formEdit, {
+                            codigoInterno: e.target.value,
+                          })
+                        );
+                      },
+                      style: styles.input,
+                    })
+                  ),
+                  React.createElement(
+                    'div',
+                    null,
+                    React.createElement(
+                      'label',
+                      { style: styles.label },
+                      'Categoría'
+                    ),
+                    React.createElement(
+                      'select',
+                      {
+                        value: formEdit.categoria || '',
+                        onChange: function (e) {
+                          setFormEdit(
+                            Object.assign({}, formEdit, {
+                              categoria: e.target.value,
+                            })
+                          );
+                        },
+                        style: styles.input,
+                      },
+                      categorias.map(function (c) {
+                        return React.createElement(
+                          'option',
+                          { key: c, value: c },
+                          c
+                        );
+                      })
+                    )
+                  ),
+                  React.createElement(
+                    'div',
+                    null,
+                    React.createElement(
+                      'label',
+                      { style: styles.label },
+                      'Stock Mínimo'
+                    ),
+                    React.createElement('input', {
+                      type: 'number',
+                      value: formEdit.stockMinimo || 0,
+                      onChange: function (e) {
+                        setFormEdit(
+                          Object.assign({}, formEdit, {
+                            stockMinimo: parseInt(e.target.value) || 0,
+                          })
+                        );
+                      },
+                      style: styles.input,
+                    })
+                  ),
+                  React.createElement(
+                    'div',
+                    null,
+                    React.createElement(
+                      'label',
+                      { style: styles.label },
+                      'Unidad'
+                    ),
+                    React.createElement('input', {
+                      type: 'text',
+                      value: formEdit.unidad || '',
+                      onChange: function (e) {
+                        setFormEdit(
+                          Object.assign({}, formEdit, {
+                            unidad: e.target.value,
+                          })
+                        );
+                      },
+                      style: styles.input,
+                    })
+                  ),
+                  React.createElement(
+                    'div',
+                    null,
+                    React.createElement(
+                      'label',
+                      { style: styles.label },
+                      'Ubicación'
+                    ),
+                    React.createElement('input', {
+                      type: 'text',
+                      value: formEdit.ubicacion || '',
+                      onChange: function (e) {
+                        setFormEdit(
+                          Object.assign({}, formEdit, {
+                            ubicacion: e.target.value,
+                          })
+                        );
+                      },
+                      style: styles.input,
+                    })
+                  ),
+                  React.createElement(
+                    'div',
+                    { style: { gridColumn: 'span 3' } },
+                    React.createElement(
+                      'label',
+                      { style: styles.label },
+                      'Descripción'
+                    ),
+                    React.createElement('input', {
+                      type: 'text',
+                      value: formEdit.descripcion || '',
+                      onChange: function (e) {
+                        setFormEdit(
+                          Object.assign({}, formEdit, {
+                            descripcion: e.target.value,
+                          })
+                        );
+                      },
+                      style: styles.input,
+                    })
+                  )
+                ),
+                React.createElement(
+                  'div',
+                  { style: { display: 'flex', gap: '10px' } },
+                  React.createElement(
+                    'button',
+                    {
+                      style: {
+                        flex: 1,
+                        padding: '10px',
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                      },
+                      onClick: function () {
+                        guardarEdicion(item.id);
+                      },
+                    },
+                    '💾 Guardar'
+                  ),
+                  React.createElement(
+                    'button',
+                    {
+                      style: {
+                        flex: 1,
+                        padding: '10px',
+                        background: '#6b7280',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                      },
+                      onClick: function () {
+                        setEditando(null);
+                      },
+                    },
+                    '✖ Cancelar'
+                  )
+                )
+              )
+            : React.createElement(
+                'div',
+                {
+                  style: {
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '10px',
+                  },
+                },
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      flex: 1,
+                    },
+                  },
+                  React.createElement(
+                    'span',
+                    {
+                      style: {
+                        background: catColores[item.categoria] || '#6b7280',
+                        color: 'white',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                      },
+                    },
+                    item.categoria
+                  ),
+                  React.createElement(
+                    'div',
+                    null,
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          marginBottom: '2px',
+                        },
+                      },
+                      React.createElement(
+                        'p',
+                        { style: { fontWeight: '700', fontSize: '15px' } },
+                        item.nombre
+                      ),
+                      item.codigoInterno &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '11px',
+                              background: '#fef3c7',
+                              color: '#92400e',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              fontWeight: '600',
+                            },
+                          },
+                          '🏷️ ' + item.codigoInterno
+                        )
+                    ),
+                    React.createElement(
+                      'p',
+                      { style: { fontSize: '12px', color: '#6b7280' } },
+                      (item.ubicacion ? '📍 ' + item.ubicacion + ' · ' : '') +
+                        (item.descripcion || '')
+                    )
+                  )
+                ),
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      flexWrap: 'wrap',
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    { style: { textAlign: 'center' } },
+                    React.createElement(
+                      'p',
+                      {
+                        style: {
+                          fontSize: '11px',
+                          color: '#6b7280',
+                          marginBottom: '2px',
+                        },
+                      },
+                      'Stock'
+                    ),
+                    React.createElement(
+                      'span',
+                      {
+                        style: {
+                          background: bajStock ? '#fee2e2' : '#d1fae5',
+                          color: bajStock ? '#dc2626' : '#065f46',
+                          padding: '4px 14px',
+                          borderRadius: '8px',
+                          fontWeight: '700',
+                          fontSize: '16px',
+                        },
+                      },
+                      (item.stock || 0) + ' ' + (item.unidad || 'u')
+                    )
+                  ),
+                  React.createElement(
+                    'div',
+                    { style: { textAlign: 'center' } },
+                    React.createElement(
+                      'p',
+                      {
+                        style: {
+                          fontSize: '11px',
+                          color: '#6b7280',
+                          marginBottom: '2px',
+                        },
+                      },
+                      'Mínimo'
+                    ),
+                    React.createElement(
+                      'span',
+                      {
+                        style: {
+                          background: '#f3f4f6',
+                          color: '#374151',
+                          padding: '4px 14px',
+                          borderRadius: '8px',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                        },
+                      },
+                      (item.stockMinimo || 5) + ' ' + (item.unidad || 'u')
+                    )
+                  ),
+                  React.createElement(
+                    'button',
+                    {
+                      style: {
+                        padding: '8px 12px',
+                        background: '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                      },
+                      onClick: function () {
+                        iniciarEdicion(item);
+                      },
+                    },
+                    '✏️ Editar'
+                  ),
+                  React.createElement(
+                    'button',
+                    {
+                      style: {
+                        padding: '8px 12px',
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                      },
+                      onClick: function () {
+                        setMovModal({ item: item, tipo: 'entrada' });
+                        setCantMov(1);
+                        setRespMov(props.usuario ? props.usuario.nombre : '');
+                        setMotivoMov('');
+                      },
+                    },
+                    '➕ Entrada'
+                  ),
+                  React.createElement(
+                    'button',
+                    {
+                      style: {
+                        padding: '8px 12px',
+                        background: '#f59e0b',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                      },
+                      onClick: function () {
+                        setMovModal({ item: item, tipo: 'salida' });
+                        setCantMov(1);
+                        setRespMov(props.usuario ? props.usuario.nombre : '');
+                        setMotivoMov('');
+                      },
+                    },
+                    '➖ Salida'
+                  ),
+                  React.createElement(
+                    'button',
+                    {
+                      style: {
+                        padding: '8px 12px',
+                        background: '#ef4444',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                      },
+                      onClick: function () {
+                        if (window.confirm('¿Eliminar ' + item.nombre + '?')) {
+                          props.onEliminar(item.id);
+                        }
+                      },
+                    },
+                    '🗑️'
+                  )
+                )
+              )
+        );
+      })
+    ),
+
+    movModal &&
       React.createElement(
         'div',
         {
@@ -7895,918 +10341,367 @@ function Inventario(props) {
             style: {
               background: 'white',
               borderRadius: '16px',
-              padding: '24px',
-              maxWidth: '640px',
-              width: '90%',
-              maxHeight: '85vh',
-              overflowY: 'auto',
+              padding: '28px',
+              width: '400px',
+              maxWidth: '90vw',
             },
           },
+          React.createElement(
+            'h3',
+            {
+              style: {
+                fontWeight: 'bold',
+                fontSize: '18px',
+                marginBottom: '20px',
+                color: movModal.tipo === 'entrada' ? '#059669' : '#d97706',
+              },
+            },
+            movModal.tipo === 'entrada'
+              ? '➕ Entrada de Stock'
+              : '➖ Salida de Stock'
+          ),
+          React.createElement(
+            'p',
+            { style: { fontWeight: '600', marginBottom: '4px' } },
+            movModal.item.nombre
+          ),
+          movModal.item.codigoInterno &&
+            React.createElement(
+              'p',
+              {
+                style: {
+                  fontSize: '12px',
+                  color: '#6b7280',
+                  marginBottom: '16px',
+                },
+              },
+              '🏷️ ' + movModal.item.codigoInterno
+            ),
           React.createElement(
             'div',
             {
               style: {
                 display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
+                flexDirection: 'column',
+                gap: '12px',
                 marginBottom: '20px',
               },
             },
             React.createElement(
-              'h3',
-              { style: { fontWeight: 'bold', fontSize: '18px' } },
-              '📊 Historial: ' + itemSel.nombre
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Cantidad'),
+              React.createElement('input', {
+                type: 'number',
+                value: cantMov,
+                onChange: function (e) {
+                  setCantMov(parseInt(e.target.value) || 1);
+                },
+                style: styles.input,
+                min: '1',
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement(
+                'label',
+                { style: styles.label },
+                'Responsable'
+              ),
+              React.createElement('input', {
+                type: 'text',
+                value: respMov,
+                onChange: function (e) {
+                  setRespMov(e.target.value);
+                },
+                style: styles.input,
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { style: styles.label }, 'Motivo'),
+              React.createElement('input', {
+                type: 'text',
+                value: motivoMov,
+                onChange: function (e) {
+                  setMotivoMov(e.target.value);
+                },
+                style: styles.input,
+                placeholder: 'Motivo del movimiento...',
+              })
+            )
+          ),
+          React.createElement(
+            'div',
+            { style: { display: 'flex', gap: '10px' } },
+            React.createElement(
+              'button',
+              {
+                style: {
+                  flex: 1,
+                  padding: '12px',
+                  background:
+                    movModal.tipo === 'entrada' ? '#10b981' : '#f59e0b',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                },
+                onClick: async function () {
+                  if (movModal.tipo === 'entrada') {
+                    await props.onAgregarStock(
+                      movModal.item.id,
+                      cantMov,
+                      respMov,
+                      motivoMov
+                    );
+                  } else {
+                    await props.onDescontar(
+                      movModal.item.id,
+                      cantMov,
+                      respMov,
+                      motivoMov
+                    );
+                  }
+                  setMovModal(null);
+                },
+              },
+              movModal.tipo === 'entrada'
+                ? '➕ Confirmar Entrada'
+                : '➖ Confirmar Salida'
             ),
             React.createElement(
               'button',
               {
                 style: {
+                  flex: 1,
+                  padding: '12px',
                   background: '#6b7280',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '6px',
-                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  fontWeight: '700',
                   cursor: 'pointer',
                 },
                 onClick: function () {
-                  setItemSel(null);
+                  setMovModal(null);
                 },
               },
-              '✖ Cerrar'
+              '✖ Cancelar'
             )
-          ),
-          React.createElement(
-            'div',
-            {
-              style: {
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '12px',
-                marginBottom: '16px',
-              },
-            },
-            React.createElement(
-              'div',
-              {
-                style: {
-                  background: '#ecfdf5',
-                  padding: '14px',
-                  borderRadius: '10px',
-                  textAlign: 'center',
-                },
-              },
-              React.createElement(
-                'div',
-                {
-                  style: {
-                    fontSize: '24px',
-                    fontWeight: 'bold',
-                    color: '#059669',
-                  },
-                },
-                movimientosItem
-                  .filter(function (m) {
-                    return m.tipo === 'entrada';
-                  })
-                  .reduce(function (acc, m) {
-                    return acc + (m.cantidad || 0);
-                  }, 0)
-              ),
-              React.createElement(
-                'div',
-                { style: { fontSize: '12px', color: '#6b7280' } },
-                'Total Entradas'
-              )
-            ),
-            React.createElement(
-              'div',
-              {
-                style: {
-                  background: '#fef2f2',
-                  padding: '14px',
-                  borderRadius: '10px',
-                  textAlign: 'center',
-                },
-              },
-              React.createElement(
-                'div',
-                {
-                  style: {
-                    fontSize: '24px',
-                    fontWeight: 'bold',
-                    color: '#dc2626',
-                  },
-                },
-                movimientosItem
-                  .filter(function (m) {
-                    return m.tipo === 'salida';
-                  })
-                  .reduce(function (acc, m) {
-                    return acc + (m.cantidad || 0);
-                  }, 0)
-              ),
-              React.createElement(
-                'div',
-                { style: { fontSize: '12px', color: '#6b7280' } },
-                'Total Salidas'
-              )
-            )
-          ),
-          movimientosItem.length === 0
-            ? React.createElement(
-                'p',
-                {
-                  style: {
-                    color: '#6b7280',
-                    textAlign: 'center',
-                    padding: '24px',
-                  },
-                },
-                'Sin movimientos registrados'
-              )
-            : React.createElement(
-                'div',
-                {
-                  style: {
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                  },
-                },
-                movimientosItem.map(function (m, i) {
-                  return React.createElement(
-                    'div',
-                    {
-                      key: i,
-                      style: {
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '10px 14px',
-                        background:
-                          m.tipo === 'entrada' ? '#ecfdf5' : '#fef2f2',
-                        borderRadius: '8px',
-                        border:
-                          '1px solid ' +
-                          (m.tipo === 'entrada' ? '#a7f3d0' : '#fecaca'),
-                      },
-                    },
-                    React.createElement(
-                      'div',
-                      null,
-                      React.createElement(
-                        'div',
-                        {
-                          style: {
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            marginBottom: '4px',
-                          },
-                        },
-                        React.createElement(
-                          'span',
-                          {
-                            style: {
-                              fontSize: '11px',
-                              fontWeight: '700',
-                              color:
-                                m.tipo === 'entrada' ? '#059669' : '#dc2626',
-                              background:
-                                m.tipo === 'entrada' ? '#d1fae5' : '#fee2e2',
-                              padding: '2px 6px',
-                              borderRadius: '4px',
-                            },
-                          },
-                          m.tipo === 'entrada' ? '⬆️ ENTRADA' : '⬇️ SALIDA'
-                        )
-                      ),
-                      React.createElement(
-                        'p',
-                        { style: { fontSize: '12px', color: '#6b7280' } },
-                        (m.motivo || '-') + ' | 👤 ' + (m.responsable || '-')
-                      ),
-                      React.createElement(
-                        'p',
-                        { style: { fontSize: '11px', color: '#9ca3af' } },
-                        m.creadoEn && m.creadoEn.toDate
-                          ? m.creadoEn.toDate().toLocaleString()
-                          : '-'
-                      )
-                    ),
-                    React.createElement(
-                      'span',
-                      {
-                        style: {
-                          fontSize: '20px',
-                          fontWeight: 'bold',
-                          color: m.tipo === 'entrada' ? '#059669' : '#dc2626',
-                        },
-                      },
-                      (m.tipo === 'entrada' ? '+' : '-') + (m.cantidad || 0)
-                    )
-                  );
-                })
-              )
-        )
-      ),
-
-    itemsFiltrados.length === 0
-      ? React.createElement(
-          'div',
-          {
-            style: Object.assign({}, styles.card, {
-              textAlign: 'center',
-              padding: '60px',
-            }),
-          },
-          React.createElement(
-            'div',
-            { style: { fontSize: '64px', marginBottom: '16px' } },
-            '📦'
-          ),
-          React.createElement(
-            'h3',
-            { style: { color: '#6b7280' } },
-            'No hay items' +
-              (busqueda ? ' que coincidan con "' + busqueda + '"' : '')
           )
         )
-      : React.createElement(
-          'div',
-          {
-            style: {
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '16px',
-            },
-          },
-          itemsFiltrados.map(function (item) {
-            var bajoStock = (item.stock || 0) <= (item.stockMinimo || 5);
-            var catColor = catColores[item.categoria] || '#6b7280';
-            return React.createElement(
-              'div',
-              {
-                key: item.id,
-                style: Object.assign({}, styles.card, {
-                  border: '2px solid ' + (bajoStock ? '#ef4444' : '#e5e7eb'),
-                  marginBottom: '0',
-                  position: 'relative',
-                }),
-              },
-              bajoStock &&
-                React.createElement(
-                  'div',
-                  {
-                    style: {
-                      position: 'absolute',
-                      top: '12px',
-                      right: '12px',
-                      background: '#ef4444',
-                      color: 'white',
-                      padding: '3px 8px',
-                      borderRadius: '6px',
-                      fontSize: '11px',
-                      fontWeight: '700',
-                    },
-                  },
-                  '⚠️ BAJO STOCK'
-                ),
-              React.createElement(
-                'div',
-                { style: { marginBottom: '12px' } },
-                React.createElement(
-                  'h3',
-                  {
-                    style: {
-                      fontWeight: 'bold',
-                      fontSize: '16px',
-                      marginBottom: '4px',
-                      paddingRight: '80px',
-                    },
-                  },
-                  item.nombre
-                ),
-                item.codigo &&
-                  React.createElement(
-                    'p',
-                    {
-                      style: {
-                        fontSize: '12px',
-                        color: '#6b7280',
-                        marginBottom: '4px',
-                      },
-                    },
-                    '🔖 ' + item.codigo
-                  ),
-                React.createElement(
-                  'span',
-                  {
-                    style: {
-                      background: catColor,
-                      color: 'white',
-                      padding: '2px 8px',
-                      borderRadius: '6px',
-                      fontSize: '11px',
-                      fontWeight: '600',
-                    },
-                  },
-                  item.categoria
-                ),
-                item.descripcion &&
-                  React.createElement(
-                    'p',
-                    {
-                      style: {
-                        fontSize: '12px',
-                        color: '#9ca3af',
-                        marginTop: '6px',
-                      },
-                    },
-                    item.descripcion
-                  )
-              ),
-              React.createElement(
-                'div',
-                {
-                  style: {
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '8px',
-                    marginBottom: '12px',
-                  },
-                },
-                React.createElement(
-                  'div',
-                  {
-                    style: {
-                      background: bajoStock ? '#fee2e2' : '#ecfdf5',
-                      padding: '10px',
-                      borderRadius: '8px',
-                      textAlign: 'center',
-                    },
-                  },
-                  React.createElement(
-                    'div',
-                    {
-                      style: {
-                        fontSize: '22px',
-                        fontWeight: 'bold',
-                        color: bajoStock ? '#dc2626' : '#059669',
-                      },
-                    },
-                    item.stock || 0
-                  ),
-                  React.createElement(
-                    'div',
-                    { style: { fontSize: '11px', color: '#6b7280' } },
-                    'Stock (' + (item.unidad || 'u') + ')'
-                  )
-                ),
-                React.createElement(
-                  'div',
-                  {
-                    style: {
-                      background: '#f3f4f6',
-                      padding: '10px',
-                      borderRadius: '8px',
-                      textAlign: 'center',
-                    },
-                  },
-                  React.createElement(
-                    'div',
-                    {
-                      style: {
-                        fontSize: '22px',
-                        fontWeight: 'bold',
-                        color: '#374151',
-                      },
-                    },
-                    item.stockMinimo || 5
-                  ),
-                  React.createElement(
-                    'div',
-                    { style: { fontSize: '11px', color: '#6b7280' } },
-                    'Stock mínimo'
-                  )
-                )
-              ),
-              React.createElement(
-                'div',
-                { style: { display: 'flex', gap: '6px', flexWrap: 'wrap' } },
-                React.createElement(
-                  'button',
-                  {
-                    style: {
-                      flex: 1,
-                      padding: '8px',
-                      background: '#10b981',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                    },
-                    onClick: function () {
-                      var cant = parseInt(prompt('Cantidad a agregar:'));
-                      if (cant && cant > 0) {
-                        props.onAgregarStock(
-                          item.id,
-                          cant,
-                          props.usuario ? props.usuario.nombre : 'Admin',
-                          'Ingreso manual'
-                        );
-                      }
-                    },
-                  },
-                  '⬆️ Entrada'
-                ),
-                React.createElement(
-                  'button',
-                  {
-                    style: {
-                      flex: 1,
-                      padding: '8px',
-                      background: '#ef4444',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                    },
-                    onClick: function () {
-                      var cant = parseInt(prompt('Cantidad a retirar:'));
-                      if (cant && cant > 0) {
-                        props.onDescontar(
-                          item.id,
-                          cant,
-                          props.usuario ? props.usuario.nombre : 'Admin',
-                          'Retiro manual'
-                        );
-                      }
-                    },
-                  },
-                  '⬇️ Salida'
-                ),
-                React.createElement(
-                  'button',
-                  {
-                    style: {
-                      padding: '8px 10px',
-                      background: '#6b7280',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                    },
-                    onClick: function () {
-                      setItemSel(item);
-                    },
-                  },
-                  '📊'
-                ),
-                React.createElement(
-                  'button',
-                  {
-                    style: {
-                      padding: '8px 10px',
-                      background: '#dc2626',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                    },
-                    onClick: function () {
-                      if (window.confirm('¿Eliminar ' + item.nombre + '?')) {
-                        props.onEliminar(item.id);
-                      }
-                    },
-                  },
-                  '🗑️'
-                )
-              )
-            );
-          })
-        )
+      )
   );
 }
 
-// ============================================
-// PAÑOL
-// ============================================
 function Panol(props) {
-  var tipoMovState = useState('salida');
-  var tipoMov = tipoMovState[0];
-  var setTipoMov = tipoMovState[1];
   var itemSelState = useState('');
   var itemSel = itemSelState[0];
   var setItemSel = itemSelState[1];
-  var cantidadState = useState(1);
-  var cantidad = cantidadState[0];
-  var setCantidad = cantidadState[1];
+  var cantState = useState(1);
+  var cant = cantState[0];
+  var setCant = cantState[1];
+  var respState = useState('');
+  var resp = respState[0];
+  var setResp = respState[1];
   var motivoState = useState('');
   var motivo = motivoState[0];
   var setMotivo = motivoState[1];
-  var filtroCatState = useState('todos');
-  var filtroCat = filtroCatState[0];
-  var setFiltroCat = filtroCatState[1];
-  var procesandoState = useState(false);
-  var procesando = procesandoState[0];
-  var setProcesando = procesandoState[1];
+  var tipoMovState = useState('salida');
+  var tipoMov = tipoMovState[0];
+  var setTipoMov = tipoMovState[1];
+  var busquedaState = useState('');
+  var busqueda = busquedaState[0];
+  var setBusqueda = busquedaState[1];
 
-  var itemInventario = props.inventario.find(function (i) {
-    return i.id === itemSel;
+  useEffect(
+    function () {
+      if (props.usuario) setResp(props.usuario.nombre);
+    },
+    [props.usuario]
+  );
+
+  var movimientosFiltrados = props.movimientos.filter(function (m) {
+    return (
+      !busqueda ||
+      (m.itemNombre || '').toLowerCase().includes(busqueda.toLowerCase()) ||
+      (m.responsable || '').toLowerCase().includes(busqueda.toLowerCase())
+    );
   });
-  var movimientosFiltrados = props.movimientos
-    .filter(function (m) {
-      return filtroCat === 'todos' || m.tipo === filtroCat;
-    })
-    .slice(0, 50);
-  var totalEntradas = props.movimientos
-    .filter(function (m) {
-      return m.tipo === 'entrada';
-    })
-    .reduce(function (acc, m) {
-      return acc + (m.cantidad || 0);
-    }, 0);
-  var totalSalidas = props.movimientos
-    .filter(function (m) {
-      return m.tipo === 'salida';
-    })
-    .reduce(function (acc, m) {
-      return acc + (m.cantidad || 0);
-    }, 0);
 
-  var handleMovimiento = async function (e) {
-    e.preventDefault();
+  var handleMovimiento = async function () {
     if (!itemSel) {
-      alert('Selecciona un item');
+      alert('Seleccioná un item');
       return;
     }
-    if (!cantidad || cantidad <= 0) {
+    if (cant <= 0) {
       alert('La cantidad debe ser mayor a 0');
       return;
     }
-    setProcesando(true);
-    try {
-      if (tipoMov === 'salida') {
-        var ok = await props.onDescontar(
-          itemSel,
-          cantidad,
-          props.usuario ? props.usuario.nombre : 'Pañol',
-          motivo || 'Retiro desde pañol'
-        );
-        if (!ok) {
-          setProcesando(false);
-          return;
-        }
-      } else {
-        await props.onAgregarStock(
-          itemSel,
-          cantidad,
-          props.usuario ? props.usuario.nombre : 'Pañol',
-          motivo || 'Ingreso desde pañol'
-        );
-      }
-      setItemSel('');
-      setCantidad(1);
-      setMotivo('');
-      alert('✅ Movimiento registrado correctamente');
-    } catch (err) {
-      alert('❌ Error: ' + err.message);
-    } finally {
-      setProcesando(false);
+    if (!resp.trim()) {
+      alert('Ingresá el responsable');
+      return;
     }
+    if (tipoMov === 'salida') {
+      await props.onDescontar(itemSel, cant, resp, motivo);
+    } else {
+      await props.onAgregarStock(itemSel, cant, resp, motivo);
+    }
+    setItemSel('');
+    setCant(1);
+    setMotivo('');
+    alert('✅ Movimiento registrado');
   };
 
   return React.createElement(
     'div',
     null,
-    React.createElement('h2', { style: styles.pageTitle }, '🧰 Pañol'),
     React.createElement(
-      'div',
-      {
-        style: {
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: '16px',
-          marginBottom: '24px',
-        },
-      },
-      React.createElement(
-        'div',
-        {
-          style: Object.assign({}, styles.kpi, {
-            background: 'linear-gradient(135deg, #10b981, #059669)',
-          }),
-        },
-        React.createElement('div', { style: { fontSize: '28px' } }, '⬆️'),
-        React.createElement(
-          'div',
-          { style: { fontSize: '28px', fontWeight: 'bold' } },
-          totalEntradas
-        ),
-        React.createElement(
-          'div',
-          { style: { fontSize: '12px' } },
-          'Total Entradas'
-        )
-      ),
-      React.createElement(
-        'div',
-        {
-          style: Object.assign({}, styles.kpi, {
-            background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-          }),
-        },
-        React.createElement('div', { style: { fontSize: '28px' } }, '⬇️'),
-        React.createElement(
-          'div',
-          { style: { fontSize: '28px', fontWeight: 'bold' } },
-          totalSalidas
-        ),
-        React.createElement(
-          'div',
-          { style: { fontSize: '12px' } },
-          'Total Salidas'
-        )
-      ),
-      React.createElement(
-        'div',
-        {
-          style: Object.assign({}, styles.kpi, {
-            background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-          }),
-        },
-        React.createElement('div', { style: { fontSize: '28px' } }, '📦'),
-        React.createElement(
-          'div',
-          { style: { fontSize: '28px', fontWeight: 'bold' } },
-          props.inventario.length
-        ),
-        React.createElement('div', { style: { fontSize: '12px' } }, 'Items')
-      ),
-      React.createElement(
-        'div',
-        {
-          style: Object.assign({}, styles.kpi, {
-            background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-          }),
-        },
-        React.createElement('div', { style: { fontSize: '28px' } }, '📋'),
-        React.createElement(
-          'div',
-          { style: { fontSize: '28px', fontWeight: 'bold' } },
-          props.movimientos.length
-        ),
-        React.createElement(
-          'div',
-          { style: { fontSize: '12px' } },
-          'Total Movimientos'
-        )
-      )
+      'h2',
+      { style: Object.assign({}, styles.pageTitle, { marginBottom: '24px' }) },
+      '🧰 Pañol'
     ),
-
     React.createElement(
       'div',
       {
         style: Object.assign({}, styles.card, {
-          background: '#f0f9ff',
-          border: '2px solid #0ea5e9',
+          background: '#f0fdf4',
+          border: '2px solid #bbf7d0',
           marginBottom: '24px',
         }),
       },
       React.createElement(
         'h3',
-        { style: Object.assign({}, styles.cardTitle, { color: '#0369a1' }) },
-        '📝 Registrar Movimiento'
+        { style: Object.assign({}, styles.cardTitle, { color: '#15803d' }) },
+        '📦 Registrar Movimiento'
       ),
       React.createElement(
-        'form',
-        { onSubmit: handleMovimiento },
-        React.createElement(
-          'div',
-          { style: { display: 'flex', gap: '8px', marginBottom: '16px' } },
-          React.createElement(
-            'button',
-            {
-              type: 'button',
-              style: {
-                flex: 1,
-                padding: '12px',
-                background: tipoMov === 'salida' ? '#ef4444' : '#e5e7eb',
-                color: tipoMov === 'salida' ? 'white' : '#374151',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                fontSize: '15px',
-              },
-              onClick: function () {
-                setTipoMov('salida');
-              },
-            },
-            '⬇️ Salida'
-          ),
-          React.createElement(
-            'button',
-            {
-              type: 'button',
-              style: {
-                flex: 1,
-                padding: '12px',
-                background: tipoMov === 'entrada' ? '#10b981' : '#e5e7eb',
-                color: tipoMov === 'entrada' ? 'white' : '#374151',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                fontSize: '15px',
-              },
-              onClick: function () {
-                setTipoMov('entrada');
-              },
-            },
-            '⬆️ Entrada'
-          )
-        ),
-        React.createElement(
-          'div',
-          {
-            style: {
-              display: 'grid',
-              gridTemplateColumns: '2fr 1fr',
-              gap: '16px',
-              marginBottom: '16px',
-            },
+        'div',
+        {
+          style: {
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '16px',
+            marginBottom: '16px',
           },
-          React.createElement(
-            'div',
-            null,
-            React.createElement('label', { style: styles.label }, 'Item *'),
-            React.createElement(
-              'select',
-              {
-                value: itemSel,
-                onChange: function (e) {
-                  setItemSel(e.target.value);
-                  setCantidad(1);
-                },
-                style: styles.input,
-                required: true,
-              },
-              React.createElement(
-                'option',
-                { value: '' },
-                'Seleccionar item...'
-              ),
-              props.inventario
-                .filter(function (i) {
-                  return i.estado !== 'baja';
-                })
-                .map(function (item) {
-                  return React.createElement(
-                    'option',
-                    { key: item.id, value: item.id },
-                    item.nombre +
-                      ' [' +
-                      item.categoria +
-                      '] - Stock: ' +
-                      (item.stock || 0) +
-                      ' ' +
-                      (item.unidad || 'u')
-                  );
-                })
-            )
-          ),
-          React.createElement(
-            'div',
-            null,
-            React.createElement('label', { style: styles.label }, 'Cantidad *'),
-            React.createElement('input', {
-              type: 'number',
-              value: cantidad,
-              onChange: function (e) {
-                setCantidad(parseInt(e.target.value) || 1);
-              },
-              style: styles.input,
-              min: '1',
-              max:
-                tipoMov === 'salida' && itemInventario
-                  ? itemInventario.stock
-                  : 9999,
-              required: true,
-            })
-          )
-        ),
-
-        itemInventario &&
-          React.createElement(
-            'div',
-            {
-              style: {
-                background:
-                  tipoMov === 'salida'
-                    ? itemInventario.stock <= 0
-                      ? '#fee2e2'
-                      : '#ecfdf5'
-                    : '#ecfdf5',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                marginBottom: '16px',
-                border:
-                  '1px solid ' +
-                  (tipoMov === 'salida' && itemInventario.stock <= 0
-                    ? '#fecaca'
-                    : '#a7f3d0'),
-              },
-            },
-            React.createElement(
-              'div',
-              {
-                style: {
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                },
-              },
-              React.createElement(
-                'div',
-                null,
-                React.createElement(
-                  'p',
-                  {
-                    style: {
-                      fontWeight: '600',
-                      fontSize: '14px',
-                      marginBottom: '2px',
-                    },
-                  },
-                  itemInventario.nombre
-                ),
-                React.createElement(
-                  'p',
-                  { style: { fontSize: '12px', color: '#6b7280' } },
-                  itemInventario.categoria +
-                    ' · ' +
-                    (itemInventario.unidad || 'u')
-                )
-              ),
-              React.createElement(
-                'div',
-                { style: { textAlign: 'right' } },
-                React.createElement(
-                  'p',
-                  {
-                    style: {
-                      fontSize: '22px',
-                      fontWeight: 'bold',
-                      color:
-                        itemInventario.stock <=
-                        (itemInventario.stockMinimo || 5)
-                          ? '#dc2626'
-                          : '#059669',
-                    },
-                  },
-                  itemInventario.stock || 0
-                ),
-                React.createElement(
-                  'p',
-                  { style: { fontSize: '11px', color: '#6b7280' } },
-                  'Stock actual'
-                ),
-                tipoMov === 'salida' &&
-                  cantidad > 0 &&
-                  React.createElement(
-                    'p',
-                    {
-                      style: {
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        color:
-                          (itemInventario.stock || 0) - cantidad < 0
-                            ? '#dc2626'
-                            : '#374151',
-                      },
-                    },
-                    'Quedarán: ' + ((itemInventario.stock || 0) - cantidad)
-                  )
-              )
-            )
-          ),
-
+        },
         React.createElement(
           'div',
-          { style: { marginBottom: '16px' } },
+          { style: { gridColumn: 'span 2' } },
           React.createElement(
             'label',
             { style: styles.label },
-            'Motivo / Descripción'
+            'Tipo de Movimiento'
           ),
+          React.createElement(
+            'div',
+            { style: { display: 'flex', gap: '10px' } },
+            React.createElement(
+              'button',
+              {
+                style: {
+                  flex: 1,
+                  padding: '12px',
+                  background: tipoMov === 'salida' ? '#f59e0b' : '#e5e7eb',
+                  color: tipoMov === 'salida' ? 'white' : '#374151',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  fontSize: '15px',
+                },
+                onClick: function () {
+                  setTipoMov('salida');
+                },
+              },
+              '➖ Salida'
+            ),
+            React.createElement(
+              'button',
+              {
+                style: {
+                  flex: 1,
+                  padding: '12px',
+                  background: tipoMov === 'entrada' ? '#10b981' : '#e5e7eb',
+                  color: tipoMov === 'entrada' ? 'white' : '#374151',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  fontSize: '15px',
+                },
+                onClick: function () {
+                  setTipoMov('entrada');
+                },
+              },
+              '➕ Entrada'
+            )
+          )
+        ),
+        React.createElement(
+          'div',
+          null,
+          React.createElement('label', { style: styles.label }, 'Item'),
+          React.createElement(
+            'select',
+            {
+              value: itemSel,
+              onChange: function (e) {
+                setItemSel(e.target.value);
+              },
+              style: styles.input,
+            },
+            React.createElement('option', { value: '' }, 'Seleccionar item...'),
+            props.inventario.map(function (i) {
+              return React.createElement(
+                'option',
+                { key: i.id, value: i.id },
+                (i.codigoInterno ? '[' + i.codigoInterno + '] ' : '') +
+                  i.nombre +
+                  ' - Stock: ' +
+                  (i.stock || 0) +
+                  ' ' +
+                  (i.unidad || 'u')
+              );
+            })
+          )
+        ),
+        React.createElement(
+          'div',
+          null,
+          React.createElement('label', { style: styles.label }, 'Cantidad'),
+          React.createElement('input', {
+            type: 'number',
+            value: cant,
+            onChange: function (e) {
+              setCant(parseInt(e.target.value) || 1);
+            },
+            style: styles.input,
+            min: '1',
+          })
+        ),
+        React.createElement(
+          'div',
+          null,
+          React.createElement('label', { style: styles.label }, 'Responsable'),
+          React.createElement('input', {
+            type: 'text',
+            value: resp,
+            onChange: function (e) {
+              setResp(e.target.value);
+            },
+            style: styles.input,
+            placeholder: 'Nombre del responsable',
+          })
+        ),
+        React.createElement(
+          'div',
+          null,
+          React.createElement('label', { style: styles.label }, 'Motivo'),
           React.createElement('input', {
             type: 'text',
             value: motivo,
@@ -8814,44 +10709,27 @@ function Panol(props) {
               setMotivo(e.target.value);
             },
             style: styles.input,
-            placeholder:
-              tipoMov === 'salida'
-                ? 'Ej: Usado en incendio, asignado a TB-01...'
-                : 'Ej: Compra, devolución, reposición...',
+            placeholder: 'Motivo del movimiento...',
           })
-        ),
-
-        React.createElement(
-          'button',
-          {
-            type: 'submit',
-            disabled:
-              procesando ||
-              (tipoMov === 'salida' &&
-                itemInventario &&
-                (itemInventario.stock || 0) <= 0),
-            style: {
-              width: '100%',
-              padding: '14px',
-              background: procesando
-                ? '#9ca3af'
-                : tipoMov === 'salida'
-                ? '#ef4444'
-                : '#10b981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: '700',
-              fontSize: '15px',
-              cursor: procesando ? 'not-allowed' : 'pointer',
-            },
-          },
-          procesando
-            ? '⏳ Procesando...'
-            : tipoMov === 'salida'
-            ? '⬇️ Registrar Salida'
-            : '⬆️ Registrar Entrada'
         )
+      ),
+      React.createElement(
+        'button',
+        {
+          style: {
+            width: '100%',
+            padding: '14px',
+            background: tipoMov === 'salida' ? '#f59e0b' : '#10b981',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontWeight: '700',
+            fontSize: '15px',
+            cursor: 'pointer',
+          },
+          onClick: handleMovimiento,
+        },
+        tipoMov === 'salida' ? '➖ Registrar Salida' : '➕ Registrar Entrada'
       )
     ),
 
@@ -8866,66 +10744,35 @@ function Panol(props) {
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '16px',
-            flexWrap: 'wrap',
-            gap: '8px',
           },
         },
         React.createElement(
           'h3',
-          { style: Object.assign({}, styles.cardTitle, { margin: 0 }) },
-          '📜 Historial de Movimientos'
+          { style: styles.cardTitle },
+          '📋 Historial de Movimientos'
         ),
-        React.createElement(
-          'div',
-          { style: { display: 'flex', gap: '6px' } },
-          React.createElement(
-            'button',
-            {
-              style:
-                filtroCat === 'todos' ? styles.navBtnActive : styles.navBtn,
-              onClick: function () {
-                setFiltroCat('todos');
-              },
-            },
-            'Todos'
-          ),
-          React.createElement(
-            'button',
-            {
-              style: Object.assign(
-                {},
-                filtroCat === 'entrada' ? styles.navBtnActive : styles.navBtn,
-                filtroCat === 'entrada' ? { background: '#10b981' } : {}
-              ),
-              onClick: function () {
-                setFiltroCat('entrada');
-              },
-            },
-            '⬆️ Entradas'
-          ),
-          React.createElement(
-            'button',
-            {
-              style: Object.assign(
-                {},
-                filtroCat === 'salida' ? styles.navBtnActive : styles.navBtn,
-                filtroCat === 'salida' ? { background: '#ef4444' } : {}
-              ),
-              onClick: function () {
-                setFiltroCat('salida');
-              },
-            },
-            '⬇️ Salidas'
-          )
-        )
+        React.createElement('input', {
+          type: 'text',
+          placeholder: '🔍 Buscar...',
+          value: busqueda,
+          onChange: function (e) {
+            setBusqueda(e.target.value);
+          },
+          style: Object.assign({}, styles.input, { width: '250px' }),
+        })
       ),
       movimientosFiltrados.length === 0
         ? React.createElement(
-            'p',
+            'div',
             {
-              style: { color: '#6b7280', textAlign: 'center', padding: '32px' },
+              style: { textAlign: 'center', padding: '40px', color: '#6b7280' },
             },
-            'Sin movimientos'
+            React.createElement(
+              'div',
+              { style: { fontSize: '48px', marginBottom: '12px' } },
+              '📋'
+            ),
+            React.createElement('p', null, 'No hay movimientos registrados')
           )
         : React.createElement(
             'div',
@@ -8934,84 +10781,79 @@ function Panol(props) {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '8px',
-                maxHeight: '600px',
+                maxHeight: '500px',
                 overflowY: 'auto',
               },
             },
-            movimientosFiltrados.map(function (m, i) {
+            movimientosFiltrados.map(function (m) {
+              var esEntrada = m.tipo === 'entrada';
+              var fecha =
+                m.creadoEn && m.creadoEn.toDate
+                  ? m.creadoEn.toDate().toLocaleString('es-AR')
+                  : '-';
               return React.createElement(
                 'div',
                 {
-                  key: i,
+                  key: m.id,
                   style: {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    padding: '12px 14px',
-                    background: m.tipo === 'entrada' ? '#ecfdf5' : '#fef2f2',
+                    padding: '12px 16px',
+                    background: esEntrada ? '#f0fdf4' : '#fffbeb',
                     borderRadius: '8px',
-                    border:
-                      '1px solid ' +
-                      (m.tipo === 'entrada' ? '#a7f3d0' : '#fecaca'),
+                    border: '1px solid ' + (esEntrada ? '#bbf7d0' : '#fde68a'),
                   },
                 },
                 React.createElement(
                   'div',
-                  null,
+                  {
+                    style: {
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                    },
+                  },
+                  React.createElement(
+                    'span',
+                    { style: { fontSize: '20px' } },
+                    esEntrada ? '➕' : '➖'
+                  ),
                   React.createElement(
                     'div',
-                    {
-                      style: {
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        marginBottom: '4px',
-                      },
-                    },
+                    null,
                     React.createElement(
-                      'span',
-                      {
-                        style: {
-                          fontSize: '12px',
-                          fontWeight: '700',
-                          color: m.tipo === 'entrada' ? '#059669' : '#dc2626',
-                          background:
-                            m.tipo === 'entrada' ? '#d1fae5' : '#fee2e2',
-                          padding: '2px 8px',
-                          borderRadius: '6px',
-                        },
-                      },
-                      m.tipo === 'entrada' ? '⬆️ ENTRADA' : '⬇️ SALIDA'
+                      'p',
+                      { style: { fontWeight: '600', fontSize: '14px' } },
+                      m.itemNombre || '-'
                     ),
                     React.createElement(
-                      'span',
-                      { style: { fontSize: '13px', fontWeight: '600' } },
-                      m.itemNombre || '-'
+                      'p',
+                      { style: { fontSize: '12px', color: '#6b7280' } },
+                      '👤 ' +
+                        (m.responsable || '-') +
+                        (m.motivo ? ' · ' + m.motivo : '')
+                    ),
+                    React.createElement(
+                      'p',
+                      { style: { fontSize: '11px', color: '#9ca3af' } },
+                      '📅 ' + fecha
                     )
-                  ),
-                  React.createElement(
-                    'p',
-                    { style: { fontSize: '12px', color: '#6b7280' } },
-                    (m.motivo || '-') + ' | 👤 ' + (m.responsable || '-')
-                  ),
-                  React.createElement(
-                    'p',
-                    { style: { fontSize: '11px', color: '#9ca3af' } },
-                    m.creadoEn && m.creadoEn.toDate
-                      ? m.creadoEn.toDate().toLocaleString()
-                      : '-'
                   )
                 ),
                 React.createElement(
                   'span',
                   {
                     style: {
-                      fontSize: '22px',
-                      fontWeight: 'bold',
-                      color: m.tipo === 'entrada' ? '#059669' : '#dc2626',
+                      background: esEntrada ? '#d1fae5' : '#fef3c7',
+                      color: esEntrada ? '#065f46' : '#92400e',
+                      padding: '6px 14px',
+                      borderRadius: '8px',
+                      fontWeight: '700',
+                      fontSize: '15px',
                     },
                   },
-                  (m.tipo === 'entrada' ? '+' : '-') + (m.cantidad || 0)
+                  (esEntrada ? '+' : '-') + m.cantidad
                 )
               );
             })
@@ -9019,522 +10861,373 @@ function Panol(props) {
     )
   );
 }
-
-// ============================================
-// EQUIPOS
-// ============================================
-function Equipos(props) {
-  var mostrarFormState = useState(false);
-  var mostrarForm = mostrarFormState[0];
-  var setMostrarForm = mostrarFormState[1];
-  var equipoSelState = useState(null);
-  var equipoSel = equipoSelState[0];
-  var setEquipoSel = equipoSelState[1];
-  var mostrarBitacoraState = useState(false);
-  var mostrarBitacora = mostrarBitacoraState[0];
-  var setMostrarBitacora = mostrarBitacoraState[1];
-  var filtroEstadoState = useState('todos');
-  var filtroEstado = filtroEstadoState[0];
-  var setFiltroEstado = filtroEstadoState[1];
+function Checklists(props) {
+  var vistaState = useState('lista');
+  var vista = vistaState[0];
+  var setVista = vistaState[1];
+  var vehiculoSelState = useState(null);
+  var vehiculoSel = vehiculoSelState[0];
+  var setVehiculoSel = vehiculoSelState[1];
+  var tipoState = useState('completo');
+  var tipo = tipoState[0];
+  var setTipo = tipoState[1];
+  var obsState = useState('');
+  var obs = obsState[0];
+  var setObs = obsState[1];
   var guardandoState = useState(false);
   var guardando = guardandoState[0];
   var setGuardando = guardandoState[1];
-  var estadoInicial = {
-    nombre: '',
-    codigo: '',
-    estado: 'operativo',
-    categoria: 'equipo',
-    vehiculoId: '',
-    proximoMantenimiento: '',
-    descripcion: '',
-    itemInventarioId: '',
-  };
-  var formState = useState(estadoInicial);
-  var form = formState[0];
-  var setForm = formState[1];
-  var formBitacoraInicial = {
-    tipo: 'preventivo',
-    observaciones: '',
-    responsable: '',
-    fecha: new Date().toISOString().split('T')[0],
-  };
-  var formBitacoraState = useState(formBitacoraInicial);
-  var formBitacora = formBitacoraState[0];
-  var setFormBitacora = formBitacoraState[1];
+  var estadoFluidosState = useState({});
+  var estadoFluidos = estadoFluidosState[0];
+  var setEstadoFluidos = estadoFluidosState[1];
+  var estadoLucesState = useState({});
+  var estadoLuces = estadoLucesState[0];
+  var setEstadoLuces = estadoLucesState[1];
+  var estadoItemsState = useState({});
+  var estadoItems = estadoItemsState[0];
+  var setEstadoItems = estadoItemsState[1];
+  var estadoERAsState = useState({});
+  var estadoERAs = estadoERAsState[0];
+  var setEstadoERAs = estadoERAsState[1];
+  var checklistDetalleState = useState(null);
+  var checklistDetalle = checklistDetalleState[0];
+  var setChecklistDetalle = checklistDetalleState[1];
 
-  var estadoColores = {
-    operativo: '#10b981',
-    mantenimiento: '#f59e0b',
-    fuera_servicio: '#ef4444',
-    baja: '#6b7280',
-  };
-  var estadoLabels = {
-    operativo: '✅ Operativo',
-    mantenimiento: '🔧 Mantenimiento',
-    fuera_servicio: '❌ Fuera de Servicio',
-    baja: '🗑️ Baja',
-  };
+  var fluidosConfig = [
+    { key: 'aceite', label: '🛢️ Aceite de Motor' },
+    { key: 'refrigerante', label: '🌡️ Refrigerante' },
+    { key: 'combustible', label: '⛽ Combustible' },
+    { key: 'liquidoFrenos', label: '🔴 Líquido de Frenos' },
+    { key: 'aguaLimpia', label: '💧 Agua Limpiaparabrisas' },
+  ];
 
-  var verificarVencimiento = function (fecha) {
-    if (!fecha) return '';
-    var dias = Math.ceil(
-      (new Date(fecha) - new Date()) / (1000 * 60 * 60 * 24)
-    );
-    if (dias < 0) return 'vencido';
-    if (dias <= 30) return 'proximo';
-    return 'ok';
-  };
+  var lucesConfig = [
+    { key: 'luzDelantera', label: '💡 Luces Delanteras' },
+    { key: 'luzTrasera', label: '🔴 Luces Traseras' },
+    { key: 'luzEmergencia', label: '🚨 Luces de Emergencia' },
+    { key: 'sirena', label: '📢 Sirena' },
+    { key: 'bocina', label: '📯 Bocina' },
+    { key: 'balizas', label: '⚠️ Balizas' },
+    { key: 'luzInterior', label: '💡 Luz Interior' },
+    { key: 'luzRetroceso', label: '🔦 Luz de Retroceso' },
+  ];
 
-  var equiposFiltrados = props.equipos.filter(function (eq) {
-    return filtroEstado === 'todos' || eq.estado === filtroEstado;
-  });
+  useEffect(
+    function () {
+      if (!vehiculoSel) return;
 
-  var handleSubmit = async function (e) {
-    e.preventDefault();
-    if (!form.nombre.trim()) {
-      alert('El nombre es obligatorio');
-      return;
-    }
-    if (!form.codigo.trim()) {
-      alert('El código es obligatorio');
-      return;
-    }
-    var dup = props.equipos.find(function (eq) {
-      return (
-        eq.codigo &&
-        form.codigo &&
-        eq.codigo.toLowerCase() === form.codigo.toLowerCase()
-      );
-    });
-    if (dup) {
-      alert('Ya existe un equipo con el código: ' + form.codigo);
-      return;
-    }
+      var fluidos = {};
+      fluidosConfig.forEach(function (f) {
+        fluidos[f.key] = { ok: null, observaciones: '' };
+      });
+      setEstadoFluidos(fluidos);
+
+      var luces = {};
+      lucesConfig.forEach(function (l) {
+        luces[l.key] = { ok: null, observaciones: '' };
+      });
+      setEstadoLuces(luces);
+
+      var items = {};
+      var compartimientos = vehiculoSel.compartimientos || [];
+      compartimientos.forEach(function (comp) {
+        (comp.subcompartimientos || []).forEach(function (sub) {
+          (sub.items || []).forEach(function (item) {
+            items[item.itemId] = {
+              nombre: item.nombre,
+              categoria: item.categoria,
+              cantidadEsperada: item.cantidadEsperada,
+              cantidadReal: 0,
+              ok: null,
+              observaciones: '',
+              ubicacion: comp.nombre + ' > ' + sub.nombre,
+              unidad: item.unidad || 'u',
+            };
+          });
+        });
+      });
+      (vehiculoSel.itemsAsignados || []).forEach(function (item) {
+        if (!items[item.itemId]) {
+          items[item.itemId] = {
+            nombre: item.nombre,
+            categoria: item.categoria,
+            cantidadEsperada: item.cantidad,
+            cantidadReal: 0,
+            ok: null,
+            observaciones: '',
+            ubicacion: 'General',
+            unidad: item.unidad || 'u',
+          };
+        }
+      });
+      setEstadoItems(items);
+
+      var eras = {};
+      (vehiculoSel.erasAsignadas || []).forEach(function (eraId) {
+        var era = props.eras.find(function (e) {
+          return e.id === eraId;
+        });
+        if (era) {
+          eras[eraId] = {
+            nombre: era.marca + ' ' + era.modelo,
+            serial: era.serial,
+            codigoInterno: era.codigoInterno || '',
+            presionEsperada: 300,
+            presionReal: 0,
+            ok: null,
+            observaciones: '',
+          };
+        }
+      });
+      setEstadoERAs(eras);
+    },
+    [vehiculoSel]
+  );
+
+  var guardar = async function () {
+    if (!vehiculoSel) return;
     setGuardando(true);
-    try {
-      var id = await props.onAgregar(Object.assign({}, form, { bitacora: [] }));
-      if (id) {
-        alert('✅ Equipo guardado');
-        setForm(estadoInicial);
-        setMostrarForm(false);
-      }
-    } catch (err) {
-      alert('❌ Error: ' + err.message);
-    } finally {
-      setGuardando(false);
-    }
-  };
-
-  var agregarEntradaBitacora = async function (equipoId) {
-    if (!formBitacora.responsable.trim()) {
-      alert('El responsable es obligatorio');
-      return;
-    }
-    var equipo = props.equipos.find(function (eq) {
-      return eq.id === equipoId;
+    var todosOk = true;
+    Object.values(estadoFluidos).forEach(function (f) {
+      if (f.ok === false) todosOk = false;
     });
-    if (!equipo) return;
-    var nuevaBitacora = (equipo.bitacora || []).concat([
-      Object.assign({}, formBitacora, {
-        id: Date.now(),
-        registradoEn: new Date().toISOString(),
-      }),
-    ]);
-    await props.onActualizar(equipoId, { bitacora: nuevaBitacora });
-    setFormBitacora(formBitacoraInicial);
-    alert('✅ Entrada registrada');
+    Object.values(estadoLuces).forEach(function (l) {
+      if (l.ok === false) todosOk = false;
+    });
+    Object.values(estadoItems).forEach(function (i) {
+      if (i.ok === false) todosOk = false;
+    });
+    Object.values(estadoERAs).forEach(function (e) {
+      if (e.ok === false) todosOk = false;
+    });
+    await props.onGuardar({
+      vehiculoId: vehiculoSel.id,
+      vehiculoNombre: vehiculoSel.nombre,
+      tipo: tipo,
+      fluidos: estadoFluidos,
+      luces: estadoLuces,
+      items: estadoItems,
+      eras: estadoERAs,
+      observaciones: obs,
+      resultado: todosOk ? 'ok' : 'con_novedades',
+      usuario: props.usuario ? props.usuario.nombre : 'Sistema',
+      fecha: new Date().toISOString().split('T')[0],
+      hora: new Date().toLocaleTimeString('es-AR'),
+    });
+    setGuardando(false);
+    setVista('lista');
+    setVehiculoSel(null);
+    setObs('');
+    alert('✅ Checklist guardado correctamente');
   };
 
-  return React.createElement(
-    'div',
-    null,
-    React.createElement(
-      'div',
-      {
-        style: {
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-          flexWrap: 'wrap',
-          gap: '12px',
-        },
-      },
-      React.createElement('h2', { style: styles.pageTitle }, '🧯 Equipos'),
-      React.createElement(
-        'button',
+  var renderEstadoBadge = function (ok) {
+    if (ok === true)
+      return React.createElement(
+        'span',
         {
-          style: styles.btnPrimary,
-          onClick: function () {
-            setMostrarForm(!mostrarForm);
-            setForm(estadoInicial);
+          style: {
+            background: '#d1fae5',
+            color: '#065f46',
+            padding: '3px 10px',
+            borderRadius: '6px',
+            fontSize: '12px',
+            fontWeight: '700',
           },
         },
-        mostrarForm ? '✖ Cancelar' : '➕ Nuevo Equipo'
-      )
-    ),
+        '✅ OK'
+      );
+    if (ok === false)
+      return React.createElement(
+        'span',
+        {
+          style: {
+            background: '#fee2e2',
+            color: '#991b1b',
+            padding: '3px 10px',
+            borderRadius: '6px',
+            fontSize: '12px',
+            fontWeight: '700',
+          },
+        },
+        '❌ NOK'
+      );
+    return React.createElement(
+      'span',
+      {
+        style: {
+          background: '#f3f4f6',
+          color: '#6b7280',
+          padding: '3px 10px',
+          borderRadius: '6px',
+          fontSize: '12px',
+          fontWeight: '700',
+        },
+      },
+      '⬜ S/D'
+    );
+  };
 
-    React.createElement(
+  var renderDetalleChecklist = function (cl) {
+    var fluidos = cl.fluidos || {};
+    var luces = cl.luces || {};
+    var items = cl.items || {};
+    var eras = cl.eras || {};
+
+    return React.createElement(
       'div',
       {
         style: {
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.6)',
           display: 'flex',
-          gap: '8px',
-          marginBottom: '16px',
-          flexWrap: 'wrap',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          zIndex: 1000,
+          overflowY: 'auto',
+          padding: '20px',
         },
       },
-      ['todos', 'operativo', 'mantenimiento', 'fuera_servicio', 'baja'].map(
-        function (est) {
-          var count =
-            est === 'todos'
-              ? props.equipos.length
-              : props.equipos.filter(function (eq) {
-                  return eq.estado === est;
-                }).length;
-          return React.createElement(
-            'button',
-            {
-              key: est,
-              style: Object.assign(
-                {},
-                filtroEstado === est ? styles.navBtnActive : styles.navBtn,
-                filtroEstado === est && est !== 'todos'
-                  ? { background: estadoColores[est] }
-                  : {}
-              ),
-              onClick: function () {
-                setFiltroEstado(est);
-              },
-            },
-            (est === 'todos' ? 'Todos' : estadoLabels[est]) + ' (' + count + ')'
-          );
-        }
-      )
-    ),
-
-    mostrarForm &&
-      React.createElement(
-        'div',
-        {
-          style: Object.assign({}, styles.card, {
-            background: '#fff7ed',
-            border: '2px solid #fb923c',
-            marginBottom: '24px',
-          }),
-        },
-        React.createElement(
-          'h3',
-          { style: Object.assign({}, styles.cardTitle, { color: '#c2410c' }) },
-          '➕ Nuevo Equipo'
-        ),
-        React.createElement(
-          'form',
-          { onSubmit: handleSubmit },
-          React.createElement(
-            'div',
-            {
-              style: {
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '16px',
-                marginBottom: '16px',
-              },
-            },
-            React.createElement(
-              'div',
-              null,
-              React.createElement('label', { style: styles.label }, 'Nombre *'),
-              React.createElement('input', {
-                type: 'text',
-                value: form.nombre,
-                onChange: function (e) {
-                  setForm(Object.assign({}, form, { nombre: e.target.value }));
-                },
-                style: styles.input,
-                required: true,
-                placeholder: 'Ej: Extintor CO2',
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement('label', { style: styles.label }, 'Código *'),
-              React.createElement('input', {
-                type: 'text',
-                value: form.codigo,
-                onChange: function (e) {
-                  setForm(Object.assign({}, form, { codigo: e.target.value }));
-                },
-                style: styles.input,
-                required: true,
-                placeholder: 'Ej: EXT-001',
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Categoría'
-              ),
-              React.createElement(
-                'select',
-                {
-                  value: form.categoria,
-                  onChange: function (e) {
-                    setForm(
-                      Object.assign({}, form, { categoria: e.target.value })
-                    );
-                  },
-                  style: styles.input,
-                },
-                ['equipo', 'herramienta', 'EPP', 'material', 'otro'].map(
-                  function (c) {
-                    return React.createElement(
-                      'option',
-                      { key: c, value: c },
-                      c
-                    );
-                  }
-                )
-              )
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement('label', { style: styles.label }, 'Estado'),
-              React.createElement(
-                'select',
-                {
-                  value: form.estado,
-                  onChange: function (e) {
-                    setForm(
-                      Object.assign({}, form, { estado: e.target.value })
-                    );
-                  },
-                  style: styles.input,
-                },
-                Object.entries(estadoLabels).map(function (e) {
-                  return React.createElement(
-                    'option',
-                    { key: e[0], value: e[0] },
-                    e[1]
-                  );
-                })
-              )
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Asignar a Móvil'
-              ),
-              React.createElement(
-                'select',
-                {
-                  value: form.vehiculoId,
-                  onChange: function (e) {
-                    setForm(
-                      Object.assign({}, form, { vehiculoId: e.target.value })
-                    );
-                  },
-                  style: styles.input,
-                },
-                React.createElement('option', { value: '' }, 'Sin asignar'),
-                props.vehiculos.map(function (v) {
-                  return React.createElement(
-                    'option',
-                    { key: v.id, value: v.id },
-                    v.nombre
-                  );
-                })
-              )
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Vincular Inventario'
-              ),
-              React.createElement(
-                'select',
-                {
-                  value: form.itemInventarioId,
-                  onChange: function (e) {
-                    setForm(
-                      Object.assign({}, form, {
-                        itemInventarioId: e.target.value,
-                      })
-                    );
-                  },
-                  style: styles.input,
-                },
-                React.createElement('option', { value: '' }, 'Sin vincular'),
-                props.inventario.map(function (item) {
-                  return React.createElement(
-                    'option',
-                    { key: item.id, value: item.id },
-                    item.nombre
-                  );
-                })
-              )
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Próx. Mantenimiento'
-              ),
-              React.createElement('input', {
-                type: 'date',
-                value: form.proximoMantenimiento,
-                onChange: function (e) {
-                  setForm(
-                    Object.assign({}, form, {
-                      proximoMantenimiento: e.target.value,
-                    })
-                  );
-                },
-                style: styles.input,
-              })
-            ),
-            React.createElement(
-              'div',
-              { style: { gridColumn: '1 / -1' } },
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Descripción'
-              ),
-              React.createElement('input', {
-                type: 'text',
-                value: form.descripcion,
-                onChange: function (e) {
-                  setForm(
-                    Object.assign({}, form, { descripcion: e.target.value })
-                  );
-                },
-                style: styles.input,
-                placeholder: 'Descripción del equipo...',
-              })
-            )
-          ),
-          React.createElement(
-            'button',
-            {
-              type: 'submit',
-              disabled: guardando,
-              style: {
-                width: '100%',
-                padding: '14px',
-                background: guardando ? '#9ca3af' : '#f97316',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: '700',
-                cursor: guardando ? 'not-allowed' : 'pointer',
-                fontSize: '15px',
-              },
-            },
-            guardando ? '⏳ Guardando...' : '💾 Guardar Equipo'
-          )
-        )
-      ),
-
-    mostrarBitacora &&
-      equipoSel &&
       React.createElement(
         'div',
         {
           style: {
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
+            background: 'white',
+            borderRadius: '16px',
+            padding: '28px',
+            width: '100%',
+            maxWidth: '800px',
+            marginTop: '20px',
           },
         },
         React.createElement(
           'div',
           {
             style: {
-              background: 'white',
-              borderRadius: '16px',
-              padding: '24px',
-              maxWidth: '680px',
-              width: '90%',
-              maxHeight: '85vh',
-              overflowY: 'auto',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px',
             },
           },
           React.createElement(
             'div',
-            {
-              style: {
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '20px',
-              },
-            },
+            null,
             React.createElement(
-              'h3',
-              { style: { fontWeight: 'bold', fontSize: '18px' } },
-              '📋 Bitácora: ' + equipoSel.nombre
+              'h2',
+              {
+                style: {
+                  fontWeight: 'bold',
+                  fontSize: '20px',
+                  marginBottom: '4px',
+                },
+              },
+              '📋 Detalle de Checklist'
+            ),
+            React.createElement(
+              'p',
+              { style: { fontSize: '14px', color: '#6b7280' } },
+              '🚛 ' +
+                cl.vehiculoNombre +
+                ' · 📅 ' +
+                (cl.fecha || '-') +
+                ' ' +
+                (cl.hora || '') +
+                ' · 👤 ' +
+                (cl.usuario || '-')
+            )
+          ),
+          React.createElement(
+            'div',
+            { style: { display: 'flex', gap: '10px', alignItems: 'center' } },
+            React.createElement(
+              'span',
+              { style: { fontSize: '32px' } },
+              cl.resultado === 'ok' ? '✅' : '⚠️'
             ),
             React.createElement(
               'button',
               {
                 style: {
+                  padding: '8px 16px',
                   background: '#6b7280',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '6px',
-                  padding: '6px 12px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
+                  fontWeight: '600',
                 },
                 onClick: function () {
-                  setMostrarBitacora(false);
-                  setEquipoSel(null);
+                  setChecklistDetalle(null);
                 },
               },
               '✖ Cerrar'
             )
-          ),
+          )
+        ),
+
+        React.createElement(
+          'div',
+          {
+            style: {
+              background: cl.resultado === 'ok' ? '#f0fdf4' : '#fef2f2',
+              border:
+                '2px solid ' + (cl.resultado === 'ok' ? '#bbf7d0' : '#fecaca'),
+              borderRadius: '10px',
+              padding: '14px',
+              marginBottom: '20px',
+              textAlign: 'center',
+            },
+          },
           React.createElement(
-            'div',
+            'p',
             {
               style: {
-                background: '#f0fdf4',
-                padding: '16px',
-                borderRadius: '10px',
-                marginBottom: '20px',
-                border: '1px solid #bbf7d0',
+                fontSize: '18px',
+                fontWeight: '700',
+                color: cl.resultado === 'ok' ? '#15803d' : '#dc2626',
               },
             },
+            cl.resultado === 'ok'
+              ? '✅ CHECKLIST APROBADO - Todo en orden'
+              : '⚠️ CHECKLIST CON NOVEDADES - Revisar items marcados'
+          ),
+          cl.observaciones &&
             React.createElement(
-              'h4',
+              'p',
               {
                 style: {
-                  fontWeight: '600',
-                  marginBottom: '12px',
-                  color: '#15803d',
+                  fontSize: '13px',
+                  color: '#6b7280',
+                  marginTop: '8px',
+                  fontStyle: 'italic',
                 },
               },
-              '➕ Nueva Entrada'
+              '💬 ' + cl.observaciones
+            )
+        ),
+
+        Object.keys(fluidos).length > 0 &&
+          React.createElement(
+            'div',
+            { style: { marginBottom: '20px' } },
+            React.createElement(
+              'h3',
+              {
+                style: {
+                  fontWeight: 'bold',
+                  fontSize: '16px',
+                  marginBottom: '12px',
+                  color: '#92400e',
+                  borderBottom: '2px solid #fde68a',
+                  paddingBottom: '8px',
+                },
+              },
+              '🛢️ Fluidos'
             ),
             React.createElement(
               'div',
@@ -9542,174 +11235,972 @@ function Equipos(props) {
                 style: {
                   display: 'grid',
                   gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '12px',
-                  marginBottom: '12px',
+                  gap: '8px',
                 },
               },
-              React.createElement(
-                'div',
-                null,
-                React.createElement('label', { style: styles.label }, 'Tipo'),
-                React.createElement(
-                  'select',
+              fluidosConfig.map(function (fc) {
+                var val = fluidos[fc.key];
+                if (!val) return null;
+                return React.createElement(
+                  'div',
                   {
-                    value: formBitacora.tipo,
-                    onChange: function (e) {
-                      setFormBitacora(
-                        Object.assign({}, formBitacora, {
-                          tipo: e.target.value,
-                        })
-                      );
+                    key: fc.key,
+                    style: {
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '10px 14px',
+                      background:
+                        val.ok === true
+                          ? '#f0fdf4'
+                          : val.ok === false
+                          ? '#fef2f2'
+                          : '#f9fafb',
+                      borderRadius: '8px',
+                      border:
+                        '1px solid ' +
+                        (val.ok === true
+                          ? '#bbf7d0'
+                          : val.ok === false
+                          ? '#fecaca'
+                          : '#e5e7eb'),
                     },
-                    style: styles.input,
                   },
                   React.createElement(
-                    'option',
-                    { value: 'preventivo' },
-                    'Mantenimiento Preventivo'
+                    'div',
+                    null,
+                    React.createElement(
+                      'p',
+                      { style: { fontWeight: '600', fontSize: '13px' } },
+                      fc.label
+                    ),
+                    val.observaciones &&
+                      React.createElement(
+                        'p',
+                        {
+                          style: {
+                            fontSize: '11px',
+                            color: '#6b7280',
+                            fontStyle: 'italic',
+                          },
+                        },
+                        val.observaciones
+                      )
                   ),
-                  React.createElement(
-                    'option',
-                    { value: 'correctivo' },
-                    'Mantenimiento Correctivo'
-                  ),
-                  React.createElement(
-                    'option',
-                    { value: 'inspeccion' },
-                    'Inspección'
-                  ),
-                  React.createElement(
-                    'option',
-                    { value: 'reparacion' },
-                    'Reparación'
-                  ),
-                  React.createElement('option', { value: 'otro' }, 'Otro')
-                )
-              ),
-              React.createElement(
-                'div',
-                null,
-                React.createElement('label', { style: styles.label }, 'Fecha'),
-                React.createElement('input', {
-                  type: 'date',
-                  value: formBitacora.fecha,
-                  onChange: function (e) {
-                    setFormBitacora(
-                      Object.assign({}, formBitacora, { fecha: e.target.value })
-                    );
-                  },
-                  style: styles.input,
-                })
-              ),
-              React.createElement(
-                'div',
-                null,
-                React.createElement(
-                  'label',
-                  { style: styles.label },
-                  'Responsable *'
-                ),
-                React.createElement('input', {
-                  type: 'text',
-                  value: formBitacora.responsable,
-                  onChange: function (e) {
-                    setFormBitacora(
-                      Object.assign({}, formBitacora, {
-                        responsable: e.target.value,
-                      })
-                    );
-                  },
-                  style: styles.input,
-                  placeholder: 'Nombre del responsable',
-                })
-              ),
-              React.createElement(
-                'div',
-                null,
-                React.createElement(
-                  'label',
-                  { style: styles.label },
-                  'Observaciones'
-                ),
-                React.createElement('input', {
-                  type: 'text',
-                  value: formBitacora.observaciones,
-                  onChange: function (e) {
-                    setFormBitacora(
-                      Object.assign({}, formBitacora, {
-                        observaciones: e.target.value,
-                      })
-                    );
-                  },
-                  style: styles.input,
-                  placeholder: 'Detalles...',
-                })
-              )
-            ),
-            React.createElement(
-              'button',
-              {
-                style: {
-                  width: '100%',
-                  padding: '10px',
-                  background: '#10b981',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                },
-                onClick: function () {
-                  agregarEntradaBitacora(equipoSel.id);
-                },
-              },
-              '💾 Registrar Entrada'
+                  renderEstadoBadge(val.ok)
+                );
+              })
             )
           ),
-          (equipoSel.bitacora || []).length === 0
-            ? React.createElement(
-                'p',
+
+        Object.keys(luces).length > 0 &&
+          React.createElement(
+            'div',
+            { style: { marginBottom: '20px' } },
+            React.createElement(
+              'h3',
+              {
+                style: {
+                  fontWeight: 'bold',
+                  fontSize: '16px',
+                  marginBottom: '12px',
+                  color: '#1e40af',
+                  borderBottom: '2px solid #bfdbfe',
+                  paddingBottom: '8px',
+                },
+              },
+              '💡 Luces, Bocina y Sirena'
+            ),
+            React.createElement(
+              'div',
+              {
+                style: {
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '8px',
+                },
+              },
+              lucesConfig.map(function (lc) {
+                var val = luces[lc.key];
+                if (!val) return null;
+                return React.createElement(
+                  'div',
+                  {
+                    key: lc.key,
+                    style: {
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '10px 14px',
+                      background:
+                        val.ok === true
+                          ? '#f0fdf4'
+                          : val.ok === false
+                          ? '#fef2f2'
+                          : '#f9fafb',
+                      borderRadius: '8px',
+                      border:
+                        '1px solid ' +
+                        (val.ok === true
+                          ? '#bbf7d0'
+                          : val.ok === false
+                          ? '#fecaca'
+                          : '#e5e7eb'),
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    null,
+                    React.createElement(
+                      'p',
+                      { style: { fontWeight: '600', fontSize: '13px' } },
+                      lc.label
+                    ),
+                    val.observaciones &&
+                      React.createElement(
+                        'p',
+                        {
+                          style: {
+                            fontSize: '11px',
+                            color: '#6b7280',
+                            fontStyle: 'italic',
+                          },
+                        },
+                        val.observaciones
+                      )
+                  ),
+                  renderEstadoBadge(val.ok)
+                );
+              })
+            )
+          ),
+
+        Object.keys(items).length > 0 &&
+          React.createElement(
+            'div',
+            { style: { marginBottom: '20px' } },
+            React.createElement(
+              'h3',
+              {
+                style: {
+                  fontWeight: 'bold',
+                  fontSize: '16px',
+                  marginBottom: '12px',
+                  color: '#374151',
+                  borderBottom: '2px solid #e5e7eb',
+                  paddingBottom: '8px',
+                },
+              },
+              '🔧 Herramientas e Items'
+            ),
+            React.createElement(
+              'div',
+              {
+                style: { display: 'flex', flexDirection: 'column', gap: '8px' },
+              },
+              Object.entries(items).map(function (entry) {
+                var itemId = entry[0];
+                var item = entry[1];
+                return React.createElement(
+                  'div',
+                  {
+                    key: itemId,
+                    style: {
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '10px 14px',
+                      background:
+                        item.ok === true
+                          ? '#f0fdf4'
+                          : item.ok === false
+                          ? '#fef2f2'
+                          : '#f9fafb',
+                      borderRadius: '8px',
+                      border:
+                        '1px solid ' +
+                        (item.ok === true
+                          ? '#bbf7d0'
+                          : item.ok === false
+                          ? '#fecaca'
+                          : '#e5e7eb'),
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    null,
+                    React.createElement(
+                      'p',
+                      { style: { fontWeight: '600', fontSize: '13px' } },
+                      item.nombre
+                    ),
+                    React.createElement(
+                      'p',
+                      { style: { fontSize: '11px', color: '#6b7280' } },
+                      '📍 ' +
+                        item.ubicacion +
+                        ' · Esperado: ' +
+                        item.cantidadEsperada +
+                        ' ' +
+                        (item.unidad || 'u') +
+                        ' · Real: ' +
+                        (item.cantidadReal || 0) +
+                        ' ' +
+                        (item.unidad || 'u')
+                    ),
+                    item.observaciones &&
+                      React.createElement(
+                        'p',
+                        {
+                          style: {
+                            fontSize: '11px',
+                            color: '#6b7280',
+                            fontStyle: 'italic',
+                          },
+                        },
+                        item.observaciones
+                      )
+                  ),
+                  renderEstadoBadge(item.ok)
+                );
+              })
+            )
+          ),
+
+        Object.keys(eras).length > 0 &&
+          React.createElement(
+            'div',
+            { style: { marginBottom: '20px' } },
+            React.createElement(
+              'h3',
+              {
+                style: {
+                  fontWeight: 'bold',
+                  fontSize: '16px',
+                  marginBottom: '12px',
+                  color: '#7c3aed',
+                  borderBottom: '2px solid #ddd6fe',
+                  paddingBottom: '8px',
+                },
+              },
+              '🎽 ERAs'
+            ),
+            React.createElement(
+              'div',
+              {
+                style: { display: 'flex', flexDirection: 'column', gap: '8px' },
+              },
+              Object.entries(eras).map(function (entry) {
+                var eraId = entry[0];
+                var era = entry[1];
+                return React.createElement(
+                  'div',
+                  {
+                    key: eraId,
+                    style: {
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '10px 14px',
+                      background:
+                        era.ok === true
+                          ? '#f0fdf4'
+                          : era.ok === false
+                          ? '#fef2f2'
+                          : '#f9fafb',
+                      borderRadius: '8px',
+                      border:
+                        '1px solid ' +
+                        (era.ok === true
+                          ? '#bbf7d0'
+                          : era.ok === false
+                          ? '#fecaca'
+                          : '#e5e7eb'),
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    null,
+                    React.createElement(
+                      'p',
+                      { style: { fontWeight: '600', fontSize: '13px' } },
+                      '🎽 ' + era.nombre
+                    ),
+                    React.createElement(
+                      'p',
+                      { style: { fontSize: '11px', color: '#6b7280' } },
+                      '🔖 ' +
+                        era.serial +
+                        (era.codigoInterno
+                          ? ' · 🏷️ ' + era.codigoInterno
+                          : '') +
+                        ' · Presión: ' +
+                        (era.presionReal || 0) +
+                        ' / ' +
+                        era.presionEsperada +
+                        ' bar'
+                    ),
+                    era.observaciones &&
+                      React.createElement(
+                        'p',
+                        {
+                          style: {
+                            fontSize: '11px',
+                            color: '#6b7280',
+                            fontStyle: 'italic',
+                          },
+                        },
+                        era.observaciones
+                      )
+                  ),
+                  renderEstadoBadge(era.ok)
+                );
+              })
+            )
+          )
+      )
+    );
+  };
+
+  if (vista === 'lista') {
+    return React.createElement(
+      'div',
+      null,
+      React.createElement(
+        'div',
+        {
+          style: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          },
+        },
+        React.createElement('h2', { style: styles.pageTitle }, '📋 Checklists'),
+        React.createElement(
+          'button',
+          {
+            style: styles.btnPrimary,
+            onClick: function () {
+              setVista('nuevo');
+            },
+          },
+          '➕ Nuevo Checklist'
+        )
+      ),
+
+      checklistDetalle && renderDetalleChecklist(checklistDetalle),
+
+      props.checklists.length === 0
+        ? React.createElement(
+            'div',
+            {
+              style: Object.assign({}, styles.card, {
+                textAlign: 'center',
+                padding: '60px',
+              }),
+            },
+            React.createElement(
+              'div',
+              { style: { fontSize: '64px', marginBottom: '16px' } },
+              '📋'
+            ),
+            React.createElement(
+              'h3',
+              { style: { color: '#6b7280' } },
+              'No hay checklists registrados'
+            )
+          )
+        : React.createElement(
+            'div',
+            {
+              style: { display: 'flex', flexDirection: 'column', gap: '10px' },
+            },
+            props.checklists.map(function (cl) {
+              var fluidos = cl.fluidos || {};
+              var luces = cl.luces || {};
+              var items = cl.items || {};
+              var eras = cl.eras || {};
+
+              var contarOk = function (obj) {
+                return Object.values(obj).filter(function (v) {
+                  return v.ok === true;
+                }).length;
+              };
+              var contarNok = function (obj) {
+                return Object.values(obj).filter(function (v) {
+                  return v.ok === false;
+                }).length;
+              };
+              var contarTotal = function (obj) {
+                return Object.values(obj).length;
+              };
+
+              var totalOk =
+                contarOk(fluidos) +
+                contarOk(luces) +
+                contarOk(items) +
+                contarOk(eras);
+              var totalNok =
+                contarNok(fluidos) +
+                contarNok(luces) +
+                contarNok(items) +
+                contarNok(eras);
+              var totalItems =
+                contarTotal(fluidos) +
+                contarTotal(luces) +
+                contarTotal(items) +
+                contarTotal(eras);
+
+              return React.createElement(
+                'div',
                 {
-                  style: {
-                    color: '#6b7280',
-                    textAlign: 'center',
-                    padding: '24px',
+                  key: cl.id,
+                  style: Object.assign({}, styles.card, {
+                    border:
+                      '2px solid ' +
+                      (cl.resultado === 'ok' ? '#bbf7d0' : '#fecaca'),
+                    background: cl.resultado === 'ok' ? '#f0fdf4' : '#fef2f2',
+                    marginBottom: '0',
+                    cursor: 'pointer',
+                  }),
+                  onClick: function () {
+                    setChecklistDetalle(cl);
                   },
                 },
-                'Sin registros en bitácora'
-              )
-            : React.createElement(
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      flexWrap: 'wrap',
+                      gap: '10px',
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    { style: { flex: 1 } },
+                    React.createElement(
+                      'h3',
+                      {
+                        style: {
+                          fontWeight: 'bold',
+                          fontSize: '15px',
+                          marginBottom: '6px',
+                        },
+                      },
+                      '🚛 ' + cl.vehiculoNombre
+                    ),
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          display: 'flex',
+                          gap: '8px',
+                          flexWrap: 'wrap',
+                          marginBottom: '8px',
+                        },
+                      },
+                      React.createElement(
+                        'span',
+                        {
+                          style: {
+                            fontSize: '12px',
+                            background: '#dbeafe',
+                            color: '#1e40af',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontWeight: '600',
+                          },
+                        },
+                        cl.tipo === 'completo'
+                          ? '📋 Completo'
+                          : cl.tipo === 'fluidos'
+                          ? '🛢️ Fluidos'
+                          : cl.tipo === 'herramientas'
+                          ? '🔧 Herramientas'
+                          : '🎽 ERAs'
+                      ),
+                      React.createElement(
+                        'span',
+                        { style: { fontSize: '12px', color: '#6b7280' } },
+                        '📅 ' + (cl.fecha || '-') + ' ' + (cl.hora || '')
+                      ),
+                      React.createElement(
+                        'span',
+                        { style: { fontSize: '12px', color: '#6b7280' } },
+                        '👤 ' + (cl.usuario || '-')
+                      )
+                    ),
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          display: 'flex',
+                          gap: '10px',
+                          flexWrap: 'wrap',
+                        },
+                      },
+                      totalItems > 0 &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '12px',
+                              background: '#f3f4f6',
+                              color: '#374151',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                            },
+                          },
+                          '📊 Total: ' + totalItems + ' items'
+                        ),
+                      totalOk > 0 &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '12px',
+                              background: '#d1fae5',
+                              color: '#065f46',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontWeight: '600',
+                            },
+                          },
+                          '✅ OK: ' + totalOk
+                        ),
+                      totalNok > 0 &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '12px',
+                              background: '#fee2e2',
+                              color: '#991b1b',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontWeight: '600',
+                            },
+                          },
+                          '❌ NOK: ' + totalNok
+                        ),
+                      Object.keys(fluidos).length > 0 &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '12px',
+                              background: '#fef3c7',
+                              color: '#92400e',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                            },
+                          },
+                          '🛢️ Fluidos: ' +
+                            contarOk(fluidos) +
+                            '/' +
+                            contarTotal(fluidos)
+                        ),
+                      Object.keys(luces).length > 0 &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '12px',
+                              background: '#dbeafe',
+                              color: '#1e40af',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                            },
+                          },
+                          '💡 Luces: ' +
+                            contarOk(luces) +
+                            '/' +
+                            contarTotal(luces)
+                        ),
+                      Object.keys(items).length > 0 &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '12px',
+                              background: '#f3f4f6',
+                              color: '#374151',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                            },
+                          },
+                          '🔧 Items: ' +
+                            contarOk(items) +
+                            '/' +
+                            contarTotal(items)
+                        ),
+                      Object.keys(eras).length > 0 &&
+                        React.createElement(
+                          'span',
+                          {
+                            style: {
+                              fontSize: '12px',
+                              background: '#ede9fe',
+                              color: '#7c3aed',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                            },
+                          },
+                          '🎽 ERAs: ' + contarOk(eras) + '/' + contarTotal(eras)
+                        )
+                    ),
+                    cl.observaciones &&
+                      React.createElement(
+                        'p',
+                        {
+                          style: {
+                            fontSize: '12px',
+                            color: '#6b7280',
+                            marginTop: '6px',
+                            fontStyle: 'italic',
+                          },
+                        },
+                        '💬 ' + cl.observaciones
+                      )
+                  ),
+                  React.createElement(
+                    'div',
+                    {
+                      style: {
+                        display: 'flex',
+                        gap: '8px',
+                        alignItems: 'center',
+                      },
+                    },
+                    React.createElement(
+                      'div',
+                      { style: { textAlign: 'center' } },
+                      React.createElement(
+                        'div',
+                        { style: { fontSize: '32px' } },
+                        cl.resultado === 'ok' ? '✅' : '⚠️'
+                      ),
+                      React.createElement(
+                        'p',
+                        {
+                          style: {
+                            fontSize: '11px',
+                            color: '#6b7280',
+                            marginTop: '2px',
+                          },
+                        },
+                        cl.resultado === 'ok' ? 'APROBADO' : 'CON NOVEDADES'
+                      )
+                    ),
+                    React.createElement(
+                      'div',
+                      {
+                        style: {
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '6px',
+                        },
+                      },
+                      React.createElement(
+                        'button',
+                        {
+                          style: {
+                            padding: '6px 12px',
+                            background: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                          },
+                          onClick: function (e) {
+                            e.stopPropagation();
+                            setChecklistDetalle(cl);
+                          },
+                        },
+                        '👁️ Ver Detalle'
+                      ),
+                      React.createElement(
+                        'button',
+                        {
+                          style: {
+                            padding: '6px 12px',
+                            background: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                          },
+                          onClick: function (e) {
+                            e.stopPropagation();
+                            if (window.confirm('¿Eliminar este checklist?')) {
+                              props.onEliminar(cl.id);
+                            }
+                          },
+                        },
+                        '🗑️ Eliminar'
+                      )
+                    )
+                  )
+                )
+              );
+            })
+          )
+    );
+  }
+
+  if (vista === 'nuevo') {
+    return React.createElement(
+      'div',
+      null,
+      React.createElement(
+        'div',
+        {
+          style: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          },
+        },
+        React.createElement(
+          'h2',
+          { style: styles.pageTitle },
+          '📋 Nuevo Checklist'
+        ),
+        React.createElement(
+          'button',
+          {
+            style: Object.assign({}, styles.btnPrimary, {
+              background: '#6b7280',
+            }),
+            onClick: function () {
+              setVista('lista');
+              setVehiculoSel(null);
+            },
+          },
+          '✖ Cancelar'
+        )
+      ),
+
+      !vehiculoSel
+        ? React.createElement(
+            'div',
+            { style: styles.card },
+            React.createElement(
+              'h3',
+              { style: styles.cardTitle },
+              '1️⃣ Seleccionar Móvil'
+            ),
+            React.createElement(
+              'div',
+              {
+                style: {
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: '12px',
+                },
+              },
+              props.vehiculos.map(function (v) {
+                return React.createElement(
+                  'button',
+                  {
+                    key: v.id,
+                    style: {
+                      padding: '20px',
+                      background:
+                        v.estado === 'operativo' ? '#f0fdf4' : '#fef3c7',
+                      border:
+                        '2px solid ' +
+                        (v.estado === 'operativo' ? '#bbf7d0' : '#fde68a'),
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                    },
+                    onClick: function () {
+                      setVehiculoSel(v);
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    { style: { fontSize: '36px', marginBottom: '8px' } },
+                    '🚛'
+                  ),
+                  React.createElement(
+                    'p',
+                    { style: { fontWeight: 'bold', fontSize: '14px' } },
+                    v.nombre
+                  ),
+                  React.createElement(
+                    'p',
+                    { style: { fontSize: '12px', color: '#6b7280' } },
+                    v.tipo
+                  )
+                );
+              })
+            )
+          )
+        : React.createElement(
+            'div',
+            null,
+            React.createElement(
+              'div',
+              {
+                style: Object.assign({}, styles.card, {
+                  background: '#f0f9ff',
+                  border: '2px solid #0ea5e9',
+                  marginBottom: '16px',
+                }),
+              },
+              React.createElement(
                 'div',
                 {
                   style: {
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: '10px',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
                   },
                 },
-                (equipoSel.bitacora || [])
-                  .slice()
-                  .reverse()
-                  .map(function (entrada, i) {
-                    var tipoColores = {
-                      preventivo: '#3b82f6',
-                      correctivo: '#ef4444',
-                      inspeccion: '#10b981',
-                      reparacion: '#f59e0b',
-                      otro: '#6b7280',
+                React.createElement(
+                  'div',
+                  null,
+                  React.createElement(
+                    'h3',
+                    { style: { fontWeight: 'bold', fontSize: '16px' } },
+                    '🚛 ' + vehiculoSel.nombre
+                  ),
+                  React.createElement(
+                    'p',
+                    { style: { fontSize: '13px', color: '#6b7280' } },
+                    vehiculoSel.tipo
+                  )
+                ),
+                React.createElement(
+                  'button',
+                  {
+                    style: {
+                      padding: '6px 12px',
+                      background: '#6b7280',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                    },
+                    onClick: function () {
+                      setVehiculoSel(null);
+                    },
+                  },
+                  '↩️ Cambiar'
+                )
+              )
+            ),
+
+            React.createElement(
+              'div',
+              {
+                style: Object.assign({}, styles.card, { marginBottom: '16px' }),
+              },
+              React.createElement(
+                'h3',
+                { style: styles.cardTitle },
+                '2️⃣ Tipo de Checklist'
+              ),
+              React.createElement(
+                'div',
+                { style: { display: 'flex', gap: '10px', flexWrap: 'wrap' } },
+                [
+                  { key: 'completo', label: '📋 Completo' },
+                  { key: 'fluidos', label: '🛢️ Fluidos y Luces' },
+                  { key: 'herramientas', label: '🔧 Herramientas' },
+                  { key: 'eras', label: '🎽 ERAs' },
+                ].map(function (t) {
+                  return React.createElement(
+                    'button',
+                    {
+                      key: t.key,
+                      style: {
+                        flex: 1,
+                        padding: '12px',
+                        background: tipo === t.key ? '#2563eb' : '#f3f4f6',
+                        color: tipo === t.key ? 'white' : '#374151',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontWeight: tipo === t.key ? '700' : '500',
+                        minWidth: '120px',
+                      },
+                      onClick: function () {
+                        setTipo(t.key);
+                      },
+                    },
+                    t.label
+                  );
+                })
+              )
+            ),
+
+            (tipo === 'fluidos' || tipo === 'completo') &&
+              React.createElement(
+                'div',
+                {
+                  style: Object.assign({}, styles.card, {
+                    marginBottom: '16px',
+                  }),
+                },
+                React.createElement(
+                  'h3',
+                  {
+                    style: {
+                      fontWeight: 'bold',
+                      fontSize: '16px',
+                      marginBottom: '16px',
+                      color: '#92400e',
+                    },
+                  },
+                  '🛢️ Control de Fluidos'
+                ),
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    },
+                  },
+                  fluidosConfig.map(function (fc) {
+                    var val = estadoFluidos[fc.key] || {
+                      ok: null,
+                      observaciones: '',
                     };
                     return React.createElement(
                       'div',
                       {
-                        key: i,
+                        key: fc.key,
                         style: {
                           padding: '14px',
-                          background: '#f9fafb',
+                          background:
+                            val.ok === true
+                              ? '#f0fdf4'
+                              : val.ok === false
+                              ? '#fef2f2'
+                              : '#f9fafb',
                           borderRadius: '10px',
-                          border: '1px solid #e5e7eb',
-                          borderLeft:
-                            '4px solid ' +
-                            (tipoColores[entrada.tipo] || '#6b7280'),
+                          border:
+                            '1px solid ' +
+                            (val.ok === true
+                              ? '#bbf7d0'
+                              : val.ok === false
+                              ? '#fecaca'
+                              : '#e5e7eb'),
                         },
                       },
                       React.createElement(
@@ -9718,2734 +12209,1344 @@ function Equipos(props) {
                           style: {
                             display: 'flex',
                             justifyContent: 'space-between',
-                            marginBottom: '6px',
+                            alignItems: 'center',
+                            marginBottom: '8px',
                           },
                         },
                         React.createElement(
-                          'span',
-                          {
-                            style: {
-                              fontWeight: '700',
-                              fontSize: '12px',
-                              color: tipoColores[entrada.tipo] || '#6b7280',
-                              textTransform: 'uppercase',
-                            },
-                          },
-                          entrada.tipo
+                          'p',
+                          { style: { fontWeight: '600', fontSize: '14px' } },
+                          fc.label
                         ),
                         React.createElement(
-                          'span',
-                          { style: { fontSize: '12px', color: '#6b7280' } },
-                          entrada.fecha || '-'
+                          'div',
+                          { style: { display: 'flex', gap: '8px' } },
+                          React.createElement(
+                            'button',
+                            {
+                              style: {
+                                padding: '6px 16px',
+                                background:
+                                  val.ok === true ? '#10b981' : '#e5e7eb',
+                                color: val.ok === true ? 'white' : '#374151',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: '600',
+                              },
+                              onClick: function () {
+                                var f = Object.assign({}, estadoFluidos);
+                                f[fc.key] = Object.assign({}, val, {
+                                  ok: true,
+                                });
+                                setEstadoFluidos(f);
+                              },
+                            },
+                            '✓ OK'
+                          ),
+                          React.createElement(
+                            'button',
+                            {
+                              style: {
+                                padding: '6px 16px',
+                                background:
+                                  val.ok === false ? '#ef4444' : '#e5e7eb',
+                                color: val.ok === false ? 'white' : '#374151',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: '600',
+                              },
+                              onClick: function () {
+                                var f = Object.assign({}, estadoFluidos);
+                                f[fc.key] = Object.assign({}, val, {
+                                  ok: false,
+                                });
+                                setEstadoFluidos(f);
+                              },
+                            },
+                            '✗ NOK'
+                          )
                         )
                       ),
-                      React.createElement(
-                        'p',
-                        {
-                          style: {
-                            fontSize: '13px',
-                            color: '#374151',
-                            marginBottom: '4px',
-                          },
+                      React.createElement('input', {
+                        type: 'text',
+                        placeholder: 'Observaciones...',
+                        value: val.observaciones || '',
+                        onChange: function (e) {
+                          var f = Object.assign({}, estadoFluidos);
+                          f[fc.key] = Object.assign({}, val, {
+                            observaciones: e.target.value,
+                          });
+                          setEstadoFluidos(f);
                         },
-                        entrada.observaciones || 'Sin observaciones'
-                      ),
-                      React.createElement(
-                        'p',
-                        { style: { fontSize: '12px', color: '#9ca3af' } },
-                        '👤 ' + (entrada.responsable || '-')
-                      )
+                        style: {
+                          width: '100%',
+                          padding: '8px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          boxSizing: 'border-box',
+                        },
+                      })
                     );
                   })
-              )
-        )
-      ),
-
-    equiposFiltrados.length === 0
-      ? React.createElement(
-          'div',
-          {
-            style: Object.assign({}, styles.card, {
-              textAlign: 'center',
-              padding: '60px',
-            }),
-          },
-          React.createElement(
-            'div',
-            { style: { fontSize: '64px', marginBottom: '16px' } },
-            '🧯'
-          ),
-          React.createElement(
-            'h3',
-            { style: { color: '#6b7280' } },
-            'No hay equipos registrados'
-          )
-        )
-      : React.createElement(
-          'div',
-          {
-            style: {
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-              gap: '16px',
-            },
-          },
-          equiposFiltrados.map(function (eq) {
-            var vehiculo = props.vehiculos.find(function (v) {
-              return v.id === eq.vehiculoId;
-            });
-            var itemInv = props.inventario.find(function (i) {
-              return i.id === eq.itemInventarioId;
-            });
-            var estadoColor = estadoColores[eq.estado] || '#6b7280';
-            var estadoLabel = estadoLabels[eq.estado] || eq.estado;
-            var vencMant = verificarVencimiento(eq.proximoMantenimiento);
-
-            return React.createElement(
-              'div',
-              {
-                key: eq.id,
-                style: Object.assign({}, styles.card, {
-                  border:
-                    '2px solid ' +
-                    (vencMant === 'vencido'
-                      ? '#ef4444'
-                      : vencMant === 'proximo'
-                      ? '#f59e0b'
-                      : '#e5e7eb'),
-                  marginBottom: '0',
-                }),
-              },
-              React.createElement(
-                'div',
-                {
-                  style: {
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '12px',
-                  },
-                },
-                React.createElement(
-                  'div',
-                  null,
-                  React.createElement(
-                    'h3',
-                    {
-                      style: {
-                        fontWeight: 'bold',
-                        fontSize: '16px',
-                        marginBottom: '4px',
-                      },
-                    },
-                    eq.nombre
-                  ),
-                  eq.codigo &&
-                    React.createElement(
-                      'p',
-                      {
-                        style: {
-                          fontSize: '12px',
-                          color: '#6b7280',
-                          marginBottom: '2px',
-                        },
-                      },
-                      '🔖 ' + eq.codigo
-                    ),
-                  eq.descripcion &&
-                    React.createElement(
-                      'p',
-                      { style: { fontSize: '12px', color: '#9ca3af' } },
-                      eq.descripcion
-                    )
-                ),
-                React.createElement(
-                  'span',
-                  {
-                    style: {
-                      background: estadoColor,
-                      color: 'white',
-                      padding: '4px 10px',
-                      borderRadius: '8px',
-                      fontSize: '11px',
-                      fontWeight: '700',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                    },
-                  },
-                  estadoLabel
                 )
               ),
 
+            (tipo === 'fluidos' || tipo === 'completo') &&
               React.createElement(
                 'div',
                 {
-                  style: {
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '6px',
-                    marginBottom: '14px',
-                  },
+                  style: Object.assign({}, styles.card, {
+                    marginBottom: '16px',
+                  }),
                 },
-                vehiculo &&
-                  React.createElement(
-                    'div',
-                    {
-                      style: {
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        background: '#eff6ff',
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                      },
-                    },
-                    React.createElement('span', null, '🚛'),
-                    React.createElement(
-                      'span',
-                      {
-                        style: {
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          color: '#1e40af',
-                        },
-                      },
-                      vehiculo.nombre + ' - ' + vehiculo.tipo
-                    )
-                  ),
-                itemInv &&
-                  React.createElement(
-                    'div',
-                    {
-                      style: {
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        background: '#f0fdf4',
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                      },
-                    },
-                    React.createElement('span', null, '📦'),
-                    React.createElement(
-                      'span',
-                      {
-                        style: {
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          color: '#15803d',
-                        },
-                      },
-                      itemInv.nombre + ' [Stock: ' + (itemInv.stock || 0) + ']'
-                    )
-                  ),
-                eq.proximoMantenimiento &&
-                  React.createElement(
-                    'div',
-                    {
-                      style: {
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        background:
-                          vencMant === 'vencido'
-                            ? '#fef2f2'
-                            : vencMant === 'proximo'
-                            ? '#fffbeb'
-                            : '#f9fafb',
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                      },
-                    },
-                    React.createElement('span', null, '📅'),
-                    React.createElement(
-                      'span',
-                      {
-                        style: {
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          color:
-                            vencMant === 'vencido'
-                              ? '#dc2626'
-                              : vencMant === 'proximo'
-                              ? '#d97706'
-                              : '#374151',
-                        },
-                      },
-                      'Próx. Mant: ' +
-                        eq.proximoMantenimiento +
-                        (vencMant === 'vencido'
-                          ? ' ⚠️ VENCIDO'
-                          : vencMant === 'proximo'
-                          ? ' ⚠️ PRÓXIMO'
-                          : '')
-                    )
-                  )
-              ),
-
-              React.createElement(
-                'div',
-                {
-                  style: {
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, 1fr)',
-                    gap: '8px',
-                    marginBottom: '12px',
-                  },
-                },
-                React.createElement(
-                  'div',
-                  null,
-                  React.createElement(
-                    'label',
-                    {
-                      style: {
-                        fontSize: '11px',
-                        color: '#6b7280',
-                        display: 'block',
-                        marginBottom: '3px',
-                      },
-                    },
-                    'Estado'
-                  ),
-                  React.createElement(
-                    'select',
-                    {
-                      value: eq.estado,
-                      onChange: function (e) {
-                        props.onActualizar(eq.id, { estado: e.target.value });
-                      },
-                      style: {
-                        width: '100%',
-                        padding: '7px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                      },
-                    },
-                    Object.entries(estadoLabels).map(function (e) {
-                      return React.createElement(
-                        'option',
-                        { key: e[0], value: e[0] },
-                        e[1]
-                      );
-                    })
-                  )
-                ),
-                React.createElement(
-                  'div',
-                  null,
-                  React.createElement(
-                    'label',
-                    {
-                      style: {
-                        fontSize: '11px',
-                        color: '#6b7280',
-                        display: 'block',
-                        marginBottom: '3px',
-                      },
-                    },
-                    'Próx. Mantenimiento'
-                  ),
-                  React.createElement('input', {
-                    type: 'date',
-                    value: eq.proximoMantenimiento || '',
-                    onChange: function (e) {
-                      props.onActualizar(eq.id, {
-                        proximoMantenimiento: e.target.value,
-                      });
-                    },
-                    style: {
-                      width: '100%',
-                      padding: '7px',
-                      border:
-                        '1px solid ' +
-                        (vencMant === 'vencido'
-                          ? '#ef4444'
-                          : vencMant === 'proximo'
-                          ? '#f59e0b'
-                          : '#d1d5db'),
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      background:
-                        vencMant === 'vencido'
-                          ? '#fef2f2'
-                          : vencMant === 'proximo'
-                          ? '#fffbeb'
-                          : 'white',
-                    },
-                  })
-                ),
-                React.createElement(
-                  'div',
-                  null,
-                  React.createElement(
-                    'label',
-                    {
-                      style: {
-                        fontSize: '11px',
-                        color: '#6b7280',
-                        display: 'block',
-                        marginBottom: '3px',
-                      },
-                    },
-                    'Asignar a Móvil'
-                  ),
-                  React.createElement(
-                    'select',
-                    {
-                      value: eq.vehiculoId || '',
-                      onChange: function (e) {
-                        props.onActualizar(eq.id, {
-                          vehiculoId: e.target.value,
-                        });
-                      },
-                      style: {
-                        width: '100%',
-                        padding: '7px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                      },
-                    },
-                    React.createElement('option', { value: '' }, 'Sin asignar'),
-                    props.vehiculos.map(function (v) {
-                      return React.createElement(
-                        'option',
-                        { key: v.id, value: v.id },
-                        v.nombre
-                      );
-                    })
-                  )
-                ),
-                React.createElement(
-                  'div',
-                  null,
-                  React.createElement(
-                    'label',
-                    {
-                      style: {
-                        fontSize: '11px',
-                        color: '#6b7280',
-                        display: 'block',
-                        marginBottom: '3px',
-                      },
-                    },
-                    'Vincular Inventario'
-                  ),
-                  React.createElement(
-                    'select',
-                    {
-                      value: eq.itemInventarioId || '',
-                      onChange: function (e) {
-                        props.onActualizar(eq.id, {
-                          itemInventarioId: e.target.value,
-                        });
-                      },
-                      style: {
-                        width: '100%',
-                        padding: '7px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                      },
-                    },
-                    React.createElement(
-                      'option',
-                      { value: '' },
-                      'Sin vincular'
-                    ),
-                    props.inventario.map(function (item) {
-                      return React.createElement(
-                        'option',
-                        { key: item.id, value: item.id },
-                        item.nombre
-                      );
-                    })
-                  )
-                )
-              ),
-
-              React.createElement(
-                'div',
-                { style: { display: 'flex', gap: '8px' } },
-                React.createElement(
-                  'button',
-                  {
-                    style: {
-                      flex: 1,
-                      padding: '9px',
-                      background: '#3b82f6',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '7px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                    },
-                    onClick: function () {
-                      setEquipoSel(eq);
-                      setMostrarBitacora(true);
-                      setFormBitacora(formBitacoraInicial);
-                    },
-                  },
-                  '📋 Bitácora (' + (eq.bitacora || []).length + ')'
-                ),
-                React.createElement(
-                  'button',
-                  {
-                    style: {
-                      padding: '9px 12px',
-                      background: '#ef4444',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '7px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                    },
-                    onClick: function () {
-                      if (
-                        window.confirm('¿Eliminar equipo ' + eq.nombre + '?')
-                      ) {
-                        props.onEliminar(eq.id);
-                      }
-                    },
-                  },
-                  '🗑️'
-                )
-              )
-            );
-          })
-        )
-  );
-}
-
-// ============================================
-// ERAs
-// ============================================
-function ERAs(props) {
-  var mostrarFormState = useState(false);
-  var mostrarForm = mostrarFormState[0];
-  var setMostrarForm = mostrarFormState[1];
-  var guardandoState = useState(false);
-  var guardando = guardandoState[0];
-  var setGuardando = guardandoState[1];
-  var estadoInicial = {
-    marca: '',
-    modelo: '',
-    serial: '',
-    presion: 300,
-    estado: 'activo',
-    pruebaHidraulica: '',
-    vencimientoTubo: '',
-    proximoMantenimiento: '',
-    proveedorRazonSocial: '',
-    proveedorTelefono: '',
-    proveedorDireccion: '',
-  };
-  var formState = useState(estadoInicial);
-  var form = formState[0];
-  var setForm = formState[1];
-
-  var verificarVencimiento = function (fecha) {
-    if (!fecha) return '';
-    var dias = Math.ceil(
-      (new Date(fecha) - new Date()) / (1000 * 60 * 60 * 24)
-    );
-    if (dias < 0) return 'vencido';
-    if (dias <= 30) return 'proximo';
-    return 'ok';
-  };
-
-  var getBorderColor = function (est) {
-    return est === 'vencido'
-      ? '#ef4444'
-      : est === 'proximo'
-      ? '#f59e0b'
-      : '#d1d5db';
-  };
-  var getBgColor = function (est) {
-    return est === 'vencido'
-      ? '#fef2f2'
-      : est === 'proximo'
-      ? '#fffbeb'
-      : 'white';
-  };
-
-  var handleSubmit = async function (e) {
-    e.preventDefault();
-    if (!form.marca.trim()) {
-      alert('La marca es obligatoria');
-      return;
-    }
-    if (!form.modelo.trim()) {
-      alert('El modelo es obligatorio');
-      return;
-    }
-    if (!form.serial.trim()) {
-      alert('El serial es obligatorio');
-      return;
-    }
-    var duplicado = props.eras.find(function (era) {
-      return (
-        era.serial &&
-        form.serial &&
-        era.serial.toLowerCase() === form.serial.toLowerCase()
-      );
-    });
-    if (duplicado) {
-      alert('Ya existe una ERA con el serial: ' + form.serial);
-      return;
-    }
-    setGuardando(true);
-    try {
-      var id = await props.onAgregar({
-        marca: form.marca.trim(),
-        modelo: form.modelo.trim(),
-        serial: form.serial.trim(),
-        presion: parseInt(form.presion) || 300,
-        estado: form.estado,
-        pruebaHidraulica: form.pruebaHidraulica || '',
-        vencimientoTubo: form.vencimientoTubo || '',
-        proximoMantenimiento: form.proximoMantenimiento || '',
-        proveedorRazonSocial: form.proveedorRazonSocial || '',
-        proveedorTelefono: form.proveedorTelefono || '',
-        proveedorDireccion: form.proveedorDireccion || '',
-        vehiculoAsignado: '',
-      });
-      if (id) {
-        alert('✅ ERA guardada');
-        setForm(estadoInicial);
-        setMostrarForm(false);
-      }
-    } catch (err) {
-      alert('❌ Error: ' + err.message);
-    } finally {
-      setGuardando(false);
-    }
-  };
-
-  return React.createElement(
-    'div',
-    null,
-    React.createElement(
-      'div',
-      {
-        style: {
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-        },
-      },
-      React.createElement('h2', { style: styles.pageTitle }, '🎽 ERAs'),
-      React.createElement(
-        'button',
-        {
-          style: styles.btnPrimary,
-          onClick: function () {
-            setMostrarForm(!mostrarForm);
-            setForm(estadoInicial);
-          },
-        },
-        mostrarForm ? '✖ Cancelar' : '➕ Nueva ERA'
-      )
-    ),
-
-    mostrarForm &&
-      React.createElement(
-        'div',
-        {
-          style: Object.assign({}, styles.card, {
-            background: '#f5f3ff',
-            border: '2px solid #8b5cf6',
-            marginBottom: '24px',
-          }),
-        },
-        React.createElement(
-          'h3',
-          { style: Object.assign({}, styles.cardTitle, { color: '#7c3aed' }) },
-          '➕ Nueva ERA'
-        ),
-        React.createElement(
-          'form',
-          { onSubmit: handleSubmit },
-          React.createElement(
-            'div',
-            {
-              style: {
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '16px',
-                marginBottom: '16px',
-              },
-            },
-            React.createElement(
-              'div',
-              null,
-              React.createElement('label', { style: styles.label }, 'Marca *'),
-              React.createElement('input', {
-                type: 'text',
-                value: form.marca,
-                onChange: function (e) {
-                  setForm(Object.assign({}, form, { marca: e.target.value }));
-                },
-                style: styles.input,
-                required: true,
-                placeholder: 'Ej: Scott',
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement('label', { style: styles.label }, 'Modelo *'),
-              React.createElement('input', {
-                type: 'text',
-                value: form.modelo,
-                onChange: function (e) {
-                  setForm(Object.assign({}, form, { modelo: e.target.value }));
-                },
-                style: styles.input,
-                required: true,
-                placeholder: 'Ej: Air-Pak X3',
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement('label', { style: styles.label }, 'Serial *'),
-              React.createElement('input', {
-                type: 'text',
-                value: form.serial,
-                onChange: function (e) {
-                  setForm(Object.assign({}, form, { serial: e.target.value }));
-                },
-                style: styles.input,
-                required: true,
-                placeholder: 'Ej: SN-001234',
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Presión (bar)'
-              ),
-              React.createElement('input', {
-                type: 'number',
-                value: form.presion,
-                onChange: function (e) {
-                  setForm(Object.assign({}, form, { presion: e.target.value }));
-                },
-                style: styles.input,
-                min: '0',
-                max: '400',
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement('label', { style: styles.label }, 'Estado'),
-              React.createElement(
-                'select',
-                {
-                  value: form.estado,
-                  onChange: function (e) {
-                    setForm(
-                      Object.assign({}, form, { estado: e.target.value })
-                    );
-                  },
-                  style: styles.input,
-                },
-                React.createElement('option', { value: 'activo' }, 'Activo'),
-                React.createElement(
-                  'option',
-                  { value: 'mantenimiento' },
-                  'Mantenimiento'
-                ),
-                React.createElement('option', { value: 'retirado' }, 'Retirado')
-              )
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Prueba Hidráulica'
-              ),
-              React.createElement('input', {
-                type: 'date',
-                value: form.pruebaHidraulica,
-                onChange: function (e) {
-                  setForm(
-                    Object.assign({}, form, {
-                      pruebaHidraulica: e.target.value,
-                    })
-                  );
-                },
-                style: styles.input,
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Vencimiento Tubo'
-              ),
-              React.createElement('input', {
-                type: 'date',
-                value: form.vencimientoTubo,
-                onChange: function (e) {
-                  setForm(
-                    Object.assign({}, form, { vencimientoTubo: e.target.value })
-                  );
-                },
-                style: styles.input,
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Próx. Mantenimiento'
-              ),
-              React.createElement('input', {
-                type: 'date',
-                value: form.proximoMantenimiento,
-                onChange: function (e) {
-                  setForm(
-                    Object.assign({}, form, {
-                      proximoMantenimiento: e.target.value,
-                    })
-                  );
-                },
-                style: styles.input,
-              })
-            )
-          ),
-          React.createElement(
-            'div',
-            {
-              style: {
-                background: '#eff6ff',
-                padding: '16px',
-                borderRadius: '10px',
-                marginBottom: '16px',
-                border: '1px solid #bfdbfe',
-              },
-            },
-            React.createElement(
-              'h4',
-              {
-                style: {
-                  fontWeight: 'bold',
-                  color: '#1e40af',
-                  marginBottom: '12px',
-                },
-              },
-              '🏢 Datos del Proveedor'
-            ),
-            React.createElement(
-              'div',
-              {
-                style: {
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '12px',
-                },
-              },
-              React.createElement(
-                'div',
-                null,
-                React.createElement(
-                  'label',
-                  { style: styles.label },
-                  'Razón Social'
-                ),
-                React.createElement('input', {
-                  type: 'text',
-                  value: form.proveedorRazonSocial,
-                  onChange: function (e) {
-                    setForm(
-                      Object.assign({}, form, {
-                        proveedorRazonSocial: e.target.value,
-                      })
-                    );
-                  },
-                  style: styles.input,
-                  placeholder: 'Empresa S.A.',
-                })
-              ),
-              React.createElement(
-                'div',
-                null,
-                React.createElement(
-                  'label',
-                  { style: styles.label },
-                  'Teléfono'
-                ),
-                React.createElement('input', {
-                  type: 'text',
-                  value: form.proveedorTelefono,
-                  onChange: function (e) {
-                    setForm(
-                      Object.assign({}, form, {
-                        proveedorTelefono: e.target.value,
-                      })
-                    );
-                  },
-                  style: styles.input,
-                  placeholder: '+54 11 1234-5678',
-                })
-              ),
-              React.createElement(
-                'div',
-                null,
-                React.createElement(
-                  'label',
-                  { style: styles.label },
-                  'Dirección'
-                ),
-                React.createElement('input', {
-                  type: 'text',
-                  value: form.proveedorDireccion,
-                  onChange: function (e) {
-                    setForm(
-                      Object.assign({}, form, {
-                        proveedorDireccion: e.target.value,
-                      })
-                    );
-                  },
-                  style: styles.input,
-                  placeholder: 'Av. Ejemplo 1234',
-                })
-              )
-            )
-          ),
-          React.createElement(
-            'button',
-            {
-              type: 'submit',
-              disabled: guardando,
-              style: {
-                width: '100%',
-                background: guardando ? '#9ca3af' : '#8b5cf6',
-                color: 'white',
-                border: 'none',
-                padding: '14px',
-                borderRadius: '8px',
-                fontWeight: '600',
-                fontSize: '15px',
-                cursor: guardando ? 'not-allowed' : 'pointer',
-              },
-            },
-            guardando ? '⏳ Guardando...' : '💾 Agregar ERA'
-          )
-        )
-      ),
-
-    props.eras.length === 0
-      ? React.createElement(
-          'div',
-          {
-            style: Object.assign({}, styles.card, {
-              textAlign: 'center',
-              padding: '60px',
-            }),
-          },
-          React.createElement(
-            'div',
-            { style: { fontSize: '64px', marginBottom: '16px' } },
-            '🎽'
-          ),
-          React.createElement(
-            'h3',
-            { style: { color: '#6b7280' } },
-            'No hay ERAs registradas'
-          )
-        )
-      : React.createElement(
-          'div',
-          {
-            style: {
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-              gap: '16px',
-            },
-          },
-          props.eras.map(function (era) {
-            var vencPH = verificarVencimiento(era.pruebaHidraulica);
-            var vencTubo = verificarVencimiento(era.vencimientoTubo);
-            var vencMant = verificarVencimiento(era.proximoMantenimiento);
-            var tieneAlerta =
-              vencPH === 'vencido' ||
-              vencTubo === 'vencido' ||
-              vencMant === 'vencido';
-            var tieneProximo =
-              vencPH === 'proximo' ||
-              vencTubo === 'proximo' ||
-              vencMant === 'proximo';
-            var vehiculoAsig = era.vehiculoAsignado
-              ? props.vehiculos.find(function (v) {
-                  return v.id === era.vehiculoAsignado;
-                })
-              : null;
-
-            return React.createElement(
-              'div',
-              {
-                key: era.id,
-                style: Object.assign({}, styles.card, {
-                  border:
-                    '2px solid ' +
-                    (tieneAlerta
-                      ? '#ef4444'
-                      : tieneProximo
-                      ? '#f59e0b'
-                      : '#e5e7eb'),
-                  marginBottom: '0',
-                }),
-              },
-              React.createElement(
-                'div',
-                { style: { textAlign: 'center', marginBottom: '16px' } },
-                React.createElement(
-                  'div',
-                  {
-                    style: {
-                      width: '64px',
-                      height: '64px',
-                      background:
-                        era.estado === 'activo'
-                          ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
-                          : 'linear-gradient(135deg, #f59e0b, #d97706)',
-                      borderRadius: '16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '32px',
-                      margin: '0 auto 10px',
-                    },
-                  },
-                  '🎽'
-                ),
                 React.createElement(
                   'h3',
                   {
                     style: {
-                      fontSize: '18px',
                       fontWeight: 'bold',
-                      marginBottom: '4px',
+                      fontSize: '16px',
+                      marginBottom: '16px',
+                      color: '#1e40af',
                     },
                   },
-                  era.marca + ' ' + era.modelo
+                  '💡 Control de Luces, Bocina y Sirena'
+                ),
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    },
+                  },
+                  lucesConfig.map(function (lc) {
+                    var val = estadoLuces[lc.key] || {
+                      ok: null,
+                      observaciones: '',
+                    };
+                    return React.createElement(
+                      'div',
+                      {
+                        key: lc.key,
+                        style: {
+                          padding: '14px',
+                          background:
+                            val.ok === true
+                              ? '#f0fdf4'
+                              : val.ok === false
+                              ? '#fef2f2'
+                              : '#f9fafb',
+                          borderRadius: '10px',
+                          border:
+                            '1px solid ' +
+                            (val.ok === true
+                              ? '#bbf7d0'
+                              : val.ok === false
+                              ? '#fecaca'
+                              : '#e5e7eb'),
+                        },
+                      },
+                      React.createElement(
+                        'div',
+                        {
+                          style: {
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '8px',
+                          },
+                        },
+                        React.createElement(
+                          'p',
+                          { style: { fontWeight: '600', fontSize: '14px' } },
+                          lc.label
+                        ),
+                        React.createElement(
+                          'div',
+                          { style: { display: 'flex', gap: '8px' } },
+                          React.createElement(
+                            'button',
+                            {
+                              style: {
+                                padding: '6px 16px',
+                                background:
+                                  val.ok === true ? '#10b981' : '#e5e7eb',
+                                color: val.ok === true ? 'white' : '#374151',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: '600',
+                              },
+                              onClick: function () {
+                                var l = Object.assign({}, estadoLuces);
+                                l[lc.key] = Object.assign({}, val, {
+                                  ok: true,
+                                });
+                                setEstadoLuces(l);
+                              },
+                            },
+                            '✓ OK'
+                          ),
+                          React.createElement(
+                            'button',
+                            {
+                              style: {
+                                padding: '6px 16px',
+                                background:
+                                  val.ok === false ? '#ef4444' : '#e5e7eb',
+                                color: val.ok === false ? 'white' : '#374151',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: '600',
+                              },
+                              onClick: function () {
+                                var l = Object.assign({}, estadoLuces);
+                                l[lc.key] = Object.assign({}, val, {
+                                  ok: false,
+                                });
+                                setEstadoLuces(l);
+                              },
+                            },
+                            '✗ NOK'
+                          )
+                        )
+                      ),
+                      React.createElement('input', {
+                        type: 'text',
+                        placeholder: 'Observaciones...',
+                        value: val.observaciones || '',
+                        onChange: function (e) {
+                          var l = Object.assign({}, estadoLuces);
+                          l[lc.key] = Object.assign({}, val, {
+                            observaciones: e.target.value,
+                          });
+                          setEstadoLuces(l);
+                        },
+                        style: {
+                          width: '100%',
+                          padding: '8px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          boxSizing: 'border-box',
+                        },
+                      })
+                    );
+                  })
+                )
+              ),
+
+            (tipo === 'herramientas' || tipo === 'completo') &&
+              Object.keys(estadoItems).length > 0 &&
+              React.createElement(
+                'div',
+                {
+                  style: Object.assign({}, styles.card, {
+                    marginBottom: '16px',
+                  }),
+                },
+                React.createElement(
+                  'h3',
+                  {
+                    style: {
+                      fontWeight: 'bold',
+                      fontSize: '16px',
+                      marginBottom: '16px',
+                      color: '#374151',
+                    },
+                  },
+                  '🔧 Control de Herramientas e Items'
+                ),
+                React.createElement(
+                  'div',
+                  {
+                    style: {
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    },
+                  },
+                  Object.entries(estadoItems).map(function (entry) {
+                    var itemId = entry[0];
+                    var item = entry[1];
+                    return React.createElement(
+                      'div',
+                      {
+                        key: itemId,
+                        style: {
+                          padding: '14px',
+                          background:
+                            item.ok === true
+                              ? '#f0fdf4'
+                              : item.ok === false
+                              ? '#fef2f2'
+                              : '#f9fafb',
+                          borderRadius: '10px',
+                          border:
+                            '1px solid ' +
+                            (item.ok === true
+                              ? '#bbf7d0'
+                              : item.ok === false
+                              ? '#fecaca'
+                              : '#e5e7eb'),
+                        },
+                      },
+                      React.createElement(
+                        'div',
+                        {
+                          style: {
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '8px',
+                            flexWrap: 'wrap',
+                            gap: '8px',
+                          },
+                        },
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'p',
+                            { style: { fontWeight: '600', fontSize: '14px' } },
+                            item.nombre
+                          ),
+                          React.createElement(
+                            'p',
+                            { style: { fontSize: '12px', color: '#6b7280' } },
+                            '📍 ' +
+                              item.ubicacion +
+                              ' · Esperado: ' +
+                              item.cantidadEsperada +
+                              ' ' +
+                              item.unidad
+                          )
+                        ),
+                        React.createElement(
+                          'div',
+                          {
+                            style: {
+                              display: 'flex',
+                              gap: '8px',
+                              alignItems: 'center',
+                            },
+                          },
+                          React.createElement('input', {
+                            type: 'number',
+                            value: item.cantidadReal || 0,
+                            onChange: function (e) {
+                              var it = Object.assign({}, estadoItems);
+                              it[itemId] = Object.assign({}, item, {
+                                cantidadReal: parseInt(e.target.value) || 0,
+                                ok:
+                                  parseInt(e.target.value) >=
+                                  item.cantidadEsperada,
+                              });
+                              setEstadoItems(it);
+                            },
+                            style: {
+                              width: '70px',
+                              padding: '6px',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '6px',
+                              fontSize: '14px',
+                              textAlign: 'center',
+                            },
+                            min: '0',
+                          }),
+                          React.createElement(
+                            'span',
+                            { style: { fontSize: '13px', color: '#6b7280' } },
+                            '/ ' + item.cantidadEsperada + ' ' + item.unidad
+                          ),
+                          item.ok === true &&
+                            React.createElement(
+                              'span',
+                              { style: { color: '#10b981', fontSize: '20px' } },
+                              '✅'
+                            ),
+                          item.ok === false &&
+                            React.createElement(
+                              'span',
+                              { style: { color: '#ef4444', fontSize: '20px' } },
+                              '❌'
+                            )
+                        )
+                      ),
+                      React.createElement('input', {
+                        type: 'text',
+                        placeholder: 'Observaciones...',
+                        value: item.observaciones || '',
+                        onChange: function (e) {
+                          var it = Object.assign({}, estadoItems);
+                          it[itemId] = Object.assign({}, item, {
+                            observaciones: e.target.value,
+                          });
+                          setEstadoItems(it);
+                        },
+                        style: {
+                          width: '100%',
+                          padding: '8px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          boxSizing: 'border-box',
+                        },
+                      })
+                    );
+                  })
+                )
+              ),
+
+            (tipo === 'herramientas' || tipo === 'completo') &&
+              Object.keys(estadoItems).length === 0 &&
+              React.createElement(
+                'div',
+                {
+                  style: Object.assign({}, styles.card, {
+                    marginBottom: '16px',
+                    textAlign: 'center',
+                    padding: '30px',
+                  }),
+                },
+                React.createElement(
+                  'p',
+                  { style: { fontSize: '40px', marginBottom: '8px' } },
+                  '🔧'
                 ),
                 React.createElement(
                   'p',
-                  {
-                    style: {
-                      color: '#8b5cf6',
-                      fontWeight: '600',
-                      fontSize: '13px',
-                    },
-                  },
-                  '🔖 Serial: ' + era.serial
-                ),
-                vehiculoAsig &&
-                  React.createElement(
-                    'div',
-                    {
-                      style: {
-                        background: '#eff6ff',
-                        padding: '6px 12px',
-                        borderRadius: '8px',
-                        marginTop: '8px',
-                        display: 'inline-block',
-                      },
-                    },
-                    React.createElement(
-                      'span',
-                      {
-                        style: {
-                          fontSize: '12px',
-                          color: '#1e40af',
-                          fontWeight: '600',
-                        },
-                      },
-                      '🚛 Asignada a: ' + vehiculoAsig.nombre
-                    )
-                  )
-              ),
-
-              React.createElement(
-                'div',
-                {
-                  style: {
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, 1fr)',
-                    gap: '8px',
-                    marginBottom: '14px',
-                  },
-                },
-                React.createElement(
-                  'div',
-                  {
-                    style: {
-                      padding: '10px',
-                      background: '#f3f4f6',
-                      borderRadius: '8px',
-                      textAlign: 'center',
-                    },
-                  },
-                  React.createElement(
-                    'div',
-                    {
-                      style: {
-                        fontSize: '20px',
-                        fontWeight: 'bold',
-                        color:
-                          (era.presion || 0) >= 280 ? '#10b981' : '#ef4444',
-                      },
-                    },
-                    (era.presion || 0) + ' bar'
-                  ),
-                  React.createElement(
-                    'div',
-                    { style: { fontSize: '11px', color: '#6b7280' } },
-                    'Presión'
-                  )
-                ),
-                React.createElement(
-                  'div',
-                  {
-                    style: {
-                      padding: '10px',
-                      background: '#f3f4f6',
-                      borderRadius: '8px',
-                      textAlign: 'center',
-                    },
-                  },
-                  React.createElement(
-                    'div',
-                    {
-                      style: {
-                        fontSize: '13px',
-                        fontWeight: 'bold',
-                        color: era.estado === 'activo' ? '#10b981' : '#f59e0b',
-                      },
-                    },
-                    era.estado === 'activo'
-                      ? '✅ ACTIVO'
-                      : '🔧 ' + (era.estado || '').toUpperCase()
-                  ),
-                  React.createElement(
-                    'div',
-                    { style: { fontSize: '11px', color: '#6b7280' } },
-                    'Estado'
-                  )
+                  { style: { color: '#6b7280', fontSize: '14px' } },
+                  'Este móvil no tiene items asignados en compartimientos'
                 )
               ),
 
+            (tipo === 'eras' || tipo === 'completo') &&
+              Object.keys(estadoERAs).length > 0 &&
               React.createElement(
                 'div',
                 {
-                  style: {
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, 1fr)',
-                    gap: '8px',
-                    marginBottom: '12px',
-                  },
+                  style: Object.assign({}, styles.card, {
+                    marginBottom: '16px',
+                  }),
                 },
                 React.createElement(
-                  'div',
-                  null,
-                  React.createElement(
-                    'label',
-                    {
-                      style: {
-                        fontSize: '11px',
-                        color: '#6b7280',
-                        display: 'block',
-                        marginBottom: '3px',
-                      },
-                    },
-                    'Estado'
-                  ),
-                  React.createElement(
-                    'select',
-                    {
-                      value: era.estado,
-                      onChange: function (e) {
-                        props.onActualizar(era.id, { estado: e.target.value });
-                      },
-                      style: {
-                        width: '100%',
-                        padding: '7px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                      },
-                    },
-                    React.createElement(
-                      'option',
-                      { value: 'activo' },
-                      'Activo'
-                    ),
-                    React.createElement(
-                      'option',
-                      { value: 'mantenimiento' },
-                      'Mantenimiento'
-                    ),
-                    React.createElement(
-                      'option',
-                      { value: 'retirado' },
-                      'Retirado'
-                    )
-                  )
-                ),
-                React.createElement(
-                  'div',
-                  null,
-                  React.createElement(
-                    'label',
-                    {
-                      style: {
-                        fontSize: '11px',
-                        color: '#6b7280',
-                        display: 'block',
-                        marginBottom: '3px',
-                      },
-                    },
-                    'Presión (bar)'
-                  ),
-                  React.createElement('input', {
-                    type: 'number',
-                    value: era.presion || '',
-                    onChange: function (e) {
-                      props.onActualizar(era.id, {
-                        presion: parseInt(e.target.value) || 0,
-                      });
-                    },
-                    style: {
-                      width: '100%',
-                      padding: '7px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                    },
-                    min: '0',
-                    max: '400',
-                  })
-                ),
-                React.createElement(
-                  'div',
-                  null,
-                  React.createElement(
-                    'label',
-                    {
-                      style: {
-                        fontSize: '11px',
-                        color: '#6b7280',
-                        display: 'block',
-                        marginBottom: '3px',
-                      },
-                    },
-                    'Prueba Hidráulica'
-                  ),
-                  React.createElement('input', {
-                    type: 'date',
-                    value: era.pruebaHidraulica || '',
-                    onChange: function (e) {
-                      props.onActualizar(era.id, {
-                        pruebaHidraulica: e.target.value,
-                      });
-                    },
-                    style: {
-                      width: '100%',
-                      padding: '7px',
-                      border: '1px solid ' + getBorderColor(vencPH),
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      background: getBgColor(vencPH),
-                    },
-                  }),
-                  vencPH === 'vencido' &&
-                    React.createElement(
-                      'p',
-                      {
-                        style: {
-                          fontSize: '10px',
-                          color: '#dc2626',
-                          marginTop: '2px',
-                          fontWeight: '600',
-                        },
-                      },
-                      '⚠️ VENCIDA'
-                    ),
-                  vencPH === 'proximo' &&
-                    React.createElement(
-                      'p',
-                      {
-                        style: {
-                          fontSize: '10px',
-                          color: '#d97706',
-                          marginTop: '2px',
-                          fontWeight: '600',
-                        },
-                      },
-                      '⚠️ Próxima'
-                    )
-                ),
-                React.createElement(
-                  'div',
-                  null,
-                  React.createElement(
-                    'label',
-                    {
-                      style: {
-                        fontSize: '11px',
-                        color: '#6b7280',
-                        display: 'block',
-                        marginBottom: '3px',
-                      },
-                    },
-                    'Venc. Tubo'
-                  ),
-                  React.createElement('input', {
-                    type: 'date',
-                    value: era.vencimientoTubo || '',
-                    onChange: function (e) {
-                      props.onActualizar(era.id, {
-                        vencimientoTubo: e.target.value,
-                      });
-                    },
-                    style: {
-                      width: '100%',
-                      padding: '7px',
-                      border: '1px solid ' + getBorderColor(vencTubo),
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      background: getBgColor(vencTubo),
-                    },
-                  }),
-                  vencTubo === 'vencido' &&
-                    React.createElement(
-                      'p',
-                      {
-                        style: {
-                          fontSize: '10px',
-                          color: '#dc2626',
-                          marginTop: '2px',
-                          fontWeight: '600',
-                        },
-                      },
-                      '⚠️ VENCIDO'
-                    ),
-                  vencTubo === 'proximo' &&
-                    React.createElement(
-                      'p',
-                      {
-                        style: {
-                          fontSize: '10px',
-                          color: '#d97706',
-                          marginTop: '2px',
-                          fontWeight: '600',
-                        },
-                      },
-                      '⚠️ Próximo'
-                    )
-                ),
-                React.createElement(
-                  'div',
-                  { style: { gridColumn: '1 / -1' } },
-                  React.createElement(
-                    'label',
-                    {
-                      style: {
-                        fontSize: '11px',
-                        color: '#6b7280',
-                        display: 'block',
-                        marginBottom: '3px',
-                      },
-                    },
-                    'Próx. Mantenimiento'
-                  ),
-                  React.createElement('input', {
-                    type: 'date',
-                    value: era.proximoMantenimiento || '',
-                    onChange: function (e) {
-                      props.onActualizar(era.id, {
-                        proximoMantenimiento: e.target.value,
-                      });
-                    },
-                    style: {
-                      width: '100%',
-                      padding: '7px',
-                      border: '1px solid ' + getBorderColor(vencMant),
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      background: getBgColor(vencMant),
-                    },
-                  }),
-                  vencMant === 'vencido' &&
-                    React.createElement(
-                      'p',
-                      {
-                        style: {
-                          fontSize: '10px',
-                          color: '#dc2626',
-                          marginTop: '2px',
-                          fontWeight: '600',
-                        },
-                      },
-                      '⚠️ VENCIDO'
-                    ),
-                  vencMant === 'proximo' &&
-                    React.createElement(
-                      'p',
-                      {
-                        style: {
-                          fontSize: '10px',
-                          color: '#d97706',
-                          marginTop: '2px',
-                          fontWeight: '600',
-                        },
-                      },
-                      '⚠️ Próximo'
-                    )
-                )
-              ),
-
-              React.createElement(
-                'div',
-                { style: { marginBottom: '12px' } },
-                React.createElement(
-                  'label',
+                  'h3',
                   {
                     style: {
-                      fontSize: '11px',
-                      color: '#6b7280',
-                      display: 'block',
-                      marginBottom: '3px',
+                      fontWeight: 'bold',
+                      fontSize: '16px',
+                      marginBottom: '16px',
+                      color: '#7c3aed',
                     },
                   },
-                  '🚛 Asignar a Móvil'
+                  '🎽 Control de ERAs'
                 ),
                 React.createElement(
-                  'select',
+                  'div',
                   {
-                    value: era.vehiculoAsignado || '',
-                    onChange: function (e) {
-                      if (e.target.value) {
-                        props.onAsignarERA(e.target.value, era.id);
-                      } else {
-                        if (era.vehiculoAsignado) {
-                          props.onDesasignarERA(era.vehiculoAsignado, era.id);
-                        }
-                      }
-                    },
                     style: {
-                      width: '100%',
-                      padding: '7px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      fontSize: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
                     },
                   },
-                  React.createElement('option', { value: '' }, 'Sin asignar'),
-                  props.vehiculos.map(function (v) {
+                  Object.entries(estadoERAs).map(function (entry) {
+                    var eraId = entry[0];
+                    var era = entry[1];
                     return React.createElement(
-                      'option',
-                      { key: v.id, value: v.id },
-                      v.nombre + ' - ' + v.tipo
-                    );
-                  })
-                )
-              ),
-
-              (era.proveedorRazonSocial ||
-                era.proveedorTelefono ||
-                era.proveedorDireccion) &&
-                React.createElement(
-                  'div',
-                  {
-                    style: {
-                      background: '#eff6ff',
-                      padding: '10px 12px',
-                      borderRadius: '8px',
-                      marginBottom: '12px',
-                      border: '1px solid #bfdbfe',
-                    },
-                  },
-                  React.createElement(
-                    'p',
-                    {
-                      style: {
-                        fontSize: '12px',
-                        fontWeight: '700',
-                        color: '#1e40af',
-                        marginBottom: '6px',
-                      },
-                    },
-                    '🏢 Proveedor'
-                  ),
-                  era.proveedorRazonSocial &&
-                    React.createElement(
-                      'p',
-                      {
-                        style: {
-                          fontSize: '12px',
-                          color: '#1e40af',
-                          marginBottom: '2px',
-                        },
-                      },
-                      era.proveedorRazonSocial
-                    ),
-                  era.proveedorTelefono &&
-                    React.createElement(
-                      'p',
-                      {
-                        style: {
-                          fontSize: '12px',
-                          color: '#1e40af',
-                          marginBottom: '2px',
-                        },
-                      },
-                      '📞 ' + era.proveedorTelefono
-                    ),
-                  era.proveedorDireccion &&
-                    React.createElement(
-                      'p',
-                      { style: { fontSize: '12px', color: '#1e40af' } },
-                      '📍 ' + era.proveedorDireccion
-                    )
-                ),
-
-              React.createElement(
-                'button',
-                {
-                  style: {
-                    width: '100%',
-                    padding: '10px',
-                    background: '#ef4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                  },
-                  onClick: function () {
-                    if (
-                      window.confirm(
-                        '¿Eliminar ERA ' +
-                          era.marca +
-                          ' ' +
-                          era.modelo +
-                          ' [' +
-                          era.serial +
-                          ']?'
-                      )
-                    ) {
-                      props.onEliminar(era.id);
-                    }
-                  },
-                },
-                '🗑️ Eliminar ERA'
-              )
-            );
-          })
-        )
-  );
-}
-
-// ============================================
-// PERSONAL
-// ============================================
-function Personal(props) {
-  var mostrarFormState = useState(false);
-  var mostrarForm = mostrarFormState[0];
-  var setMostrarForm = mostrarFormState[1];
-  var guardandoState = useState(false);
-  var guardando = guardandoState[0];
-  var setGuardando = guardandoState[1];
-  var estadoInicial = {
-    nombre: '',
-    apellido: '',
-    cargo: '',
-    licencia: '',
-    categoria: '',
-    telefono: '',
-    email: '',
-  };
-  var formState = useState(estadoInicial);
-  var form = formState[0];
-  var setForm = formState[1];
-
-  var verificarVencimiento = function (fecha) {
-    if (!fecha) return '';
-    var dias = Math.ceil(
-      (new Date(fecha) - new Date()) / (1000 * 60 * 60 * 24)
-    );
-    if (dias < 0) return 'vencido';
-    if (dias <= 30) return 'proximo';
-    return 'ok';
-  };
-
-  var handleSubmit = async function (e) {
-    e.preventDefault();
-    if (!form.nombre.trim()) {
-      alert('El nombre es obligatorio');
-      return;
-    }
-    if (!form.apellido.trim()) {
-      alert('El apellido es obligatorio');
-      return;
-    }
-    setGuardando(true);
-    try {
-      var id = await props.onAgregar({
-        nombre: form.nombre.trim(),
-        apellido: form.apellido.trim(),
-        cargo: form.cargo || '',
-        licencia: form.licencia || '',
-        categoria: form.categoria || '',
-        telefono: form.telefono || '',
-        email: form.email || '',
-      });
-      if (id) {
-        alert('✅ Personal agregado');
-        setForm(estadoInicial);
-        setMostrarForm(false);
-      }
-    } catch (err) {
-      alert('❌ Error: ' + err.message);
-    } finally {
-      setGuardando(false);
-    }
-  };
-
-  return React.createElement(
-    'div',
-    null,
-    React.createElement(
-      'div',
-      {
-        style: {
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-        },
-      },
-      React.createElement('h2', { style: styles.pageTitle }, '👥 Personal'),
-      React.createElement(
-        'button',
-        {
-          style: styles.btnPrimary,
-          onClick: function () {
-            setMostrarForm(!mostrarForm);
-            setForm(estadoInicial);
-          },
-        },
-        mostrarForm ? '✖ Cancelar' : '➕ Agregar Personal'
-      )
-    ),
-
-    mostrarForm &&
-      React.createElement(
-        'div',
-        {
-          style: Object.assign({}, styles.card, {
-            background: '#f0fdf4',
-            border: '2px solid #22c55e',
-            marginBottom: '24px',
-          }),
-        },
-        React.createElement(
-          'h3',
-          { style: Object.assign({}, styles.cardTitle, { color: '#15803d' }) },
-          '➕ Nuevo Integrante'
-        ),
-        React.createElement(
-          'form',
-          { onSubmit: handleSubmit },
-          React.createElement(
-            'div',
-            {
-              style: {
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '16px',
-                marginBottom: '16px',
-              },
-            },
-            React.createElement(
-              'div',
-              null,
-              React.createElement('label', { style: styles.label }, 'Nombre *'),
-              React.createElement('input', {
-                type: 'text',
-                value: form.nombre,
-                onChange: function (e) {
-                  setForm(Object.assign({}, form, { nombre: e.target.value }));
-                },
-                style: styles.input,
-                required: true,
-                placeholder: 'Juan',
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Apellido *'
-              ),
-              React.createElement('input', {
-                type: 'text',
-                value: form.apellido,
-                onChange: function (e) {
-                  setForm(
-                    Object.assign({}, form, { apellido: e.target.value })
-                  );
-                },
-                style: styles.input,
-                required: true,
-                placeholder: 'Pérez',
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement('label', { style: styles.label }, 'Cargo'),
-              React.createElement('input', {
-                type: 'text',
-                value: form.cargo,
-                onChange: function (e) {
-                  setForm(Object.assign({}, form, { cargo: e.target.value }));
-                },
-                style: styles.input,
-                placeholder: 'Bombero 1°',
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement('label', { style: styles.label }, 'Teléfono'),
-              React.createElement('input', {
-                type: 'tel',
-                value: form.telefono,
-                onChange: function (e) {
-                  setForm(
-                    Object.assign({}, form, { telefono: e.target.value })
-                  );
-                },
-                style: styles.input,
-                placeholder: '+54 11 1234-5678',
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement('label', { style: styles.label }, 'Email'),
-              React.createElement('input', {
-                type: 'email',
-                value: form.email,
-                onChange: function (e) {
-                  setForm(Object.assign({}, form, { email: e.target.value }));
-                },
-                style: styles.input,
-                placeholder: 'juan@bomberos.com',
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Categoría Licencia'
-              ),
-              React.createElement(
-                'select',
-                {
-                  value: form.categoria,
-                  onChange: function (e) {
-                    setForm(
-                      Object.assign({}, form, { categoria: e.target.value })
-                    );
-                  },
-                  style: styles.input,
-                },
-                React.createElement('option', { value: '' }, 'Seleccionar...'),
-                ['A', 'B', 'C', 'D', 'E'].map(function (c) {
-                  return React.createElement(
-                    'option',
-                    { key: c, value: c },
-                    'Categoría ' + c
-                  );
-                })
-              )
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Vencimiento Licencia'
-              ),
-              React.createElement('input', {
-                type: 'date',
-                value: form.licencia,
-                onChange: function (e) {
-                  setForm(
-                    Object.assign({}, form, { licencia: e.target.value })
-                  );
-                },
-                style: styles.input,
-              })
-            )
-          ),
-          React.createElement(
-            'button',
-            {
-              type: 'submit',
-              disabled: guardando,
-              style: {
-                width: '100%',
-                padding: '12px',
-                background: guardando ? '#9ca3af' : '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: '600',
-                cursor: guardando ? 'not-allowed' : 'pointer',
-              },
-            },
-            guardando ? '⏳ Guardando...' : '💾 Agregar Personal'
-          )
-        )
-      ),
-
-    props.personal.length === 0
-      ? React.createElement(
-          'div',
-          {
-            style: Object.assign({}, styles.card, {
-              textAlign: 'center',
-              padding: '60px',
-            }),
-          },
-          React.createElement(
-            'div',
-            { style: { fontSize: '64px', marginBottom: '16px' } },
-            '👥'
-          ),
-          React.createElement(
-            'h3',
-            { style: { color: '#6b7280' } },
-            'No hay personal registrado'
-          )
-        )
-      : React.createElement(
-          'div',
-          { style: { overflowX: 'auto' } },
-          React.createElement(
-            'table',
-            {
-              style: {
-                width: '100%',
-                borderCollapse: 'collapse',
-                background: 'white',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              },
-            },
-            React.createElement(
-              'thead',
-              null,
-              React.createElement(
-                'tr',
-                { style: { background: '#f3f4f6' } },
-                [
-                  'Nombre',
-                  'Apellido',
-                  'Cargo',
-                  'Teléfono',
-                  'Email',
-                  'Categoría',
-                  'Venc. Licencia',
-                  'Acciones',
-                ].map(function (h) {
-                  return React.createElement(
-                    'th',
-                    {
-                      key: h,
-                      style: {
-                        padding: '12px 16px',
-                        textAlign: 'left',
-                        fontWeight: '600',
-                        fontSize: '13px',
-                        color: '#374151',
-                        whiteSpace: 'nowrap',
-                      },
-                    },
-                    h
-                  );
-                })
-              )
-            ),
-            React.createElement(
-              'tbody',
-              null,
-              props.personal.map(function (p, idx) {
-                var estadoLic = verificarVencimiento(p.licencia);
-                return React.createElement(
-                  'tr',
-                  {
-                    key: p.id,
-                    style: {
-                      borderBottom: '1px solid #e5e7eb',
-                      background: idx % 2 === 0 ? 'white' : '#f9fafb',
-                    },
-                  },
-                  React.createElement(
-                    'td',
-                    { style: { padding: '12px 16px', fontWeight: '500' } },
-                    p.nombre
-                  ),
-                  React.createElement(
-                    'td',
-                    { style: { padding: '12px 16px' } },
-                    p.apellido
-                  ),
-                  React.createElement(
-                    'td',
-                    {
-                      style: {
-                        padding: '12px 16px',
-                        color: '#6b7280',
-                        fontSize: '13px',
-                      },
-                    },
-                    p.cargo || '-'
-                  ),
-                  React.createElement(
-                    'td',
-                    {
-                      style: {
-                        padding: '12px 16px',
-                        color: '#6b7280',
-                        fontSize: '13px',
-                      },
-                    },
-                    p.telefono || '-'
-                  ),
-                  React.createElement(
-                    'td',
-                    {
-                      style: {
-                        padding: '12px 16px',
-                        color: '#6b7280',
-                        fontSize: '13px',
-                      },
-                    },
-                    p.email || '-'
-                  ),
-                  React.createElement(
-                    'td',
-                    { style: { padding: '12px 16px' } },
-                    p.categoria
-                      ? React.createElement(
-                          'span',
-                          {
-                            style: {
-                              background: '#3b82f6',
-                              color: 'white',
-                              padding: '3px 8px',
-                              borderRadius: '4px',
-                              fontSize: '12px',
-                            },
-                          },
-                          'Cat. ' + p.categoria
-                        )
-                      : React.createElement(
-                          'span',
-                          { style: { color: '#9ca3af' } },
-                          '-'
-                        )
-                  ),
-                  React.createElement(
-                    'td',
-                    { style: { padding: '12px 16px' } },
-                    React.createElement(
                       'div',
-                      null,
-                      React.createElement('input', {
-                        type: 'date',
-                        value: p.licencia || '',
-                        onChange: function (e) {
-                          props.onActualizar(p.id, {
-                            licencia: e.target.value,
-                          });
-                        },
+                      {
+                        key: eraId,
                         style: {
-                          padding: '6px',
-                          fontSize: '12px',
+                          padding: '14px',
+                          background:
+                            era.ok === true
+                              ? '#f0fdf4'
+                              : era.ok === false
+                              ? '#fef2f2'
+                              : '#f9fafb',
+                          borderRadius: '10px',
                           border:
                             '1px solid ' +
-                            (estadoLic === 'vencido'
-                              ? '#ef4444'
-                              : estadoLic === 'proximo'
-                              ? '#f59e0b'
-                              : '#d1d5db'),
-                          borderRadius: '6px',
-                          background:
-                            estadoLic === 'vencido'
-                              ? '#fef2f2'
-                              : estadoLic === 'proximo'
-                              ? '#fffbeb'
-                              : 'white',
-                        },
-                      }),
-                      estadoLic === 'vencido' &&
-                        React.createElement(
-                          'p',
-                          {
-                            style: {
-                              fontSize: '10px',
-                              color: '#ef4444',
-                              marginTop: '2px',
-                              fontWeight: '600',
-                            },
-                          },
-                          '⚠️ VENCIDA'
-                        ),
-                      estadoLic === 'proximo' &&
-                        React.createElement(
-                          'p',
-                          {
-                            style: {
-                              fontSize: '10px',
-                              color: '#f59e0b',
-                              marginTop: '2px',
-                              fontWeight: '600',
-                            },
-                          },
-                          '⚠️ Próxima'
-                        )
-                    )
-                  ),
-                  React.createElement(
-                    'td',
-                    { style: { padding: '12px 16px' } },
-                    React.createElement(
-                      'button',
-                      {
-                        style: {
-                          background: '#ef4444',
-                          color: 'white',
-                          border: 'none',
-                          padding: '7px 12px',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                        },
-                        onClick: function () {
-                          if (
-                            window.confirm(
-                              '¿Eliminar a ' + p.nombre + ' ' + p.apellido + '?'
-                            )
-                          ) {
-                            props.onEliminar(p.id);
-                          }
+                            (era.ok === true
+                              ? '#bbf7d0'
+                              : era.ok === false
+                              ? '#fecaca'
+                              : '#e5e7eb'),
                         },
                       },
-                      '🗑️ Eliminar'
-                    )
-                  )
-                );
+                      React.createElement(
+                        'div',
+                        {
+                          style: {
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '8px',
+                            flexWrap: 'wrap',
+                            gap: '8px',
+                          },
+                        },
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement(
+                            'p',
+                            { style: { fontWeight: '600', fontSize: '14px' } },
+                            '🎽 ' + era.nombre
+                          ),
+                          React.createElement(
+                            'p',
+                            { style: { fontSize: '12px', color: '#6b7280' } },
+                            '🔖 ' +
+                              era.serial +
+                              (era.codigoInterno
+                                ? ' · 🏷️ ' + era.codigoInterno
+                                : '') +
+                              ' · Presión esperada: ' +
+                              era.presionEsperada +
+                              ' bar'
+                          )
+                        ),
+                        React.createElement(
+                          'div',
+                          {
+                            style: {
+                              display: 'flex',
+                              gap: '8px',
+                              alignItems: 'center',
+                            },
+                          },
+                          React.createElement('input', {
+                            type: 'number',
+                            value: era.presionReal || 0,
+                            onChange: function (e) {
+                              var er = Object.assign({}, estadoERAs);
+                              er[eraId] = Object.assign({}, era, {
+                                presionReal: parseInt(e.target.value) || 0,
+                                ok:
+                                  parseInt(e.target.value) >=
+                                  era.presionEsperada * 0.9,
+                              });
+                              setEstadoERAs(er);
+                            },
+                            style: {
+                              width: '80px',
+                              padding: '6px',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '6px',
+                              fontSize: '14px',
+                              textAlign: 'center',
+                            },
+                            min: '0',
+                            max: '300',
+                          }),
+                          React.createElement(
+                            'span',
+                            { style: { fontSize: '13px', color: '#6b7280' } },
+                            'bar'
+                          ),
+                          era.ok === true &&
+                            React.createElement(
+                              'span',
+                              { style: { color: '#10b981', fontSize: '20px' } },
+                              '✅'
+                            ),
+                          era.ok === false &&
+                            React.createElement(
+                              'span',
+                              { style: { color: '#ef4444', fontSize: '20px' } },
+                              '❌'
+                            )
+                        )
+                      ),
+                      React.createElement('input', {
+                        type: 'text',
+                        placeholder: 'Observaciones...',
+                        value: era.observaciones || '',
+                        onChange: function (e) {
+                          var er = Object.assign({}, estadoERAs);
+                          er[eraId] = Object.assign({}, era, {
+                            observaciones: e.target.value,
+                          });
+                          setEstadoERAs(er);
+                        },
+                        style: {
+                          width: '100%',
+                          padding: '8px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          boxSizing: 'border-box',
+                        },
+                      })
+                    );
+                  })
+                )
+              ),
+
+            (tipo === 'eras' || tipo === 'completo') &&
+              Object.keys(estadoERAs).length === 0 &&
+              React.createElement(
+                'div',
+                {
+                  style: Object.assign({}, styles.card, {
+                    marginBottom: '16px',
+                    textAlign: 'center',
+                    padding: '30px',
+                  }),
+                },
+                React.createElement(
+                  'p',
+                  { style: { fontSize: '40px', marginBottom: '8px' } },
+                  '🎽'
+                ),
+                React.createElement(
+                  'p',
+                  { style: { color: '#6b7280', fontSize: '14px' } },
+                  'Este móvil no tiene ERAs asignadas'
+                )
+              ),
+
+            React.createElement(
+              'div',
+              {
+                style: Object.assign({}, styles.card, { marginBottom: '16px' }),
+              },
+              React.createElement(
+                'label',
+                { style: styles.label },
+                '💬 Observaciones Generales'
+              ),
+              React.createElement('textarea', {
+                value: obs,
+                onChange: function (e) {
+                  setObs(e.target.value);
+                },
+                style: Object.assign({}, styles.input, {
+                  minHeight: '80px',
+                  resize: 'vertical',
+                }),
+                placeholder: 'Observaciones generales del checklist...',
               })
+            ),
+
+            React.createElement(
+              'button',
+              {
+                style: {
+                  width: '100%',
+                  padding: '16px',
+                  background: guardando ? '#9ca3af' : '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontWeight: '700',
+                  fontSize: '16px',
+                  cursor: guardando ? 'not-allowed' : 'pointer',
+                },
+                onClick: guardar,
+                disabled: guardando,
+              },
+              guardando ? '⏳ Guardando...' : '✅ Guardar Checklist'
             )
           )
-        )
-  );
+    );
+  }
+
+  return null;
 }
-
-// ============================================
-// BITACORA
-// ============================================
-function Bitacora(props) {
-  var mostrarFormState = useState(false);
-  var mostrarForm = mostrarFormState[0];
-  var setMostrarForm = mostrarFormState[1];
-  var filtroState = useState('todos');
-  var filtro = filtroState[0];
-  var setFiltro = filtroState[1];
-  var guardandoState = useState(false);
-  var guardando = guardandoState[0];
-  var setGuardando = guardandoState[1];
-  var estadoInicial = {
-    tipo: 'Mantenimiento',
-    descripcion: '',
-    responsable: '',
-    vehiculoId: '',
-    eraId: '',
-  };
-  var formState = useState(estadoInicial);
-  var form = formState[0];
-  var setForm = formState[1];
-
-  var tipos = [
-    'Mantenimiento',
-    'Reparacion',
-    'Inspeccion',
-    'Carga de Combustible',
-    'Cambio de Aceite',
-    'Cambio de Bateria',
-    'Emergencia',
-    'Otro',
+function Panel(props) {
+  var kpis = [
+    {
+      label: 'Móviles',
+      valor: props.vehiculos.length,
+      icon: '🚛',
+      color: 'linear-gradient(135deg, #1e3a5f, #2563eb)',
+      sub:
+        props.vehiculos.filter(function (v) {
+          return v.estado === 'operativo';
+        }).length + ' operativos',
+    },
+    {
+      label: 'ERAs',
+      valor: props.eras.length,
+      icon: '🎽',
+      color: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+      sub:
+        props.eras.filter(function (e) {
+          return e.estado === 'activo';
+        }).length + ' activas',
+    },
+    {
+      label: 'Personal',
+      valor: props.personal.length,
+      icon: '👥',
+      color: 'linear-gradient(135deg, #059669, #047857)',
+      sub:
+        props.personal.filter(function (p) {
+          return p.estado === 'activo';
+        }).length + ' activos',
+    },
+    {
+      label: 'Inventario',
+      valor: props.inventario.length,
+      icon: '📦',
+      color: 'linear-gradient(135deg, #d97706, #b45309)',
+      sub: props.itemsBajoStock.length + ' bajo stock',
+    },
+    {
+      label: 'Equipos',
+      valor: props.equipos.length,
+      icon: '🧯',
+      color: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+      sub:
+        props.equipos.filter(function (e) {
+          return e.estado === 'operativo';
+        }).length + ' operativos',
+    },
+    {
+      label: 'Checklists',
+      valor: props.checklists.length,
+      icon: '📋',
+      color: 'linear-gradient(135deg, #0891b2, #0e7490)',
+      sub: 'controles realizados',
+    },
   ];
-  var tipoColores = {
-    Mantenimiento: '#3b82f6',
-    Reparacion: '#ef4444',
-    Inspeccion: '#10b981',
-    'Carga de Combustible': '#f59e0b',
-    'Cambio de Aceite': '#8b5cf6',
-    'Cambio de Bateria': '#06b6d4',
-    Emergencia: '#dc2626',
-    Otro: '#6b7280',
-  };
 
-  var handleSubmit = async function (e) {
-    e.preventDefault();
-    if (!form.descripcion.trim()) {
-      alert('La descripción es obligatoria');
-      return;
-    }
-    if (!form.responsable.trim()) {
-      alert('El responsable es obligatorio');
-      return;
-    }
-    setGuardando(true);
-    try {
-      var id = await props.onAgregar({
-        tipo: form.tipo,
-        descripcion: form.descripcion.trim(),
-        responsable: form.responsable.trim(),
-        vehiculoId: form.vehiculoId || '',
-        eraId: form.eraId || '',
-        fecha: new Date().toLocaleString(),
-      });
-      if (id) {
-        alert('✅ Entrada registrada');
-        setForm(estadoInicial);
-        setMostrarForm(false);
-      }
-    } catch (err) {
-      alert('❌ Error: ' + err.message);
-    } finally {
-      setGuardando(false);
-    }
-  };
+  var alertas = [];
 
-  var bitacoraFiltrada = props.bitacora.filter(function (b) {
-    return filtro === 'todos' || b.tipo === filtro;
+  props.vehiculos.forEach(function (v) {
+    if (v.vtv && v.vtv.vencimiento) {
+      var dias = Math.ceil(
+        (new Date(v.vtv.vencimiento) - new Date()) / (1000 * 60 * 60 * 24)
+      );
+      if (dias < 0)
+        alertas.push({
+          tipo: 'error',
+          msg:
+            '🚗 VTV vencida: ' +
+            v.nombre +
+            ' (hace ' +
+            Math.abs(dias) +
+            ' días)',
+        });
+      else if (dias <= 30)
+        alertas.push({
+          tipo: 'warn',
+          msg: '🚗 VTV próxima: ' + v.nombre + ' (' + dias + ' días)',
+        });
+    }
+  });
+
+  props.eras.forEach(function (era) {
+    if (era.vencimientoTubo) {
+      var dias = Math.ceil(
+        (new Date(era.vencimientoTubo) - new Date()) / (1000 * 60 * 60 * 24)
+      );
+      if (dias < 0)
+        alertas.push({
+          tipo: 'error',
+          msg:
+            '🎽 Tubo ERA vencido: ' +
+            (era.codigoInterno || era.serial) +
+            ' - ' +
+            era.marca +
+            ' ' +
+            era.modelo,
+        });
+      else if (dias <= 30)
+        alertas.push({
+          tipo: 'warn',
+          msg:
+            '🎽 Tubo ERA próximo: ' +
+            (era.codigoInterno || era.serial) +
+            ' (' +
+            dias +
+            ' días)',
+        });
+    }
+    if (era.pruebaHidraulica) {
+      var diasPH = Math.ceil(
+        (new Date(era.pruebaHidraulica) - new Date()) / (1000 * 60 * 60 * 24)
+      );
+      if (diasPH < 0)
+        alertas.push({
+          tipo: 'error',
+          msg: '🔧 PH ERA vencida: ' + (era.codigoInterno || era.serial),
+        });
+    }
+  });
+
+  props.personal.forEach(function (p) {
+    var lic = p.licencia || {};
+    if (lic.vencimiento) {
+      var dias = Math.ceil(
+        (new Date(lic.vencimiento) - new Date()) / (1000 * 60 * 60 * 24)
+      );
+      if (dias < 0)
+        alertas.push({
+          tipo: 'error',
+          msg:
+            '🪪 Licencia vencida: ' +
+            p.nombre +
+            ' ' +
+            (p.apellido || '') +
+            ' (Cat. ' +
+            lic.categoria +
+            ')',
+        });
+      else if (dias <= 60)
+        alertas.push({
+          tipo: 'warn',
+          msg:
+            '🪪 Licencia próxima: ' +
+            p.nombre +
+            ' ' +
+            (p.apellido || '') +
+            ' (' +
+            dias +
+            ' días)',
+        });
+    }
+  });
+
+  props.itemsBajoStock.forEach(function (i) {
+    alertas.push({
+      tipo: 'warn',
+      msg:
+        '📦 Stock bajo: ' +
+        (i.codigoInterno ? '[' + i.codigoInterno + '] ' : '') +
+        i.nombre +
+        ' (' +
+        (i.stock || 0) +
+        ' ' +
+        (i.unidad || 'u') +
+        ')',
+    });
+  });
+
+  props.equipos.forEach(function (eq) {
+    if (eq.vencimiento) {
+      var dias = Math.ceil(
+        (new Date(eq.vencimiento) - new Date()) / (1000 * 60 * 60 * 24)
+      );
+      if (dias < 0)
+        alertas.push({
+          tipo: 'error',
+          msg:
+            '🧯 Equipo vencido: ' +
+            (eq.codigoInterno ? '[' + eq.codigoInterno + '] ' : '') +
+            eq.nombre,
+        });
+      else if (dias <= 30)
+        alertas.push({
+          tipo: 'warn',
+          msg:
+            '🧯 Equipo próximo: ' +
+            (eq.codigoInterno ? '[' + eq.codigoInterno + '] ' : '') +
+            eq.nombre +
+            ' (' +
+            dias +
+            ' días)',
+        });
+    }
+  });
+
+  var errores = alertas.filter(function (a) {
+    return a.tipo === 'error';
+  });
+  var warnings = alertas.filter(function (a) {
+    return a.tipo === 'warn';
   });
 
   return React.createElement(
     'div',
     null,
     React.createElement(
-      'div',
-      {
-        style: {
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-        },
-      },
-      React.createElement('h2', { style: styles.pageTitle }, '📝 Bitácora'),
-      React.createElement(
-        'button',
-        {
-          style: styles.btnPrimary,
-          onClick: function () {
-            setMostrarForm(!mostrarForm);
-            setForm(estadoInicial);
-          },
-        },
-        mostrarForm ? '✖ Cancelar' : '➕ Nueva Entrada'
-      )
+      'h2',
+      { style: Object.assign({}, styles.pageTitle, { marginBottom: '24px' }) },
+      '🏠 Panel de Control'
     ),
-
-    mostrarForm &&
-      React.createElement(
-        'div',
-        {
-          style: Object.assign({}, styles.card, {
-            background: '#fffbeb',
-            border: '2px solid #f59e0b',
-            marginBottom: '24px',
-          }),
-        },
-        React.createElement(
-          'h3',
-          { style: Object.assign({}, styles.cardTitle, { color: '#b45309' }) },
-          '➕ Nueva Entrada de Bitácora'
-        ),
-        React.createElement(
-          'form',
-          { onSubmit: handleSubmit },
+    React.createElement(
+      'div',
+      { style: styles.grid },
+      kpis.map(function (k) {
+        return React.createElement(
+          'div',
+          {
+            key: k.label,
+            style: Object.assign({}, styles.kpi, { background: k.color }),
+          },
+          React.createElement(
+            'div',
+            { style: { fontSize: '36px', marginBottom: '8px' } },
+            k.icon
+          ),
           React.createElement(
             'div',
             {
               style: {
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '16px',
-                marginBottom: '16px',
+                fontSize: '32px',
+                fontWeight: 'bold',
+                marginBottom: '4px',
               },
             },
-            React.createElement(
-              'div',
-              null,
-              React.createElement('label', { style: styles.label }, 'Tipo'),
-              React.createElement(
-                'select',
-                {
-                  value: form.tipo,
-                  onChange: function (e) {
-                    setForm(Object.assign({}, form, { tipo: e.target.value }));
-                  },
-                  style: styles.input,
-                },
-                tipos.map(function (t) {
-                  return React.createElement('option', { key: t, value: t }, t);
-                })
-              )
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Responsable *'
-              ),
-              React.createElement('input', {
-                type: 'text',
-                value: form.responsable,
-                onChange: function (e) {
-                  setForm(
-                    Object.assign({}, form, { responsable: e.target.value })
-                  );
-                },
-                style: styles.input,
-                required: true,
-                placeholder: 'Nombre del responsable',
-              })
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement('label', { style: styles.label }, 'Móvil'),
-              React.createElement(
-                'select',
-                {
-                  value: form.vehiculoId,
-                  onChange: function (e) {
-                    setForm(
-                      Object.assign({}, form, { vehiculoId: e.target.value })
-                    );
-                  },
-                  style: styles.input,
-                },
-                React.createElement('option', { value: '' }, 'Seleccionar...'),
-                props.vehiculos.map(function (v) {
-                  return React.createElement(
-                    'option',
-                    { key: v.id, value: v.nombre },
-                    v.nombre + ' - ' + v.tipo
-                  );
-                })
-              )
-            ),
-            React.createElement(
-              'div',
-              null,
-              React.createElement('label', { style: styles.label }, 'ERA'),
-              React.createElement(
-                'select',
-                {
-                  value: form.eraId,
-                  onChange: function (e) {
-                    setForm(Object.assign({}, form, { eraId: e.target.value }));
-                  },
-                  style: styles.input,
-                },
-                React.createElement('option', { value: '' }, 'Seleccionar...'),
-                props.eras.map(function (era) {
-                  return React.createElement(
-                    'option',
-                    { key: era.id, value: era.marca + ' ' + era.modelo },
-                    era.marca + ' ' + era.modelo + ' [' + era.serial + ']'
-                  );
-                })
-              )
-            ),
-            React.createElement(
-              'div',
-              { style: { gridColumn: '1 / -1' } },
-              React.createElement(
-                'label',
-                { style: styles.label },
-                'Descripción *'
-              ),
-              React.createElement('textarea', {
-                value: form.descripcion,
-                onChange: function (e) {
-                  setForm(
-                    Object.assign({}, form, { descripcion: e.target.value })
-                  );
-                },
-                style: {
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  minHeight: '100px',
-                  resize: 'vertical',
-                  boxSizing: 'border-box',
-                },
-                required: true,
-                placeholder: 'Descripción detallada...',
-              })
-            )
+            k.valor
           ),
           React.createElement(
-            'button',
-            {
-              type: 'submit',
-              disabled: guardando,
-              style: {
-                width: '100%',
-                background: guardando ? '#9ca3af' : '#f59e0b',
-                color: 'white',
-                border: 'none',
-                padding: '14px',
-                borderRadius: '8px',
-                fontWeight: '600',
-                fontSize: '15px',
-                cursor: guardando ? 'not-allowed' : 'pointer',
-              },
-            },
-            guardando ? '⏳ Guardando...' : '💾 Guardar Entrada'
+            'div',
+            { style: { fontSize: '14px', opacity: 0.9, marginBottom: '4px' } },
+            k.label
+          ),
+          React.createElement(
+            'div',
+            { style: { fontSize: '12px', opacity: 0.75 } },
+            k.sub
           )
+        );
+      })
+    ),
+
+    errores.length > 0 &&
+      React.createElement(
+        'div',
+        {
+          style: {
+            background: '#fee2e2',
+            border: '2px solid #ef4444',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          },
+        },
+        React.createElement(
+          'h3',
+          {
+            style: {
+              fontWeight: 'bold',
+              color: '#991b1b',
+              marginBottom: '12px',
+            },
+          },
+          '❌ Alertas Críticas (' + errores.length + ')'
+        ),
+        React.createElement(
+          'div',
+          { style: { display: 'flex', flexDirection: 'column', gap: '6px' } },
+          errores.map(function (a, i) {
+            return React.createElement(
+              'div',
+              {
+                key: i,
+                style: {
+                  padding: '8px 12px',
+                  background: 'white',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  color: '#991b1b',
+                },
+              },
+              a.msg
+            );
+          })
+        )
+      ),
+
+    warnings.length > 0 &&
+      React.createElement(
+        'div',
+        {
+          style: {
+            background: '#fef3c7',
+            border: '2px solid #f59e0b',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          },
+        },
+        React.createElement(
+          'h3',
+          {
+            style: {
+              fontWeight: 'bold',
+              color: '#92400e',
+              marginBottom: '12px',
+            },
+          },
+          '⚠️ Advertencias (' + warnings.length + ')'
+        ),
+        React.createElement(
+          'div',
+          { style: { display: 'flex', flexDirection: 'column', gap: '6px' } },
+          warnings.map(function (a, i) {
+            return React.createElement(
+              'div',
+              {
+                key: i,
+                style: {
+                  padding: '8px 12px',
+                  background: 'white',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  color: '#92400e',
+                },
+              },
+              a.msg
+            );
+          })
         )
       ),
 
     React.createElement(
       'div',
       {
-        style: {
-          display: 'flex',
-          gap: '6px',
-          marginBottom: '16px',
-          flexWrap: 'wrap',
-        },
+        style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },
       },
       React.createElement(
-        'button',
-        {
-          style: filtro === 'todos' ? styles.navBtnActive : styles.navBtn,
-          onClick: function () {
-            setFiltro('todos');
-          },
-        },
-        'Todos (' + props.bitacora.length + ')'
-      ),
-      tipos.map(function (t) {
-        var count = props.bitacora.filter(function (b) {
-          return b.tipo === t;
-        }).length;
-        if (count === 0) return null;
-        return React.createElement(
-          'button',
+        'div',
+        { style: styles.card },
+        React.createElement(
+          'h3',
           {
-            key: t,
-            style: Object.assign(
-              {},
-              filtro === t ? styles.navBtnActive : styles.navBtn,
-              filtro === t ? { background: tipoColores[t] } : {}
-            ),
-            onClick: function () {
-              setFiltro(t);
-            },
-          },
-          t + ' (' + count + ')'
-        );
-      })
-    ),
-
-    bitacoraFiltrada.length === 0
-      ? React.createElement(
-          'div',
-          {
-            style: Object.assign({}, styles.card, {
-              textAlign: 'center',
-              padding: '60px',
+            style: Object.assign({}, styles.cardTitle, {
+              marginBottom: '16px',
             }),
           },
-          React.createElement(
-            'div',
-            { style: { fontSize: '64px', marginBottom: '16px' } },
-            '📝'
-          ),
-          React.createElement(
-            'h3',
-            { style: { color: '#6b7280' } },
-            'No hay entradas en la bitácora'
-          )
-        )
-      : React.createElement(
-          'div',
-          {
-            style: {
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-              gap: '16px',
-            },
-          },
-          bitacoraFiltrada.map(function (b) {
-            var color = tipoColores[b.tipo] || '#6b7280';
-            return React.createElement(
+          '🚛 Estado de Móviles'
+        ),
+        props.vehiculos.length === 0
+          ? React.createElement(
+              'p',
+              {
+                style: {
+                  color: '#6b7280',
+                  textAlign: 'center',
+                  padding: '20px',
+                },
+              },
+              'No hay móviles'
+            )
+          : React.createElement(
               'div',
               {
-                key: b.id,
-                style: Object.assign({}, styles.card, {
-                  borderLeft: '4px solid ' + color,
-                  padding: '20px',
-                  marginBottom: '0',
-                }),
+                style: { display: 'flex', flexDirection: 'column', gap: '8px' },
               },
-              React.createElement(
-                'div',
-                {
-                  style: {
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '12px',
-                  },
-                },
-                React.createElement(
+              props.vehiculos.map(function (v) {
+                return React.createElement(
                   'div',
-                  null,
-                  React.createElement(
-                    'span',
-                    {
-                      style: {
-                        background: color,
-                        color: 'white',
-                        padding: '4px 12px',
-                        borderRadius: '12px',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                      },
-                    },
-                    b.tipo
-                  ),
-                  React.createElement(
-                    'p',
-                    {
-                      style: {
-                        fontSize: '12px',
-                        color: '#6b7280',
-                        marginTop: '6px',
-                      },
-                    },
-                    '📅 ' + (b.fecha || '-')
-                  )
-                ),
-                React.createElement(
-                  'button',
                   {
+                    key: v.id,
                     style: {
-                      background: '#ef4444',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      padding: '5px 10px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      flexShrink: 0,
-                    },
-                    onClick: function () {
-                      if (window.confirm('¿Eliminar esta entrada?')) {
-                        props.onEliminar(b.id);
-                      }
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '10px 14px',
+                      background: '#f9fafb',
+                      borderRadius: '8px',
                     },
                   },
-                  '🗑️'
-                )
-              ),
-              React.createElement(
-                'p',
-                {
-                  style: {
-                    color: '#374151',
-                    fontSize: '14px',
-                    marginBottom: '12px',
-                    lineHeight: '1.6',
-                  },
-                },
-                b.descripcion
-              ),
-              React.createElement(
-                'div',
-                { style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } },
-                b.responsable &&
                   React.createElement(
-                    'span',
+                    'div',
                     {
                       style: {
-                        background: '#e5e7eb',
-                        padding: '4px 10px',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        color: '#374151',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
                       },
                     },
-                    '👤 ' + b.responsable
+                    React.createElement(
+                      'span',
+                      { style: { fontSize: '20px' } },
+                      '🚛'
+                    ),
+                    React.createElement(
+                      'div',
+                      null,
+                      React.createElement(
+                        'p',
+                        { style: { fontWeight: '600', fontSize: '14px' } },
+                        v.nombre
+                      ),
+                      React.createElement(
+                        'p',
+                        { style: { fontSize: '12px', color: '#6b7280' } },
+                        v.tipo + (v.patente ? ' · ' + v.patente : '')
+                      )
+                    )
                   ),
-                b.vehiculoId &&
                   React.createElement(
                     'span',
                     {
-                      style: {
-                        background: '#dbeafe',
-                        padding: '4px 10px',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        color: '#1e40af',
-                      },
+                      style:
+                        v.estado === 'operativo'
+                          ? styles.badgeOk
+                          : styles.badgeWarn,
                     },
-                    '🚛 ' + b.vehiculoId
-                  ),
-                b.eraId &&
-                  React.createElement(
-                    'span',
-                    {
-                      style: {
-                        background: '#ede9fe',
-                        padding: '4px 10px',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        color: '#7c3aed',
-                      },
-                    },
-                    '🎽 ' + b.eraId
+                    v.estado === 'operativo' ? '✓ OK' : '🔧 MANT.'
                   )
-              )
-            );
-          })
-        )
+                );
+              })
+            )
+      ),
+
+      React.createElement(
+        'div',
+        { style: styles.card },
+        React.createElement(
+          'h3',
+          {
+            style: Object.assign({}, styles.cardTitle, {
+              marginBottom: '16px',
+            }),
+          },
+          '📋 Últimos Checklists'
+        ),
+        props.checklists.length === 0
+          ? React.createElement(
+              'p',
+              {
+                style: {
+                  color: '#6b7280',
+                  textAlign: 'center',
+                  padding: '20px',
+                },
+              },
+              'No hay checklists'
+            )
+          : React.createElement(
+              'div',
+              {
+                style: { display: 'flex', flexDirection: 'column', gap: '8px' },
+              },
+              props.checklists.slice(0, 5).map(function (cl) {
+                return React.createElement(
+                  'div',
+                  {
+                    key: cl.id,
+                    style: {
+                      padding: '10px 14px',
+                      background: cl.resultado === 'ok' ? '#f0fdf4' : '#fef2f2',
+                      borderRadius: '8px',
+                      border:
+                        '1px solid ' +
+                        (cl.resultado === 'ok' ? '#bbf7d0' : '#fecaca'),
+                    },
+                  },
+                  React.createElement(
+                    'div',
+                    {
+                      style: {
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      },
+                    },
+                    React.createElement(
+                      'div',
+                      null,
+                      React.createElement(
+                        'p',
+                        { style: { fontWeight: '600', fontSize: '13px' } },
+                        cl.vehiculoNombre +
+                          ' - ' +
+                          (cl.tipo === 'fluidos'
+                            ? '🛢️'
+                            : cl.tipo === 'herramientas'
+                            ? '🔧'
+                            : cl.tipo === 'eras'
+                            ? '🎽'
+                            : '📋') +
+                          ' ' +
+                          cl.tipo
+                      ),
+                      React.createElement(
+                        'p',
+                        { style: { fontSize: '11px', color: '#6b7280' } },
+                        '👤 ' +
+                          (cl.usuario || '-') +
+                          ' · 📅 ' +
+                          (cl.fecha || '-')
+                      )
+                    ),
+                    React.createElement(
+                      'span',
+                      { style: { fontSize: '18px' } },
+                      cl.resultado === 'ok' ? '✅' : '⚠️'
+                    )
+                  )
+                );
+              })
+            )
+      )
+    )
   );
 }
 
-// ============================================
-// ESTILOS GLOBALES
-// ============================================
-var styles = {
-  container: {
-    minHeight: '100vh',
-    background: '#f3f4f6',
-    fontFamily:
-      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-  },
-  header: {
-    background: 'white',
-    padding: '16px 24px',
-    borderBottom: '1px solid #e5e7eb',
-    position: 'sticky',
-    top: 0,
-    zIndex: 100,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-  },
-  headerContent: {
-    maxWidth: '1400px',
-    margin: '0 auto',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    flexWrap: 'wrap',
-  },
-  logo: {
-    width: '44px',
-    height: '44px',
-    background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
-    borderRadius: '10px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '22px',
-    flexShrink: 0,
-  },
-  title: {
-    fontSize: '22px',
-    fontWeight: 'bold',
-    color: '#111827',
-    margin: 0,
-  },
-  subtitle: {
-    fontSize: '13px',
-    color: '#6b7280',
-    margin: 0,
-  },
-  btnLogout: {
-    padding: '9px 16px',
-    background: '#dc2626',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    fontSize: '13px',
-  },
-  main: {
-    maxWidth: '1400px',
-    margin: '0 auto',
-    padding: '24px 16px',
-  },
-  nav: {
-    display: 'flex',
-    gap: '6px',
-    marginBottom: '24px',
-    flexWrap: 'wrap',
-  },
-  navBtn: {
-    padding: '10px 16px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '500',
-    background: 'white',
-    color: '#374151',
-    fontSize: '13px',
-    whiteSpace: 'nowrap',
-    transition: 'all 0.2s',
-  },
-  navBtnActive: {
-    padding: '10px 16px',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontWeight: '600',
-    background: '#2563eb',
-    color: 'white',
-    fontSize: '13px',
-    whiteSpace: 'nowrap',
-  },
-  pageTitle: {
-    fontSize: '26px',
-    fontWeight: 'bold',
-    marginBottom: '24px',
-    color: '#111827',
-    margin: '0 0 24px 0',
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-    gap: '16px',
-    marginBottom: '24px',
-  },
-  kpi: {
-    padding: '20px',
-    borderRadius: '12px',
-    color: 'white',
-    textAlign: 'center',
-    cursor: 'default',
-  },
-  card: {
-    background: 'white',
-    padding: '20px',
-    borderRadius: '12px',
-    marginBottom: '16px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-    border: '1px solid #e5e7eb',
-  },
-  cardTitle: {
-    fontSize: '17px',
-    fontWeight: 'bold',
-    marginBottom: '16px',
-    margin: '0 0 16px 0',
-  },
-  input: {
-    width: '100%',
-    padding: '10px 12px',
-    border: '1px solid #d1d5db',
-    borderRadius: '8px',
-    fontSize: '14px',
-    outline: 'none',
-    boxSizing: 'border-box',
-    background: 'white',
-  },
-  label: {
-    display: 'block',
-    fontSize: '13px',
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: '6px',
-  },
-  btnPrimary: {
-    padding: '10px 20px',
-    background: '#2563eb',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    fontSize: '14px',
-    whiteSpace: 'nowrap',
-  },
-  badgeOk: {
-    background: '#d1fae5',
-    color: '#065f46',
-    padding: '4px 12px',
-    borderRadius: '12px',
-    fontSize: '12px',
-    fontWeight: '600',
-    whiteSpace: 'nowrap',
-  },
-  badgeWarn: {
-    background: '#fef3c7',
-    color: '#92400e',
-    padding: '4px 12px',
-    borderRadius: '12px',
-    fontSize: '12px',
-    fontWeight: '600',
-    whiteSpace: 'nowrap',
-  },
-  alertItem: {
-    background: '#fef2f2',
-    padding: '10px 14px',
-    borderRadius: '8px',
-    marginBottom: '8px',
-    borderLeft: '4px solid #ef4444',
-  },
-};
+function Login(props) {
+  var emailState = useState('');
+  var email = emailState[0];
+  var setEmail = emailState[1];
+  var passState = useState('');
+  var pass = passState[0];
+  var setPass = passState[1];
+
+  var handleSubmit = function (e) {
+    e.preventDefault();
+    if (!email.trim() || !pass.trim()) {
+      alert('Completá todos los campos');
+      return;
+    }
+    props.onLogin(email, pass);
+  };
+
+  return React.createElement(
+    'div',
+    {
+      style: {
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1e3a5f 0%, #dc2626 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+      },
+    },
+    React.createElement(
+      'div',
+      {
+        style: {
+          background: 'white',
+          borderRadius: '20px',
+          padding: '48px',
+          width: '100%',
+          maxWidth: '420px',
+          boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
+        },
+      },
+      React.createElement(
+        'div',
+        { style: { textAlign: 'center', marginBottom: '32px' } },
+        React.createElement(
+          'div',
+          { style: { fontSize: '64px', marginBottom: '16px' } },
+          '🚒'
+        ),
+        React.createElement(
+          'h1',
+          {
+            style: {
+              fontSize: '26px',
+              fontWeight: 'bold',
+              color: '#1e3a5f',
+              marginBottom: '8px',
+            },
+          },
+          'Bomberos Ramallo'
+        ),
+        React.createElement(
+          'p',
+          { style: { color: '#6b7280', fontSize: '14px' } },
+          'Sistema de Gestión Integral'
+        )
+      ),
+      React.createElement(
+        'form',
+        { onSubmit: handleSubmit },
+        React.createElement(
+          'div',
+          { style: { marginBottom: '16px' } },
+          React.createElement(
+            'label',
+            { style: styles.label },
+            'Usuario / Email'
+          ),
+          React.createElement('input', {
+            type: 'text',
+            value: email,
+            onChange: function (e) {
+              setEmail(e.target.value);
+            },
+            style: Object.assign({}, styles.input, {
+              padding: '14px',
+              fontSize: '15px',
+            }),
+            placeholder: 'usuario@bomberos.com',
+            autoComplete: 'username',
+          })
+        ),
+        React.createElement(
+          'div',
+          { style: { marginBottom: '24px' } },
+          React.createElement('label', { style: styles.label }, 'Contraseña'),
+          React.createElement('input', {
+            type: 'password',
+            value: pass,
+            onChange: function (e) {
+              setPass(e.target.value);
+            },
+            style: Object.assign({}, styles.input, {
+              padding: '14px',
+              fontSize: '15px',
+            }),
+            placeholder: '••••••••',
+            autoComplete: 'current-password',
+          })
+        ),
+        React.createElement(
+          'button',
+          {
+            type: 'submit',
+            style: {
+              width: '100%',
+              padding: '14px',
+              background: 'linear-gradient(135deg, #1e3a5f, #dc2626)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '10px',
+              fontWeight: '700',
+              fontSize: '16px',
+              cursor: 'pointer',
+              letterSpacing: '0.5px',
+            },
+          },
+          '🔐 Ingresar al Sistema'
+        )
+      ),
+      React.createElement(
+        'div',
+        {
+          style: {
+            marginTop: '24px',
+            padding: '16px',
+            background: '#f9fafb',
+            borderRadius: '10px',
+            textAlign: 'center',
+          },
+        },
+        React.createElement(
+          'p',
+          {
+            style: { fontSize: '12px', color: '#6b7280', marginBottom: '4px' },
+          },
+          '💡 Ingresá con tu email institucional'
+        ),
+        React.createElement(
+          'p',
+          { style: { fontSize: '11px', color: '#9ca3af' } },
+          'El nombre de usuario se tomará del email'
+        )
+      )
+    )
+  );
+}
+
 export default App;
